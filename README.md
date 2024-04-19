@@ -10,11 +10,16 @@ To get started with the project, you need to clone the repository along with the
 
 ```bash
 git clone --recurse-submodules git@github.com:giommazz/bpcg-product.git
+```
 
 If you've already cloned the repository but didn't include the submodule, initialize and update the submodule with:
 
 ```bash
 git submodule update --init --recursive
+```
+
+
+
 
 
 ## Working with the Overleaf Submodule
