@@ -19,13 +19,13 @@ git submodule update --init --recursive
 
 ## Working with the Overleaf Submodule
 
-### Pulling from, and pushing to, Overleaf
+### Pulling from, and pushing to, [OverLeaf](https://www.overleaf.com/project/65b26b4f44ada0fe2bf4be42)
 
 To synchronize the latest changes from Overleaf into your local repository, follow these steps:
 
 ```bash
-cd paper    # Navigate to `paper` (a submodule linked to Overleaf project)
-git pull overleaf master    # Pull latest changes from Overleaf 
+cd paper    # Navigate to `paper` (a submodule linked to OverLeaf project)
+git pull overleaf master    # Pull latest changes from OverLeaf 
 ```
 
 To push changes: make changes, then `add` and `commit`, and finally
@@ -33,15 +33,15 @@ To push changes: make changes, then `add` and `commit`, and finally
 git push overleaf
 ```
 
+After this, changes will be visible on the OverLeaf webpage.
 
-4. Return to the root directory of your project:
+
+### Updating mother repo
+
+Now we only have to update the mother repo
+
 ```bash
 cd ..
-
-5. Commit the updated submodule reference in your main project:
-```bash
-git commit -am "Update submodule reference"
-
-6. Push the changes to your main repository:
-```bash
-git push origin main
+git commit -am "update submodule reference"
+git push
+```
