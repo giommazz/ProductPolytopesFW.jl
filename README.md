@@ -2,17 +2,19 @@
 Experiments to test BPCG over the product domain on different problems
 
 This repository contains two main components:
-- `code/`: Directory containing all Julia code for experiments.
-- `paper/`: Submodule linked to Overleaf for collaborative writing.
+- `code/`: containing Julia code for experiments
+- `paper/`: Submodule linked to [Overleaf webpage](https://www.overleaf.com/project/65b26b4f44ada0fe2bf4be42) for collaborative writing
+
+
 
 ## Cloning the Repository for the First Time
-To get started with the project, you need to clone the repository along with the associated Overleaf submodule. Use the following command:
+To get started with the project, clone repository with associated OverLeaf submodule:
 
 ```bash
 git clone --recurse-submodules git@github.com:giommazz/bpcg-product.git
 ```
 
-If you've already cloned the repository but didn't include the submodule, initialize and update the submodule with:
+If you've already cloned the repo but didn't include the submodule, initialize and update the submodule:
 
 ```bash
 git submodule update --init --recursive
@@ -20,30 +22,25 @@ git submodule update --init --recursive
 
 
 
-
-
 ## Working with the Overleaf Submodule
 
-### Pulling from, and pushing to, [OverLeaf](https://www.overleaf.com/project/65b26b4f44ada0fe2bf4be42)
+### Pulling from, and pushing to, OverLeaf
 
-To synchronize the latest changes from Overleaf into your local repository, follow these steps:
+Sync latest changes from remote Overleaf into local repository:
 
 ```bash
-cd paper    # Navigate to `paper` (a submodule linked to OverLeaf project)
+cd paper                    # `paper` is a submodule linked to OverLeaf project
 git pull overleaf master    # Pull latest changes from OverLeaf 
 ```
 
-To push changes: make changes, then `add` and `commit`, and finally
+Make changes, `add`, `commit`, and
 ```bash
-git push overleaf
+git push overleaf           # changes will be visible on [OverLeaf webpage](https://www.overleaf.com/project/65b26b4f44ada0fe2bf4be42)
 ```
-
-After this, changes will be visible on the OverLeaf webpage.
-
 
 ### Updating mother repo
 
-Now we only have to update the mother repo
+Also push changes to remote Git repo
 
 ```bash
 cd ..
