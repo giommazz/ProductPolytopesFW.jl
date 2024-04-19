@@ -24,7 +24,7 @@ git submodule update --init --recursive
 
 ## Working with the Overleaf Submodule
 
-### Pulling from, and pushing to, [OverLeaf](https://www.overleaf.com/project/65b26b4f44ada0fe2bf4be42){:target="_blank"}
+### Pulling from, and pushing to, [OverLeaf](https://www.overleaf.com/project/65b26b4f44ada0fe2bf4be42)
 
 To synchronize the latest changes from Overleaf into your local repository, follow these steps:
 
