@@ -43,7 +43,7 @@ git push overleaf           # changes will be visible on [OverLeaf webpage](http
 Also push changes to remote Git repo
 
 ```bash
-cd ..
+cd ..                       # now in main repo ../paper
 git commit -am "update submodule reference"
 git push
 ```
