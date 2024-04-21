@@ -47,3 +47,23 @@ cd ..                       # now in main repo ../paper
 git commit -am "update submodule reference"
 git push
 ```
+
+
+## Julia Setup Instructions
+
+To set up the Julia environment necessary to run the experiments, follow these steps:
+
+1. Clone this repository and navigate to the `code/BPCGProduct` directory.
+2. Start Julia and activate the local environment
+```bash
+julia --project=. 
+```
+3. # Install and lock the exact package versions
+```julia
+] instantiate
+```
+4. Run experiments with:
+```julia
+include("src/BPCGProduct.jl")
+BPCGProduct.runExperiment()
+```

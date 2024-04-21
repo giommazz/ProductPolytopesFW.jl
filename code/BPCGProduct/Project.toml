@@ -1,0 +1,7 @@
+name = "BPCGProduct"
+uuid = "f2b8fa5e-0abd-47db-9d6f-354aeaa919ee"
+authors = ["giommazz <gab.iom89@gmail.com>"]
+version = "0.1.0"
+
+[deps]
+FrankWolfe = "f55ce6ea-fdc5-4628-88c5-0087fe54bd30"
