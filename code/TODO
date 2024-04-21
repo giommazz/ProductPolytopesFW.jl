@@ -1,0 +1,6 @@
+TODO list:
+
+- understand how to plot stuff
+- decide which polytopes to run experiments over
+- talk to Elias/Jannis/Dominik: check if the code is doing exactly what I need (running BPCG over Cartesian product of several polytopes)
+- talk to Elias/Jannis/Dominik: understand if the code can be improved 
