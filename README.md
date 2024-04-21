@@ -58,7 +58,7 @@ To set up the Julia environment necessary to run the experiments, follow these s
 ```bash
 julia --project=. 
 ```
-3. # Install and lock the exact package versions
+3. Install and lock the exact package versions
 ```julia
 ] instantiate
 ```
