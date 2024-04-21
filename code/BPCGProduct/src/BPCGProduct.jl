@@ -1,7 +1,6 @@
 module BPCGProduct
-
 using FrankWolfe
-include("../examples/plot_utils.jl")
+
 
 function grad!(storage, x)
     @. storage = zero(x)
@@ -22,32 +21,28 @@ function runExperiment()
     # Polytopes LMOs (https://github.com/ZIB-IOL/FrankWolfe.jl/blob/97a599c029a054aab6a5574d9bed8d48e0f9fb01/src/polytope_oracles.jl#L4)
     lmo1 = FrankWolfe.ProbabilitySimplexOracle(1.0)
     lmo2 = FrankWolfe.ScaledBoundLInfNormBall(-ones(n), zeros(n))
-    lmo = FrankWolfe.ProductLMO(lmo1, lmo2)
+    lmos = (lmo1, lmo2)
 
     # Initialization
-    p0 = [1; zeros(Int, n-1)]
     # Find initial feasible point for `lmo1`
     x01 = FrankWolfe.compute_extreme_point(lmo2, zeros(n)) #rand(n)
     # Find initial feasible point for `lmo2`
     x02 = FrankWolfe.compute_extreme_point(lmo1, zeros(n))
-    
+    x0 = (x01, x02)
+
     # Run algorithm
     x, v, primal, dual_gap, _, trajectory_data = FrankWolfe.alternating_linear_minimization(    
-        # TODO: check (https://zib-iol.github.io/FrankWolfe.jl/dev/examples/docs_10_alternating_methods/)
-        #       I don't understand why there's a "FrankWolfe.block_coordinate_frank_wolfe" in the "Running Alternating Linear Minimization" example
-        #       Also, on the same webgpage I read: "As an alternative to Block-Coordiante Frank-Wolfe (BCFW), one can also run alternating linear minimization with standard Frank-Wolfe algorithm. 
-        #       These methods perform then the full (simulatenous) update at each iteration. In this example we also use FrankWolfe.away_frank_wolfe.". Should I use that?
+        # Check (https://zib-iol.github.io/FrankWolfe.jl/dev/examples/docs_10_alternating_methods/): performing a full (simulatenous) BPCG update at each iteration, 
+        #   by running `alternating_linear_minimization` with `blended_pairwise_conditional_gradient` inside
         FrankWolfe.blended_pairwise_conditional_gradient,
         f,
         grad!,
-        lmo, # TODO: should I use "lmos"? check (https://zib-iol.github.io/FrankWolfe.jl/dev/examples/docs_10_alternating_methods/)
-        p0, 
-        x0,
-        update_order=FrankWolfe.FullUpdate(),
+        lmos,
+        x0,  
         epsilon=target_tolerance,
         max_iteration=k,
         #lazy=true, 
-        line_search=FrankWolfe.Adaptive(L_est=L),  #FrankWolfe.Shortstep(one(T))
+        line_search=FrankWolfe.Shortstep(one(Int)),
         print_iter=k / 10,
         memory_mode=FrankWolfe.InplaceEmphasis(),
         verbose=true,
@@ -55,11 +50,7 @@ function runExperiment()
     );
     
     push!(trajectories, trajectory_data)
-    plot_trajectories(trajectories, labels, xscalelog=true)
+    #plot_trajectories(trajectories, labels, xscalelog=true)
 end
-
-
-
-
 
 end # module
