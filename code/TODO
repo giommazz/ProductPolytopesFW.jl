@@ -4,3 +4,11 @@ TODO list:
 - decide which polytopes to run experiments over
 - talk to Elias/Jannis/Dominik: check if the code is doing exactly what I need (running BPCG over Cartesian product of several polytopes)
 - talk to Elias/Jannis/Dominik: understand if the code can be improved 
+
+
+
+- 2l-1 norms. try intersect them, try not to intersect them. have them each one face that aligns, then rotate them a bit
+- see page rank code on zib gitlab
+- to show linear rates, in the plots you want: time in logarithm (look at one of the papers that have linear rates)
+- rotate them
+- plot, iterations, frank wolfe gap, primal gap, 
