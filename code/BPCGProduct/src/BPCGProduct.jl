@@ -1,38 +1,41 @@
 module BPCGProduct
 using FrankWolfe
 
-TODO: RIVEEDI LA FUNZIONE E COME ACCEDE AI DIVERSI BLOCCHI, POI FAI LO STESSO PER IL GRADIENTE
-
 # Function to compute the pairwise distance objective
 function objective_function(x, k, n)
     sum_dist = 0.0
     for i in 1:k    
         for j in i+1:k
-            xi = x[(i-1)*n+1:i*n]
-            xj = x[(j-1)*n+1:j*n]
+            xi = x[i]
+            xj = x[j]
             curr = sum((xi - xj).^2)
-            println("°°°°°°°°°°°°°°°°°°°", x_i, x_j, curr)
             sum_dist += curr
         end
     end
     return 0.5 * sum_dist
 end
 
-# Gradient computation
+# Gradient computation for tuple of vectors
 function gradient!(storage, x, k, n)
-    fill!(storage, 0.0)  # Reset storage
+    # Reset storage for each vector to zero vectors
     for i in 1:k
-        xi_index = (i-1)*n+1:i*n
-        xi = x[xi_index]
+        storage[i] .= zeros(n)  # Reset each vector in storage to zeros
+    end
+
+    # Calculate the gradient according to the corrected formula
+    for i in 1:k
+        sum_terms = zeros(n)  # This will hold the sum of x_j terms
         for j in 1:k
             if i != j
-                xj_index = (j-1)*n+1:j*n
-                xj = x[xj_index]
-                storage[xi_index] .+= (xi - xj)
+                sum_terms .+= x[j]
             end
         end
+        # Applying the gradient formula with the 1/2 factor included
+        storage[i] .= 0.5 * ((k-1) * x[i] - sum_terms)
     end
 end
+
+
 
 # Setup Linear Minimization Oracles for the polytopes
 function setup_lmos(n)
@@ -49,7 +52,6 @@ end
 # Initialize feasible points for each polytope
 function initialize_points(lmos, n)
     starting_point =  tuple([FrankWolfe.compute_extreme_point(lmo, zeros(n)) for lmo in lmos]...)
-    println("°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°", starting_point)
     return starting_point
 end
 
