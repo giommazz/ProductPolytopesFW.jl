@@ -26,15 +26,37 @@ end
 
 # Gradient computation for tuple of vectors
 function grad!(storage, x)
+    println("°°°°°°°° storage (of type $(typeof(storage))): ", storage, typeof(storage))
+    println("°°°°°°°°x (of type $(typeof(x))): ", x)
     for i = 1:k
+        println("°°°°°°°° xᵢ (of type $(typeof(x.blocks[i]))): ", x.blocks[i])
         sum_terms = zeros(n)
         for j = 1:k
+            println("°°°°°°°° xᵢ (of type $(typeof(x.blocks[j]))): ", x.blocks[j])
             if i != j
                 sum_terms .+= x.blocks[j]
             end
         end
         storage.blocks[i] .= 0.5 * ((k-1) * x.blocks[i] - sum_terms)
     end
+end
+
+
+function create_block_vector(lmos)
+    # Define the ProductLMO
+    prod_lmo = FrankWolfe.ProductLMO(lmos)
+    
+    # Compute extreme points for each LMO in the ProductLMO
+    extreme_points = [FrankWolfe.compute_extreme_point(lmo, zeros(n)) for lmo in lmos]
+    
+    # Prepare sizes for the BlockVector
+    block_sizes = fill((n,), length(lmos))
+    total_size = sum([size[1] for size in block_sizes])  # Calculate total size
+
+    # Create the BlockVector (FrankWolfe.BlockVector{Float64, Vector{Float64}, Tuple{Int64}})
+    x0 = FrankWolfe.BlockVector(extreme_points, block_sizes, total_size)
+    
+    return x0
 end
 
 # Run ALM
@@ -88,14 +110,19 @@ function main()
 	# Setup Linear Minimization Oracles for the polytopes
     lmo1 = FrankWolfe.ProbabilitySimplexOracle(1.0)
     lmo2 = FrankWolfe.ProbabilitySimplexOracle(12.0)
-    lmo3 = FrankWolfe.ScaledBoundLInfNormBall(-ones(n), zeros(n))
+    lmo3 = FrankWolfe.ScaledBoundLInfNormBall(-ones(n), ones(n))
 
     lmos = (lmo1, lmo2, lmo3)
     prod_lmo = FrankWolfe.ProductLMO(lmos)
 
+    # TODO: CHECK src/alternating_linear_minimization FrankWolfe.jl
     x0 = FrankWolfe.BlockVector([-ones(n), [i == 1 ? 1 : 0 for i in 1:n]], fill((n,), k), k * n)
-    # src/alternating_linear_minimization FrankWolfe.jl
-    #x0 = compute_extreme_point(FrankWolfe.ProductLMO(lmos), tuple(fill(zeros(n), k)...))
+    #x1 = compute_extreme_point(FrankWolfe.ProductLMO(lmos), tuple(fill(zeros(n), k)...))
+    x0 = create_block_vector(lmos)
+    println("°°°°°°°° x₀ (type $(typeof(x0))): ", x0)
+    #println("°°°°°°°° x₁ (type $(typeof(x1))): ", x1)
+    readline()
+
     #x0 = tuple([FrankWolfe.compute_extreme_point(lmo, zeros(n)) for lmo in lmos]...)
 
     # Run BPCG: FrankWolfe.blended_pairwise_conditional_gradient, 
