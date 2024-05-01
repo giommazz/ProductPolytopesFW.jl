@@ -1,15 +1,29 @@
-module test
+module BPCGProduct
 using FrankWolfe
+using Plots
+using Random
 
+include(joinpath(dirname(pathof(FrankWolfe)), "../examples/plot_utils.jl"))
+
+# Number of polytopes
 k = 2
-n = 5000
+# Dimension of the subspace in which each polytope lies
+n = 1000
+# epsilon-optimality threshold
 target_tolerance = 1e-9
+# Number of FW iterations
 max_iterations = 500000
 # REMINDER FOR EXPERIMENTS: 
 # 1) INCREASE precision
 # 2) INCREASE N. OF MAX ITERATIONS SO THAT EVEN SUBLINEAR ALGO CONVERGES.
 # 3) WITH THESE TWO, YOU CAN SHOW THAT TO REACH COVERGENCE BPCG IS FASTER 
 
+function generate_rand_float_vector(lb=0, ub=100, seed=42)
+    # Set the seed for reproducibility
+    Random.seed!(seed)
+    # Generate random Float64 in [a, b]
+    return lb .+ (ub - lb) .* rand(Float64, n)
+end
 
 # Function to compute the pairwise distance objective
 function f(x)
@@ -128,19 +142,21 @@ function main()
 
     # Polytopes LMOs (https://github.com/ZIB-IOL/FrankWolfe.jl/blob/97a599c029a054aab6a5574d9bed8d48e0f9fb01/src/polytope_oracles.jl#L4)
 	# Setup Linear Minimization Oracles for the polytopes
-    lmo1 = FrankWolfe.ProbabilitySimplexOracle(1.0)
-    lmo2 = FrankWolfe.ProbabilitySimplexOracle(123.0)
-    # lmo3 = FrankWolfe.ProbabilitySimplexOracle(123.0)
-    # lmo4 = FrankWolfe.ProbabilitySimplexOracle(123.0)
-    # lmo5 = FrankWolfe.ProbabilitySimplexOracle(123.0)
-    # lmo6 = FrankWolfe.ScaledBoundLInfNormBall(-ones(n), ones(n))
-    # lmo7 = FrankWolfe.ScaledBoundLInfNormBall(-ones(n), ones(n))
-    # lmo8 = FrankWolfe.ScaledBoundLInfNormBall(-ones(n), ones(n))
-    # lmo9 = FrankWolfe.ScaledBoundLInfNormBall(-ones(n), ones(n))
-    # lmo10 = FrankWolfe.ScaledBoundLInfNormBall(-ones(n), ones(n))
+    # lmo1 = FrankWolfe.ProbabilitySimplexOracle(11.0)                  # Probability simplex with given radius
+    # bounds = generate_rand_float_vector()
+    # lmo1 = FrankWolfe.ScaledBoundLInfNormBall(-ones(n), ones(n))      # ℓ∞-norm ball 
+    # lmo2 = FrankWolfe.ScaledBoundLInfNormBall(-bounds, bounds)        # scaled ℓ∞-norm ball
+    # lmo1 = FrankWolfe.ScaledBoundL1NormBall(-ones(n), ones(n))        # ℓ₁-norm ball 
+    # lmo2 = FrankWolfe.ScaledBoundL1NormBall(-bounds, bounds)          # scaled ℓ₁-norm ball 
+    # lmo3 = FrankWolfe.ScaledBoundL1NormBall(-44*bounds, 5*bounds)     # scaled ℓ₁-norm ball 
+    lmo1 = FrankWolfe.BirkhoffPolytopeLMO()
+    lmo2 = FrankWolfe.BirkhoffPolytopeLMO()
 
     prod_lmo = create_product_lmo([lmo1, lmo2])
+    println("°°°°°°°°°°°°°°°°", prod_lmo.lmos)
     x0 = find_starting_point(prod_lmo)
+
+    trajectories = []
 
     # Block-coordinate vanilla FW
     println("\n\n\n---------------------------------------------------------")
@@ -159,6 +175,8 @@ function main()
     println("Run Blended Pairwise Conditional Gradient over the full product LMO")
     println("---------------------------------------------------------")
     bpcg_trajectories = run_FW(prod_lmo, x0, k, n, target_tolerance, max_iterations)
+
+    #plot_trajectories([bc_fw_trajectories, bc_fw_trajectories, bpcg_trajectories], ["BC-FW", "BC-BPCG", "Full domain BPCG"], xscalelog=true)
 end
 
 end # module BPCGProduct
