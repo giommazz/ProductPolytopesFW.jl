@@ -1,3 +1,4 @@
+# `config.jl`
 struct Config
     # Number of polytopes
     k::Int

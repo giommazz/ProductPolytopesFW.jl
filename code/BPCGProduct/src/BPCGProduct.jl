@@ -1,3 +1,4 @@
+# `BPCGProduct.jl`
 module BPCGProduct
     using FrankWolfe
     using Plots
@@ -15,7 +16,7 @@ module BPCGProduct
     include("config.jl")
 
     # From `objective_functions.jl`
-    export f, grad!
+    export objective, gradient!
     # From `lmos.jl`
     export create_product_lmo, find_starting_point
     # From `fw_algorithms.jl`

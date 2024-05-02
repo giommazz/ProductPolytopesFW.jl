@@ -1,16 +1,12 @@
-function unique_combinations(list, k)
+# `utils.jl`
+function unique_combinations(list, config)
     # Generate all unique combinations of length k
-    combos = combinations(list, k)
-    # Include repeated element combinations
-    repeated_combos = [fill(entry, k) for entry in list]
-    # Concatenate and return unique combinations
-    unique_combos = vcat(collect(combos), repeated_combos)
-    return unique_combos
+    return collect(combinations(list, config.k))
 end
 
-function generate_rand_float_vector(lb=0, ub=100, seed=42)
+function generate_rand_float_vector(config, lb=0, ub=100, seed=42)
     # Set the seed for reproducibility
-    Random.seed!(seed)
+    Random.seed!(config.seed)
     # Generate random Float64 in [a, b]
-    return lb .+ (ub - lb) .* rand(Float64, n)
+    return lb .+ (ub - lb) .* rand(Float64, config.n)
 end
