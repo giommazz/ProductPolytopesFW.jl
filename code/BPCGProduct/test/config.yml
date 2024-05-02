@@ -1,0 +1,13 @@
+# ***************************
+#   User parameters
+# ***************************
+# Number of polytopes
+k: 2
+# Dimension of the subspace in which each polytope lies
+n: 1000
+# epsilon-optimality threshold
+target_tolerance: 1e-9
+# Number of FW iterations
+max_iterations: 500000
+# Set the seed for reproducibility
+seed: 42
