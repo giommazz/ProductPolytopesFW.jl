@@ -2,9 +2,9 @@
 #   User parameters
 # ***************************
 # Number of polytopes
-k: 5
+k: 2
 # Dimension of the subspace in which each polytope lies
-n: 50
+n: 2
 # epsilon-optimality threshold
 target_tolerance: 1e-9
 # Number of FW iterations

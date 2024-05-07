@@ -5,7 +5,13 @@ module BPCGProduct
     using Random
     using Combinatorics
     using YAML
-
+    using JuMP
+    using LinearAlgebra
+    using Plots
+    using MathOptInterface
+    using CDDLib
+    using Polyhedra
+    using Makie
 
     include(joinpath(dirname(pathof(FrankWolfe)), "../examples/plot_utils.jl"))
 
@@ -14,6 +20,7 @@ module BPCGProduct
     include("fw_algorithms.jl")
     include("utils.jl")
     include("config.jl")
+    include("polytopes.jl")
 
     # From `objective_functions.jl`
     export objective, gradient!
@@ -25,6 +32,9 @@ module BPCGProduct
     export unique_combinations, generate_rand_float_vector
     # From `config.jl`
     export Config
-
+    # From `polytopes.jl`
+    export generate_polytope, generate_pyramid_polytope, plot_polytope_2d
+    # From `Polyhedra`
+    export polyhedron
 
 end # module BPCGProduct
