@@ -3,6 +3,8 @@ TODO list:
 - understand how to plot stuff: #plot_trajectories([bpcg_trajectories, alm_trajectories], ["BPCG", "ALM"], xscalelog=true)
 - decide which polytopes to run experiments over
 - talk to Elias/Jannis/Dominik: check if the code is doing exactly what I need (running BPCG over Cartesian product of several polytopes)
+- IMPLEMENT ALTERNATING PROJECTIONS
+
 
 - try spectrahedron
 
@@ -11,3 +13,13 @@ TODO list:
 - to show linear rates, in the plots you want: time in logarithm (look at one of the papers that have linear rates)
 - rotate them
 - plot, iterations, frank wolfe gap, primal gap, 
+
+1) rotations
+2) check intersecting sets and non intersecting sets --> 
+    a) generate polytope A randomly, this in high enough dimensions will probably look like a ball
+    b) generate another polytope B (maybe like a pyramid or something pointy) and take a vertex x from inside A, possibly close to the "surface"
+        of the ball-looking polytope: the pointy vertex from B and x must coincide    
+3) print lmo characteristics on logs
+4) iterations, dual gap, function over time, time
+5) ask mathieu about BPCG differences w(block coordinate)
+6) comparison with BC: you can find a point in the intersection using our method: see COLT paper

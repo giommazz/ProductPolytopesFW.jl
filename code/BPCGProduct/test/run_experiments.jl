@@ -23,7 +23,7 @@ function main(config)
     lmo_onenormball_3 = FrankWolfe.ScaledBoundL1NormBall(-bounds, bounds)                       # scaled ℓ₁-norm ball 
     
     #lmos = [lmo_probsmplx_1, lmo_probsmplx_2, lmo_probsmplx_3, lmo_infnormball_1, lmo_infnormball_2, lmo_onenormball_1, lmo_onenormball_2, lmo_onenormball_3]
-    lmo_list = [lmo_probsmplx_1, lmo_probsmplx_3, lmo_infnormball_3, lmo_onenormball_2]
+    lmo_list = [lmo_probsmplx_1, lmo_probsmplx_3, lmo_infnormball_1, lmo_infnormball_3, lmo_onenormball_2, lmo_onenormball_3]
     lmo_products = unique_combinations(lmo_list, config)
     
     for lmos in lmo_products
@@ -37,19 +37,19 @@ function main(config)
         x0 = find_starting_point(prod_lmo, config)
 
         # Block-coordinate vanilla FW
-        println("\n\n\n ----------> Block-coordinate vanilla FW")
+        println("\n\n\n ----------> Cyclic Block-coordinate vanilla FW")
         bc_fw_trajectories = run_FW(FrankWolfe.CyclicUpdate(), prod_lmo, x0, config)
 
         # Block-coordinate BPCG
-        println("\n\n\n ----------> Block-coordinate BPCG")
+        println("\n\n\n ----------> Cyclic Block-coordinate BPCG")
         bc_bpcg_trajectories = run_FW(FrankWolfe.CyclicUpdate(), FrankWolfe.BPCGStep(), prod_lmo, x0, config)
         
         # TODO: TRY THIS! THIS SHOULD BE THE SAME AS CALLING FW.BPCG. IF NOT, SOMETHING IS WRONG
-        println("\n\n\n ----------> Block-coordinate BPCG over FULL product (i.e., BC with full BPCG updates)")
+        println("\n\n\n ----------> Full Block-coordinate BPCG")
         bpcg_trajectories = run_FW(FrankWolfe.FullUpdate(), FrankWolfe.BPCGStep(), prod_lmo, x0, config)
 
         # BPCG over full product LMO
-        println("\n\n\n ----------> BPCG over full product LMO")
+        println("\n\n\n ----------> BPCG")
         bpcg_trajectories = run_FW(prod_lmo, x0, config)
 
         #plot_trajectories([bc_fw_trajectories, bc_fw_trajectories, bpcg_trajectories], ["BC-FW", "BC-BPCG", "Full domain BPCG"], xscalelog=true)
