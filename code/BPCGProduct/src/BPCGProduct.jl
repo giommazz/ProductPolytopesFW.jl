@@ -1,19 +1,20 @@
 # `BPCGProduct.jl`
 module BPCGProduct
     using FrankWolfe
-    using Plots
+    # using Plots           # Plotting utilities needed to run FrankWolfe/plot_utils.jl
     using Random
     using Combinatorics
     using YAML
     using JuMP
     using LinearAlgebra
-    using Plots
     using MathOptInterface
     using CDDLib
     using Polyhedra
     using Makie
+    using GLMakie
 
-    include(joinpath(dirname(pathof(FrankWolfe)), "../examples/plot_utils.jl"))
+    # Plotting utilities needed to run FrankWolfe/plot_utils.jl
+    # include(joinpath(dirname(pathof(FrankWolfe)), "../examples/plot_utils.jl"))
 
     include("objective_functions.jl")
     include("lmos.jl")
@@ -33,8 +34,6 @@ module BPCGProduct
     # From `config.jl`
     export Config
     # From `polytopes.jl`
-    export generate_polytope, generate_pyramid_polytope, plot_polytope_2d
-    # From `Polyhedra`
-    export polyhedron
+    export generate_polytope, generate_pyramid_polytope, polytope_from_jump
 
 end # module BPCGProduct
