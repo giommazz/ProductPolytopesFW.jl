@@ -12,13 +12,14 @@ module BPCGProduct
     using Polyhedra
     using Makie
     using GLMakie
+    using GLPK
 
     # Plotting utilities needed to run FrankWolfe/plot_utils.jl
     # include(joinpath(dirname(pathof(FrankWolfe)), "../examples/plot_utils.jl"))
 
     include("objective_functions.jl")
-    include("lmos.jl")
-    include("fw_algorithms.jl")
+    include("lmo_utils.jl")
+    include("product_algorithms.jl")
     include("utils.jl")
     include("config.jl")
     include("polytopes.jl")
@@ -34,6 +35,6 @@ module BPCGProduct
     # From `config.jl`
     export Config
     # From `polytopes.jl`
-    export generate_polytope, generate_pyramid_polytope, polytope_from_jump
+    export generate_polytope, find_vertex_in_polytope, generate_simplex, setup_translated_polytope_B
 
 end # module BPCGProduct

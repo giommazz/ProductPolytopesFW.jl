@@ -1,10 +1,11 @@
 # `polytopes.jl`
 const MOI = MathOptInterface
 
+# GENERATING RANDOM INTEGER NUMBERS
 # (Multiple Dispatch) Generate a random convex polytope A in ℝⁿ with m constraints
 function generate_polytope(m, config)
     Random.seed!(config.seed)
-    model_A = Model()
+    model_A = Model(GLPK.Optimizer)
     @variable(model_A, x[1:config.n] ≥ 0)  # Variable representing the polytope
 
     # Generate random integer coefficients for matrix A and vector b
@@ -15,25 +16,82 @@ function generate_polytope(m, config)
     for i in 1:m
         @constraint(model_A, dot(A[i, :], x) ≤ b[i])
     end
-    return model_A, x
+    return model_A, x, A, b
 end
-# (Multiple Dispatch) Generate a pyramid-like polytope B in ℝⁿ    
-function generate_polytope(config)
-    Random.seed!(config.seed)
-    model_B = Model()
-    @variable(model_B, x[1:config.n])  # Variable representing the polytope
+# Solve for a vertex of polytope A by maximizing an objective function
+function find_vertex_in_polytope(model_A, x, direction)
+    @objective(model_A, Max, dot(direction, x))
+    optimize!(model_A)
+    return value.(x)
+end
+# Generate a simplex-like pointy polytope in R^n
+function generate_simplex(config)
+    model = Model()
+    @variable(model, x[1:config.n])  # Variable representing the polytope
 
-    # Tip of the pyramid (random integer coefficient)
-    @constraint(model_B, x[1] ≥ rand(0:10))
-
-    # Base constraints for the pyramid
-    for i in 2:config.n
-        @constraint(model_B, x[i] ≥ -rand(1:10) * x[1])
-        @constraint(model_B, x[i] ≤ rand(1:10) * x[1])
+    # Define n+1 constraints representing a regular simplex
+    for i in 1:config.n
+        @constraint(model, x[i] >= 0)
     end
-    return model_B, x
+
+    @constraint(model, sum(x) <= 1)
+
+    return model, x
 end
 
+
+function setup_translated_polytope_B(config, vertex_A)
+    model_B, x_B = generate_simplex(config)
+
+    # Apply translation to polytope B (shift constraints)
+    translated_constraints = @variable(model_B, translated_x[1:config.n])
+
+    for i in 1:config.n
+        @constraint(model_B, translated_x[i] == x_B[i] + vertex_A[i])
+    end
+
+    return model_B, translated_constraints
+end
+
+
+
+
+
+# Generate a shifted simplex-like polytope in R^n
+function generate_shifted_simplex_polytope(config, offset)
+    model = Model()
+    @variable(model, x[1:config.n])  # Variables representing the polytope
+
+    # 1. Create the shifted variables explicitly using an indexed for loop and applying an offset to each
+    # x_shifted = [@variable(model, x[i] + offset[i]) for i in 1:config.n]
+    # 2. Apply an offset to all variables
+    # @expression(model, x_shifted[i in 1:config.n] == x[i] + offset[i])
+
+    # 3.1. Create new variables shifted by the provided offset
+    x_shifted = [@variable(model) for _ in 1:config.n]
+    
+    println("°°°°°°°°°°°°°°°°°°°°°°°", offset)
+
+    # 3.2. Apply an offset to all shifted variables through constraints
+    for i in 1:config.n
+        @constraint(model, x_shifted[i] == x[i] + offset[i])
+    end
+
+    # Define n+1 constraints representing a regular simplex
+    for i in 1:config.n
+        @constraint(model, x_shifted[i] >= 0)
+    end
+
+    @constraint(model, sum(x_shifted) <= 1)
+    println("°°°°°°°°°°°°°°°°°°°°°°°", x)
+    println("°°°°°°°°°°°°°°°°°°°°°°°", x_shifted)
+    return model, x
+end
+
+
+
+
+# GENERATING RANDOM FLOAT NUMBERS
 # # (Multiple Dispatch) Generate a random convex polytope A in ℝⁿ with m constraints
 # function generate_polytope(m, config)
 #     Random.seed!(config.seed)
@@ -76,30 +134,14 @@ function polytope_from_jump(model)
     return polytope, fig
 end
 
-# # Function to plot a 2D polytope defined by constraints in a JuMP model
-# function plot_polytope_2d(model::Model, x_vars)
-#     # Retrieve constraints with AffExpr functions and LessThan set types
-#     less_than_constraints = all_constraints(model, AffExpr, MOI.LessThan{Float64})
 
-#     # Initialize a plot with axis limits for visualization
-#     plot(title="2D Polytope", xlim=(-2, 2), ylim=(-2, 2), legend=false)
-
-#     # Iterate through the retrieved constraints and plot them
-#     for constraint in less_than_constraints
-#         expr = constraint.func
-#         d = constraint.set.upper
-
-#         # Extract coefficients from the affine expression (dot product)
-#         c = JuMP.coefficients(expr, x_vars)
-
-#         # Check if the equation has non-zero coefficients for plotting
-#         if length(c) == 2 && c[2] != 0
-#             # Rearrange to y = mx + c
-#             m = -c[1] / c[2]
-#             intercept = d / c[2]
-#             plot!(x -> m * x + intercept, label=false)
-#         end
-#     end
-
-#     display(plot)
-# end
+TODO: 
+- decide n-dimensional box A
+- decide another n-dimensional box B, such that the two boxes don't intersect
+- generate m vertices in A, and compute convex hull with Polyhedra.jl --> obtain polytope X
+- do the same with B --> obtain polytope Y
+- transform X into JuMP
+- optimize in random direction d over X -> x1
+- optimize in direction -d over Y -> y1
+- now take each vertex of Y and move it in the direction x1 - y1. so for each vertex y in Y: do y += x1 - y1
+- now the two polytopes touch in at least one point and the intersection is not empty

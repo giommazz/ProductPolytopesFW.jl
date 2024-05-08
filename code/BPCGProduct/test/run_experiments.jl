@@ -11,19 +11,19 @@ function main(config)
 
     # Polytopes LMOs (https://github.com/ZIB-IOL/FrankWolfe.jl/blob/97a599c029a054aab6a5574d9bed8d48e0f9fb01/src/polytope_oracles.jl#L4)
     # Setup Linear Minimization Oracles for the polytopes
-    lmo_probsmplx_1 = FrankWolfe.ProbabilitySimplexOracle(200.0)                    # Probability simplex with given radius
+    lmo_probsmplx_1 = FrankWolfe.ProbabilitySimplexOracle(5.0)                    # Probability simplex with given radius
     lmo_probsmplx_2 = FrankWolfe.ProbabilitySimplexOracle(1.0)                      # Probability simplex with given radius
     lmo_probsmplx_3 = FrankWolfe.ProbabilitySimplexOracle(50.0)                     # Probability simplex with given radius
     bounds = generate_rand_float_vector(config)
     lmo_infnormball_1 = FrankWolfe.ScaledBoundLInfNormBall(-ones(config.n), ones(config.n))     # ℓ∞-norm ball
     lmo_infnormball_2 = FrankWolfe.ScaledBoundLInfNormBall(-bounds, bounds)                     # scaled ℓ∞-norm ball
     lmo_infnormball_3 = FrankWolfe.ScaledBoundLInfNormBall(bounds, 5*bounds)                     # scaled ℓ∞-norm ball
-    lmo_onenormball_1 = FrankWolfe.ScaledBoundL1NormBall(-ones(config.n), ones(config.n))       # ℓ₁-norm ball
+    lmo_onenormball_1 = FrankWolfe.ScaledBoundL1NormBall(6*ones(config.n), 15*ones(config.n))       # ℓ₁-norm ball
     lmo_onenormball_2 = FrankWolfe.ScaledBoundL1NormBall(bounds, 50*bounds)                      # scaled ℓ₁-norm ball
     lmo_onenormball_3 = FrankWolfe.ScaledBoundL1NormBall(-bounds, bounds)                       # scaled ℓ₁-norm ball 
     
-    #lmos = [lmo_probsmplx_1, lmo_probsmplx_2, lmo_probsmplx_3, lmo_infnormball_1, lmo_infnormball_2, lmo_onenormball_1, lmo_onenormball_2, lmo_onenormball_3]
-    lmo_list = [lmo_probsmplx_1, lmo_probsmplx_3, lmo_infnormball_1, lmo_infnormball_3, lmo_onenormball_2, lmo_onenormball_3]
+    #lmo_list = [lmo_probsmplx_1, lmo_probsmplx_3, lmo_infnormball_1, lmo_infnormball_3, lmo_onenormball_2, lmo_onenormball_3]
+    lmo_list = [lmo_probsmplx_1, lmo_onenormball_1]
     lmo_products = unique_combinations(lmo_list, config)
     
     for lmos in lmo_products
