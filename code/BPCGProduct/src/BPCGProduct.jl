@@ -1,7 +1,7 @@
 # `BPCGProduct.jl`
 module BPCGProduct
     using FrankWolfe
-    # using Plots           # Plotting utilities needed to run FrankWolfe/plot_utils.jl
+    using Plots           # Plotting utilities needed to run FrankWolfe/plot_utils.jl
     using Random
     using Combinatorics
     using YAML
@@ -10,8 +10,6 @@ module BPCGProduct
     using MathOptInterface
     using CDDLib
     using Polyhedra
-    using Makie
-    using GLMakie
     using GLPK
 
     # Plotting utilities needed to run FrankWolfe/plot_utils.jl
@@ -35,6 +33,6 @@ module BPCGProduct
     # From `config.jl`
     export Config
     # From `polytopes.jl`
-    export generate_polytope, find_vertex_in_polytope, generate_simplex, setup_translated_polytope_B
+    export closest_pair, intersect_polytopes, generate_polytope, generate_non_intersecting_bounds, plot_polytopes
 
 end # module BPCGProduct

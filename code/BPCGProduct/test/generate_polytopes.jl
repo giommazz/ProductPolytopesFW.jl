@@ -1,27 +1,50 @@
 # `generate_polytopes.jl`
 using BPCGProduct
+using BPCGProduct: Polyhedra
 
 config = Config("test/config.yml") # Use parameters from YAML file
 
+# Main function to generate and move polytopes
 function main(config)
-    model_A, x_A, _, _ = generate_polytope(2, config)
-    println(model_A)
-    direction = [rand(-1.0:1.0) for _ in 1:config.n]
-    
-    # Define a direction to find a vertex
-    println(direction)
-    
-    # Find a vertex inside polytope A
-    vertex_A = find_vertex_in_polytope(model_A, x_A, direction)
-    vertex_B = find_vertex_in_polytope(model_A, x_A, -direction)
-    println("Vertex in Polytope A:", vertex_A)
-    println("Opposite Vertex in Polytope A:", vertex_B)
+    # Number of points for each polytope
+    n_points = [4, 7]
 
-    model_B, translated_x_B = setup_translated_polytope_B(config, vertex_A)
-    println(model_B)
-    println(translated_x_B)
+    # Generate random, non-intersecting bounds
+    bounds_list = generate_non_intersecting_bounds(config)
 
-    #poly, fig = polytope_from_jump(m1)
+    # Initialize empty lists for vertices, polytopes, and intersecting polytopes
+    vertices = Vector{Matrix{Float64}}()
+    polytopes = Vector{Polyhedra.Polyhedron}()
+    intersecting_polytopes = Vector{Polyhedra.Polyhedron}()
+
+    # Generate k polytopes within the specified bounds
+    for i in 1:config.k
+        # Generate vertices and corresponding polytope
+        verts, poly = generate_polytope(config, n_points[i], bounds_list[i])
+        
+        # Append to `vertices` and `polytopes`
+        push!(vertices, verts)
+        push!(polytopes, poly)
+    end
+
+    # Add first polytope to `intersecting_polytopes`
+    push!(intersecting_polytopes, polytopes[1])
+
+    # Move each subsequent polytope to intersect with the first one
+    for i in 2:config.k
+        # Move iᵗʰ polytope so that it intersects with first one
+        intersecting_polytope = intersect_polytopes(config, vertices[1], vertices[i], polytopes[i])
+        # Append to the list of intersecting polytopes
+        push!(intersecting_polytopes, intersecting_polytope)
+    end
+
+    for i in 1:config.k
+        println(intersecting_polytopes[i])
+    end
+
+    println(Polyhedra.npoints(intersect(intersecting_polytopes[1], intersecting_polytopes[2])))
+
+    #plot_polytopes(intersecting_polytopes)
 end
 
 main(config)

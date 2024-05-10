@@ -10,4 +10,4 @@ target_tolerance: 1e-9
 # Number of FW iterations
 max_iterations: 1000000
 # Set the seed for reproducibility
-seed: 42
+seed: 4
