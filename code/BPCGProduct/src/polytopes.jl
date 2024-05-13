@@ -25,20 +25,20 @@ function generate_non_intersecting_bounds(config::Config; margin::Float64 = 1.0)
 end
 
 # Function to generate a random matrix with bounds for each column
-function generate_polytope(config::Config, n_points::Int, bounds::Vector{Tuple{Float64, Float64}})
+function generate_polytope(config::Config, points::Int, bounds::Vector{Tuple{Float64, Float64}})
     # Check that the number of columns specified in `config.n` matches the length of `bounds`
     if config.n != length(bounds)
         error("Mismatch: The number of columns in `config` (config.n = $(config.n)) must match the number of elements in `bounds` (length = $(length(bounds))).")
     end
 
     # Initialize a matrix of zeros with the given number of points (rows) and columns
-    vertices = zeros(Float64, n_points, config.n)
+    vertices = zeros(Float64, points, config.n)
 
     # Fill each column based on the specified bounds
     for j in 1:config.n
         lower_bound, upper_bound = bounds[j]
         # Generate random numbers within the given bounds
-        vertices[:, j] = lower_bound .+ (upper_bound - lower_bound) .* rand(Float64, n_points)
+        vertices[:, j] = lower_bound .+ (upper_bound - lower_bound) .* rand(Float64, points)
     end
     # Generate polytope as convex hull of given vertices
     poly = polyhedron(vrep(vertices), CDDLib.Library())
@@ -104,49 +104,52 @@ function closest_pair(config::Config, v::Vector, V2::Matrix)
     # Retrieve the closest point
     v2_closest = V2[closest_index, :]
 
-    return _, v2_closest, min_dist
+    return v2_closest, min_dist
 end
 
 # Function to intersect two polytopes, moving the second onto the closest vertex of the first
 function intersect_polytopes(config::Config, V1::Matrix{T}, V2::Matrix{T}, polytope_to_move::Polyhedron{T}) where T
     
     # Find the closest pair of points between the two sets of points
-    v1_closest, v2_closest, _ = closest_pair(config, V1, V2)
+    v1_closest, v2_closest, distance = closest_pair(config, V1, V2)
 
     # Create a translation vector (offset) from p_closest - q_closest
     direction = v1_closest - v2_closest
 
     # Create "fake" offset polytope
-    O = polyhedron(vrep([direction]), CDDLib.Library())
+    P = polyhedron(vrep([direction]), CDDLib.Library())
+    # Shift `polytope_to_move` along the offset
+    Pint = polytope_to_move + P
 
-    # Return translated polytope
-    return polytope_to_move + O
+    # Find vertices of `Pint` (`Polyhedron.ext` gives the V-representation of a polytope)
+    generators = Polyhedra.removevredundancy(Pint.ext, GLPK.Optimizer)
+    # Remove points that are not vertices of `Pint`
+    Polyhedra.removevredundancy!(Pint)
+
+    # Return translated polytope and other info
+    return Pint, generators, v1_closest, v2_closest, distance
 end
 # (Multiple Dispatch) Function to intersect two polytopes, moving the second unto a given vertex of the first
 function intersect_polytopes(config::Config, v::Vector, V2::Matrix{T}, polytope_to_move::Polyhedron{T}) where T
     
     # Find the closest pair of points between the two sets of points
-    _, v2_closest, _ = closest_pair(config, v, V2)
+    v2_closest, distance = closest_pair(config, v, V2)
 
     # Create a translation vector (offset) from p_closest - q_closest
     direction = v - v2_closest
 
     # Create "fake" offset polytope
-    O = polyhedron(vrep([direction]), CDDLib.Library())
+    P = polyhedron(vrep([direction]), CDDLib.Library())
+    # Shift `polytope_to_move` along the offset
+    Pint = polytope_to_move + P
+    
+    # Find vertices of `Pint` (`Polyhedron.ext` gives the V-representation of a polytope)
+    generators = Polyhedra.removevredundancy(Pint.ext, GLPK.Optimizer)
+    # Remove points that are not vertices of `Pint`
+    Polyhedra.removevredundancy!(Pint)
 
-    # Return translated polytope
-    return polytope_to_move + O
-end
-
-# Function to plot polytopes with random colors
-function plot_polytopes(polytopes::Vector{Polyhedra.Polyhedron})
-    for poly in polytopes
-        # Generate a random RGB color
-        random_color = RGB(rand(), rand(), rand())
-
-        # Plot the polytope with the random color
-        plot!(poly, color=random_color, alpha=0.6)
-    end
+    # Return translated polytope and other info
+    return Pint, generators, v2_closest, distance
 end
 
 # Function to generate a polytope with a given JuMP model
@@ -158,12 +161,87 @@ function polyhedra_to_jump(config::Config, polytope::Polyhedra.Polyhedron{T}) wh
     return model
 end
 
-"""
-TODO: 
-1) CHANGE INTERSECTION: THE THING YOU'RE DOING RIGHT NOW DOESN'T WORK FOR K >= 3 --> check"!
-2) use planar_hull and or remove redundancy!!!
-2) USE JUMP MODELS OF POLYTOPES INTO FRANKWOLFE.JL LMOS
-3) MAYBE GENERATE POLYTOPE SHOULD BE IN /SRC?
-4) MAYBE DECIDE NUMBER OF VERTICES OF EACH POLYTOPE IN CONFIG? OR GENERATE IT RANDOMLY AS SOMETHING >= N+1 INSIDE POLYTOPES.JL
-4) TRY IF EVERYTHING WORKS WITH BPCG
-"""
+# Main function to generate and move polytopes
+# `n_points` contains n. of vertices used to generate each polytope
+function generate_intersecting_polytopes(config)
+
+    println("Generating $(config.k) intersecting polytopes")
+    
+    # Generate random, non-intersecting bounds
+    bounds_list = generate_non_intersecting_bounds(config)
+
+    # Initialize empty lists for vertices, Polyhedra polytopes, and Polyhedra intersecting polytopes, JuMP intersecting polytopes
+    vertices = Vector{Matrix{Float64}}()
+    polytopes = Vector{Polyhedra.Polyhedron}()
+    intersecting_polytopes_polyhedra = Vector{Polyhedra.Polyhedron}()
+    intersecting_polytopes_jump = Vector{JuMP.Model}()
+
+    # Generate k polytopes within the specified bounds
+    for i in 1:config.k
+        # Generate vertices and corresponding polytope
+        verts, poly = generate_polytope(config, config.n_points[i], bounds_list[i])
+        
+        # Append to `vertices` and `polytopes`
+        push!(vertices, verts)
+        push!(polytopes, poly)
+    end
+
+    # Push P₁ to `intersecting_polytopes_polyhedra` and to `intersecting_polytopes_jump`
+    push!(intersecting_polytopes_polyhedra, polytopes[1])
+    push!(intersecting_polytopes_jump, polyhedra_to_jump(config, polytopes[1]))
+    
+    # Move P₂ towards P₁ so that they intersect (at least) in `v₁`
+    intersecting_polytope, _, v₁, _, distance = intersect_polytopes(config, vertices[1], vertices[2], polytopes[2])
+    push!(intersecting_polytopes_polyhedra, intersecting_polytope)
+    push!(intersecting_polytopes_jump, polyhedra_to_jump(config, intersecting_polytope))
+    intersection = Polyhedra.npoints(intersect(polytopes[1], intersecting_polytope))
+    println("Intersection of P[1] and P[2] contains $intersection points")
+    @assert intersection ≥ 1 "There must be at least one point in P₁ ∩ Pᵢ"
+    
+    # Move each subsequent polytope to intersect with the first one
+    for i in 3:config.k
+        # Move iᵗʰ polytope so that it intersects with the others (at least) in `v₁`
+        intersecting_polytope, _, _, distance = intersect_polytopes(config, v₁, vertices[i], polytopes[i])
+
+        # Append to list of intersecting polytopes
+        push!(intersecting_polytopes_polyhedra, intersecting_polytope)
+        push!(intersecting_polytopes_jump, polyhedra_to_jump(config, intersecting_polytope))
+        intersection = Polyhedra.npoints(intersect(polytopes[1], intersecting_polytope))
+        println("Intersection of P[1] and P[$i] contains $intersection points")
+        @assert intersection ≥ 1 "There must be at least one point in P₁ ∩ Pᵢ"
+    end
+end
+
+# for i in 1:config.k
+#     println("°°°°°°°°°°°°°°°°---------------------------------> [$i]")
+    
+#     println("\tVREP")
+#     for constraint in JuMP.list_of_constraint_types(intersecting_polytopes_jump[i])
+#         println("\t\tConstraint: $constraint")
+#     end
+#     println()
+#     println("\t\tall constraints: ", JuMP.all_constraints(intersecting_polytopes_jump[i]; include_variable_in_set_constraints = true))
+#     println("number of constraints: $(JuMP.num_constraints(intersecting_polytopes_jump[i]; count_variable_in_set_constraints = true))")
+#     println()   
+#     println()
+
+
+#     PP = Polyhedra.hrep(intersecting_polytopes_polyhedra[i])
+#     println("\tHREP")
+#     PPJ = polyhedra_to_jump(config, intersecting_polytopes_polyhedra[i])
+#     for constraint in JuMP.list_of_constraint_types(PPJ)
+#         println("\t\tConstraint: $constraint")
+#     end
+#     println()
+#     println("\t\tall constraints: ", JuMP.all_constraints(intersecting_polytopes_jump[i]; include_variable_in_set_constraints = true))
+#     println("number of constraints: $(JuMP.num_constraints(intersecting_polytopes_jump[i]; count_variable_in_set_constraints = true))")
+#     println()   
+#     println()
+#     readline()
+# end
+# TODO: 
+# 1) implement deeper intersection, by moving polytopes towards the average of convex hull vertices? Maybe use https://github.com/JuliaPolyhedra/Polyhedra.jl/blob/8c131a6cc883c541922a8b8efe835932e8b2593f/src/center.jl#L7
+# 2) also, implement distance function calculator, so we know the optimal solution
+
+# - USE JUMP MODELS OF POLYTOPES INTO FRANKWOLFE.JL LMOS
+# - TRY IF EVERYTHING WORKS WITH BPCG

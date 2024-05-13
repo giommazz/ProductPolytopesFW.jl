@@ -4,6 +4,8 @@ struct Config
     k::Int
     # Dimension of the subspace in which each polytope lies
     n::Int
+    # list of `k` integers, each indicating the n. of points to be used to generate intersecting polytopes 
+    n_points::Vector{Int}
     # epsilon-optimality threshold
     target_tolerance::Float64
     # Number of FW iterations
@@ -14,7 +16,7 @@ end
 
 # Constructor with default values
 function Config()
-    return Config(2, 2, 1e-6, 10000, 42)
+    return Config(2, 2, [5, 5], 1e-6, 10000, 42)
 end
 
 # Constructor from YAML file
@@ -25,7 +27,7 @@ function Config(yaml_file::String)
     # Validation checks (for YAML file dict)
     validate_config(config)
 
-    return Config(config["k"], config["n"], config["target_tolerance"], config["max_iterations"], config["seed"])
+    return Config(config["k"], config["n"], config["n_points"], config["target_tolerance"], config["max_iterations"], config["seed"])
 end
 
 # Validation checks (for YAML file dict)
@@ -38,6 +40,11 @@ function validate_config(config)
     # Check for `n`
     if typeof(config["n"]) != Int || config["n"] < 0
         error("Invalid value for 'n': must be a non-negative integer.")
+    end
+    
+    # Assuming 'config' is a dictionary and 'k' is a key in the dictionary
+    if typeof(config["n_points"]) != Vector{Int} || length(config["n_points"]) != config["k"]
+        error("Invalid configuration for 'n_points': must be a list of $(config["k"]) integers.")
     end
 
     # Check for `target_tolerance`
