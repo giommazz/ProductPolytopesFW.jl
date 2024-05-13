@@ -33,6 +33,6 @@ module BPCGProduct
     # From `config.jl`
     export Config
     # From `polytopes.jl`
-    export closest_pair, intersect_polytopes, generate_polytope, generate_non_intersecting_bounds, plot_polytopes
+    export intersect_polytopes, generate_polytope, generate_non_intersecting_bounds, polyhedra_to_jump
 
 end # module BPCGProduct
