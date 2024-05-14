@@ -175,7 +175,6 @@ function generate_intersecting_polytopes(config)
     polytopes = Vector{Polyhedra.Polyhedron}()
     intersecting_polytopes_polyhedra = Vector{Polyhedra.Polyhedron}()
     intersecting_polytopes_jump = Vector{JuMP.Model}()
-    min_distance = Float64
 
     # Generate k polytopes within the specified bounds
     for i in 1:config.k
@@ -212,40 +211,7 @@ function generate_intersecting_polytopes(config)
         @assert intersection ≥ 1 "There must be at least one point in P₁ ∩ Pᵢ"
     end
 
-    return vertices, polytopes, intersecting_polytopes_polyhedra, intersecting_polytopes_jump, min_distance
-end
-
-# Compute 1/2 ∑ᵢ₌₁ᵏ⁻¹∑ⱼ₌ᵢ₊₁ᵏ || xⁱ - xʲ ||₂²
-function compute_min_distance(config::Config, polytopes::Vector{Polyhedra.Polyhedron})
-    
-    min_dist = 0.0
-    
-    for i in 1:(config.k - 1)
-        for j in (i + 1):config.k
-            # TODO: USE min_distance_between_polytopes
-            min_dist += dist
-        end
-    end
-    
-    return 0.5 * min_dist_sum
-end
-
-# Function to formulate and solve the minimum distance problem
-function min_distance_between_polytopes(config::Config, poly1::Polyhedra.Polyhedron, poly2::Polyhedra.Polyhedron)
-    
-    model = Model(GLPK.Optimizer)
-    
-    @variable(model, p[1:config.n])
-    @variable(model, q[1:config.n])
-    
-    @constraint(model, p in poly1)
-    @constraint(model, q in poly2)
-    
-    @objective(model, Min, (1/2)*sum((p[i] - q[i])^2 for i in 1:config.n))
-    
-    optimize!(model)
-    
-    return objective_value(model)
+    return vertices, polytopes, intersecting_polytopes_polyhedra, intersecting_polytopes_jump
 end
 
 # for i in 1:config.k

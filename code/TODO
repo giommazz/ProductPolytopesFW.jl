@@ -1,12 +1,13 @@
 TODO list:
+1) check if code works
+2) check how to save data
+3) do LMOs in FrankWolfe.jl
+4) implement alternating projections
 
 - understand how to plot stuff: #plot_trajectories([bpcg_trajectories, alm_trajectories], ["BPCG", "ALM"], xscalelog=true)
-- decide which polytopes to run experiments over
 - talk to Elias/Jannis/Dominik: check if the code is doing exactly what I need (running BPCG over Cartesian product of several polytopes)
-- IMPLEMENT ALTERNATING PROJECTIONS
 
 
-- try spectrahedron
 
 - 2l-1 norms. try intersect them, try not to intersect them. have them each one face that aligns, then rotate them a bit
 - see page rank code on zib gitlab
