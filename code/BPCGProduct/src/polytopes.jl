@@ -24,6 +24,24 @@ function generate_non_intersecting_bounds(config::Config; margin::Float64 = 1.0)
     return bounds_list
 end
 
+function retrieve_nonredundant_poly_vertices(poly::Polyhedron)
+    # Find vertices of `poly`
+    removevredundancy!(poly)
+
+    # Type conversion to obtain Matrix{Float64} from `Polyhedra.points(poly)`
+    vertices = stack(collect(points(poly)), dims=1)
+    
+    return vertices
+end
+
+function create_nonredundant_polytope(vertices::Matrix{T}) where T
+    # Use vertices to create object of type Polyhedra.Polyhedron 
+    poly = polyhedron(vrep(vertices), CDDLib.Library())
+    vertices = retrieve_nonredundant_poly_vertices(poly)
+    
+    return vertices, poly
+end
+
 # Function to generate a random vertex matrix with bounds for each column
 function generate_polytopes(config::Config, idx::Int, bounds::Vector{Tuple{T, T}}) where T
     # Check that the number of columns specified in `config.n` matches the length of `bounds`
@@ -40,8 +58,9 @@ function generate_polytopes(config::Config, idx::Int, bounds::Vector{Tuple{T, T}
         # Generate vector containing `config.n_points[idx]` random Float64 within the given bounds
         vertices[:, j] = lower_bound .+ (upper_bound - lower_bound) .* rand(Float64, config.n_points[idx])
     end
-    # Generate polytope as convex hull of given vertices
-    poly = polyhedron(vrep(vertices), CDDLib.Library())
+    # Generate polytope as convex hull of given points, and remove redundant (i.e. non-vertex) points
+    vertices, poly = create_nonredundant_polytope(vertices)
+    
     return vertices, poly
 end
 # Function to generate k random vertex matrices with bounds for each column
@@ -57,9 +76,8 @@ function generate_polytopes(config::Config, bounds::Vector{Vector{Tuple{T, T}}},
     end
 end
 
-
 # Function to find the closest points between two sets of points
-function closest_pair(config::Config, V1::Matrix, V2::Matrix)
+function closest_pair(config::Config, V1::Matrix{T}, V2::Matrix{T}) where T
 
     # Check that both matrices have the correct number of columns
     if size(V1, 2) != config.n || size(V2, 2) != config.n
@@ -92,7 +110,7 @@ function closest_pair(config::Config, V1::Matrix, V2::Matrix)
     return v1_closest, v2_closest, min_dist
 end
 # (Multiple Dispatch) Here the first input is a vector (single point)
-function closest_pair(config::Config, v::Vector, V2::Matrix)
+function closest_pair(config::Config, v::Vector{T}, V2::Matrix{T}) where T
     # Check that the vector and matrix have the correct number of columns
     if length(v) != config.n || size(V2, 2) != config.n
         error("Both the point and the point set must have the dimension specified in `config.n`.")
@@ -131,22 +149,16 @@ function intersect_polytopes(config::Config, V1::Matrix{T}, V2::Matrix{T}, polyt
 
     # Create "fake" offset polytope
     P = polyhedron(vrep([direction]), CDDLib.Library())
-    # Shift `polytope_to_move` along the offset
-    Pint = polytope_to_move + P
-
-    # Find vertices of `Pint` (`Polyhedron.ext` gives the V-representation of a polytope)
-    generators = removevredundancy(Pint.ext, GLPK.Optimizer)
-    # Remove points that are not vertices of `Pint`
-    removevredundancy!(Pint)
-
+    # Shift `polytope_to_move` along the offset, to obtain a shifted polytope
+    shifted_polytope_curr = polytope_to_move + P
     # Apply the translation to each vertex in V2 to get shifted_vertices
-    shifted_vertices = V2 .+ direction'
+    shifted_vertices_curr = V2 .+ direction'
 
-    # Return translated polytope and other info
-    return Pint, shifted_vertices, generators, v1_closest, v2_closest, distance
+    # Return translated polytope and other info (`points()` returns a matrix with the vertices)
+    return shifted_polytope_curr, shifted_vertices_curr, v1_closest, v2_closest, distance
 end
 # (Multiple Dispatch) Function to intersect two polytopes, moving the second unto a given vertex of the first
-function intersect_polytopes(config::Config, v::Vector, V2::Matrix{T}, polytope_to_move::Polyhedron{T}) where T
+function intersect_polytopes(config::Config, v::Vector{T}, V2::Matrix{T}, polytope_to_move::Polyhedron{T}) where T
     
     # Find the closest pair of points between the two sets of points
     v2_closest, distance = closest_pair(config, v, V2)
@@ -157,23 +169,19 @@ function intersect_polytopes(config::Config, v::Vector, V2::Matrix{T}, polytope_
     # Create "fake" offset polytope
     P = polyhedron(vrep([direction]), CDDLib.Library())
     # Shift `polytope_to_move` along the offset
-    Pint = polytope_to_move + P
-    
-    # Find vertices of `Pint` (`Polyhedron.ext` gives the V-representation of a polytope)
-    generators = removevredundancy(Pint.ext, GLPK.Optimizer)
-    # Remove points that are not vertices of `Pint`
-    removevredundancy!(Pint)
-
+    shifted_polytope_curr = polytope_to_move + P
     # Apply the translation to each vertex in V2 to get shifted_vertices
-    shifted_vertices = V2 .+ direction'
+    shifted_vertices_curr = V2 .+ direction'
 
-    # Return translated polytope and other info
-    return Pint, shifted_vertices, generators, v2_closest, distance
+    # Return translated polytope and other info (`points()` returns a matrix with the vertices)
+    return shifted_polytope_curr, shifted_vertices_curr, v2_closest, distance
 end
+
 # (Multiple Dispatch) Function to intersect k polytopes
 function intersect_polytopes(
     config::Config,
     vertices::Vector{Matrix{T}},
+    shifted_vertices::Vector{Matrix{T}},
     polytopes::Vector{Polyhedron},
     intersecting_polytopes_polyhedra::Vector{Polyhedron},
     intersecting_polytopes_jump::Vector{Model}
@@ -183,22 +191,22 @@ function intersect_polytopes(
     push!(intersecting_polytopes_polyhedra, polytopes[1])
     push!(intersecting_polytopes_jump, polyhedra_to_jump(config, polytopes[1]))
     # Move P₂ towards P₁ so that they intersect (at least) in `v₁`
-    intersecting_polytope, shifted_vertices, _, v₁, _, distance = intersect_polytopes(config, vertices[1], vertices[2], polytopes[2])
-    push!(intersecting_polytopes_polyhedra, intersecting_polytope)
-    push!(intersecting_polytopes_jump, polyhedra_to_jump(config, intersecting_polytope))
+    shifted_polytope_curr, shifted_vertices_curr, _, v₁, _, distance = intersect_polytopes(config, vertices[1], vertices[2], polytopes[2])
+    push!(shifted_vertices, shifted_vertices_curr)
+    push!(intersecting_polytopes_polyhedra, shifted_polytope_curr)
+    push!(intersecting_polytopes_jump, polyhedra_to_jump(config, shifted_polytope_curr))
 
     # Move each subsequent polytope Pₖ, for k > 3, to intersect with P₁
     for i in 3:config.k
         # Move iᵗʰ polytope so that it intersects with the others (at least) in `v₁`
-        intersecting_polytope, shifted_vertices, _, distance = intersect_polytopes(config, v₁, vertices[i], polytopes[i])
+        shifted_polytope_curr, shifted_vertices_curr, _, distance = intersect_polytopes(config, v₁, vertices[i], polytopes[i])
 
-        # Append to list of intersecting polytopes
-        push!(intersecting_polytopes_polyhedra, intersecting_polytope)
-        push!(intersecting_polytopes_jump, polyhedra_to_jump(config, intersecting_polytope))
+        # Update data
+        push!(shifted_vertices, shifted_vertices_curr)
+        push!(intersecting_polytopes_polyhedra, shifted_polytope_curr)
+        push!(intersecting_polytopes_jump, polyhedra_to_jump(config, shifted_polytope_curr))
     end
     check_intersection(config, intersecting_polytopes_polyhedra)
-    
-    return vertices, polytopes, intersecting_polytopes_polyhedra, intersecting_polytopes_jump
 end
 
 # Function to generate a polytope with a given JuMP model
@@ -244,8 +252,9 @@ function generate_intersecting_polytopes(config::Config)
     # Generate non intersecting polytopes
     generate_polytopes(config, bounds_list, vertices, polytopes)
 
-    vertices, shifted_vertices, polytopes, intersecting_polytopes_polyhedra, intersecting_polytopes_jump = 
-        intersect_polytopes(config, vertices, polytopes, intersecting_polytopes_polyhedra, intersecting_polytopes_jump)
+    intersect_polytopes(config, vertices, shifted_vertices, polytopes, intersecting_polytopes_polyhedra, intersecting_polytopes_jump)
+
+    println(shifted_vertices)
 
     return vertices, shifted_vertices, polytopes, intersecting_polytopes_polyhedra, intersecting_polytopes_jump
 end
@@ -264,7 +273,7 @@ function save_intersecting_polytopes(
     intersecting_polytopes_jump::Vector{Model};
     ) where T
 
-    # TODO: SALVA VERTICES E VERTICES_INTERSECTING
+    # TODO: SALVA VERTICES E VERTICES_INTERSECTING: GABA
     jldsave(filename; vertices)#, polytopes, intersecting_polytopes_polyhedra, intersecting_polytopes_jump)
     println("Saving data to $filename")
 end
