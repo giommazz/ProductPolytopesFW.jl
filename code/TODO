@@ -3,7 +3,7 @@ TODO list:
 2) check how to save data
 3) do LMOs in FrankWolfe.jl
 4) implement alternating projections
-
+5) check dependencies (Ipopt, GLPK, JLD2)
 - understand how to plot stuff: #plot_trajectories([bpcg_trajectories, alm_trajectories], ["BPCG", "ALM"], xscalelog=true)
 - talk to Elias/Jannis/Dominik: check if the code is doing exactly what I need (running BPCG over Cartesian product of several polytopes)
 

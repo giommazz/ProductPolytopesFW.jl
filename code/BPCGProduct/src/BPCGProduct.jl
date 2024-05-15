@@ -12,15 +12,16 @@ module BPCGProduct
     using Polyhedra
     using GLPK
     using Ipopt
+    using JLD2
+    using Dates
 
     # Plotting utilities needed to run FrankWolfe/plot_utils.jl
     # include(joinpath(dirname(pathof(FrankWolfe)), "../examples/plot_utils.jl"))
-
+    include("config.jl")
     include("objective_functions.jl")
     include("lmo_utils.jl")
     include("product_algorithms.jl")
     include("utils.jl")
-    include("config.jl")
     include("polytopes.jl")
 
     # From `objective_functions.jl`
@@ -34,6 +35,6 @@ module BPCGProduct
     # From `config.jl`
     export Config
     # From `polytopes.jl`
-    export generate_intersecting_polytopes
+    export generate_intersecting_polytopes, save_intersecting_polytopes, load_intersecting_polytopes
 
 end # module BPCGProduct

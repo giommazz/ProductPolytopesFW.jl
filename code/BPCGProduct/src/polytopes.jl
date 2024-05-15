@@ -24,26 +24,39 @@ function generate_non_intersecting_bounds(config::Config; margin::Float64 = 1.0)
     return bounds_list
 end
 
-# Function to generate a random matrix with bounds for each column
-function generate_polytope(config::Config, points::Int, bounds::Vector{Tuple{Float64, Float64}})
+# Function to generate a random vertex matrix with bounds for each column
+function generate_polytopes(config::Config, idx::Int, bounds::Vector{Tuple{T, T}}) where T
     # Check that the number of columns specified in `config.n` matches the length of `bounds`
     if config.n != length(bounds)
         error("Mismatch: The number of columns in `config` (config.n = $(config.n)) must match the number of elements in `bounds` (length = $(length(bounds))).")
     end
 
     # Initialize a matrix of zeros with the given number of points (rows) and columns
-    vertices = zeros(Float64, points, config.n)
+    vertices = zeros(Float64, config.n_points[idx], config.n)
 
     # Fill each column based on the specified bounds
     for j in 1:config.n
         lower_bound, upper_bound = bounds[j]
-        # Generate random numbers within the given bounds
-        vertices[:, j] = lower_bound .+ (upper_bound - lower_bound) .* rand(Float64, points)
+        # Generate vector containing `config.n_points[idx]` random Float64 within the given bounds
+        vertices[:, j] = lower_bound .+ (upper_bound - lower_bound) .* rand(Float64, config.n_points[idx])
     end
     # Generate polytope as convex hull of given vertices
     poly = polyhedron(vrep(vertices), CDDLib.Library())
     return vertices, poly
 end
+# Function to generate k random vertex matrices with bounds for each column
+function generate_polytopes(config::Config, bounds::Vector{Vector{Tuple{T, T}}}, vertices::Vector{Matrix{T}}, polytopes::Vector{Polyhedron}) where T
+    # Generate k polytopes within the specified bounds
+    for i in 1:config.k
+        # Generate vertices and corresponding polytope
+        verts, poly = generate_polytopes(config, i, bounds[i])
+        
+        # Append to `vertices` and `polytopes`
+        push!(vertices, verts)
+        push!(polytopes, poly)
+    end
+end
+
 
 # Function to find the closest points between two sets of points
 function closest_pair(config::Config, V1::Matrix, V2::Matrix)
@@ -122,9 +135,9 @@ function intersect_polytopes(config::Config, V1::Matrix{T}, V2::Matrix{T}, polyt
     Pint = polytope_to_move + P
 
     # Find vertices of `Pint` (`Polyhedron.ext` gives the V-representation of a polytope)
-    generators = Polyhedra.removevredundancy(Pint.ext, GLPK.Optimizer)
+    generators = removevredundancy(Pint.ext, GLPK.Optimizer)
     # Remove points that are not vertices of `Pint`
-    Polyhedra.removevredundancy!(Pint)
+    removevredundancy!(Pint)
 
     # Return translated polytope and other info
     return Pint, generators, v1_closest, v2_closest, distance
@@ -144,60 +157,30 @@ function intersect_polytopes(config::Config, v::Vector, V2::Matrix{T}, polytope_
     Pint = polytope_to_move + P
     
     # Find vertices of `Pint` (`Polyhedron.ext` gives the V-representation of a polytope)
-    generators = Polyhedra.removevredundancy(Pint.ext, GLPK.Optimizer)
+    generators = removevredundancy(Pint.ext, GLPK.Optimizer)
     # Remove points that are not vertices of `Pint`
-    Polyhedra.removevredundancy!(Pint)
+    removevredundancy!(Pint)
 
     # Return translated polytope and other info
     return Pint, generators, v2_closest, distance
 end
-
-# Function to generate a polytope with a given JuMP model
-function polyhedra_to_jump(config::Config, polytope::Polyhedra.Polyhedron{T}) where T
-    model = Model()
-    @variable(model, x[1:config.n])
-    @constraint(model, x in polytope)
+# (Multiple Dispatch) Function to intersect k polytopes
+function intersect_polytopes(
+    config::Config,
+    vertices::Vector{Matrix{T}},
+    polytopes::Vector{Polyhedron},
+    intersecting_polytopes_polyhedra::Vector{Polyhedron},
+    intersecting_polytopes_jump::Vector{Model}
+    ) where T
     
-    return model
-end
-
-# Main function to generate and move polytopes
-# `n_points` contains n. of vertices used to generate each polytope
-function generate_intersecting_polytopes(config)
-
-    println("Generating $(config.k) intersecting polytopes")
-    
-    # Generate random, non-intersecting bounds
-    bounds_list = generate_non_intersecting_bounds(config)
-
-    # Initialize empty lists for vertices, Polyhedra polytopes, and Polyhedra intersecting polytopes, JuMP intersecting polytopes
-    vertices = Vector{Matrix{Float64}}()
-    polytopes = Vector{Polyhedra.Polyhedron}()
-    intersecting_polytopes_polyhedra = Vector{Polyhedra.Polyhedron}()
-    intersecting_polytopes_jump = Vector{JuMP.Model}()
-
-    # Generate k polytopes within the specified bounds
-    for i in 1:config.k
-        # Generate vertices and corresponding polytope
-        verts, poly = generate_polytope(config, config.n_points[i], bounds_list[i])
-        
-        # Append to `vertices` and `polytopes`
-        push!(vertices, verts)
-        push!(polytopes, poly)
-    end
-
     # Push P₁ to `intersecting_polytopes_polyhedra` and to `intersecting_polytopes_jump`
     push!(intersecting_polytopes_polyhedra, polytopes[1])
     push!(intersecting_polytopes_jump, polyhedra_to_jump(config, polytopes[1]))
-    
     # Move P₂ towards P₁ so that they intersect (at least) in `v₁`
     intersecting_polytope, _, v₁, _, distance = intersect_polytopes(config, vertices[1], vertices[2], polytopes[2])
     push!(intersecting_polytopes_polyhedra, intersecting_polytope)
     push!(intersecting_polytopes_jump, polyhedra_to_jump(config, intersecting_polytope))
-    intersection = Polyhedra.npoints(intersect(polytopes[1], intersecting_polytope))
-    println("Intersection of P₁ and P₂ contains $intersection points")
-    @assert intersection ≥ 1 "There must be at least one point in P₁ ∩ Pᵢ"
-    
+
     # Move each subsequent polytope Pₖ, for k > 3, to intersect with P₁
     for i in 3:config.k
         # Move iᵗʰ polytope so that it intersects with the others (at least) in `v₁`
@@ -206,11 +189,105 @@ function generate_intersecting_polytopes(config)
         # Append to list of intersecting polytopes
         push!(intersecting_polytopes_polyhedra, intersecting_polytope)
         push!(intersecting_polytopes_jump, polyhedra_to_jump(config, intersecting_polytope))
-        intersection = Polyhedra.npoints(intersect(polytopes[1], intersecting_polytope))
-        println("Intersection of P₁ and Pᵢ [for i=$i] contains $intersection points")
-        @assert intersection ≥ 1 "There must be at least one point in P₁ ∩ Pᵢ"
     end
+    check_intersection(config, intersecting_polytopes_polyhedra)
+    
+    return vertices, polytopes, intersecting_polytopes_polyhedra, intersecting_polytopes_jump
+end
 
+# Function to generate a polytope with a given JuMP model
+function polyhedra_to_jump(config::Config, polytope::Polyhedron{T}) where T
+    model = Model()
+    @variable(model, x[1:config.n])
+    @constraint(model, x in polytope)
+    
+    return model
+end
+
+# Check that intersection of `intersecting_polytopes` is not empty
+function check_intersection(config::Config, intersecting_polytopes::Vector{Polyhedron})
+    # By the end of the loop it must be == (k*(k-1))/2
+    intersection_count = 0
+    for i = 1:config.k-1
+        for j = i+1:config.k
+            println("\t($i, $j)")
+            intersection_size = npoints(intersect(intersecting_polytopes[i], intersecting_polytopes[j]))
+            # println("\t\tIntersection of P$i and P$j contains $intersection_size points")
+            @assert intersection_size ≥ 1 "There must be at least one point in P$i ∩ P$j"
+            intersection_count += intersection_size
+        end
+    end
+    @assert intersection_count ≥ (config.k*(config.k-1))/2 "Not all sets intersect"
+end
+
+# Main function to generate and move polytopes
+# `n_points` contains n. of vertices used to generate each polytope
+function generate_intersecting_polytopes(config::Config)
+
+    println("Generating $(config.k) intersecting polytopes")
+    
+    # Generate random, non-intersecting bounds
+    bounds_list = generate_non_intersecting_bounds(config)
+
+    # Initialize empty vectors for vertices, Polyhedra polytopes, and Polyhedra intersecting polytopes, JuMP intersecting polytopes
+    vertices = Vector{Matrix{Float64}}()
+    polytopes = Vector{Polyhedron}()
+    intersecting_polytopes_polyhedra = Vector{Polyhedron}()
+    intersecting_polytopes_jump = Vector{Model}()
+
+    # Generate non intersecting polytopes
+    generate_polytopes(config, bounds_list, vertices, polytopes)
+
+    vertices, polytopes, intersecting_polytopes_polyhedra, intersecting_polytopes_jump = 
+        intersect_polytopes(config, vertices, polytopes, intersecting_polytopes_polyhedra, intersecting_polytopes_jump)
+
+    # Save the generated data
+    save_intersecting_polytopes(config, vertices, polytopes, intersecting_polytopes_polyhedra, intersecting_polytopes_jump)
+
+    return vertices, polytopes, intersecting_polytopes_polyhedra, intersecting_polytopes_jump
+end
+
+function generate_filename(config::Config)    
+    timestamp = Dates.format(now(), "yyyymmddHHMMSS")
+    return "intersecting_polytopes_k$(config.k)_n$(config.n)_v$(join(config.n_points, "_"))_t$timestamp.jld2"
+end
+
+# Save data to given .jld2 file
+function save_intersecting_polytopes(
+    filename::String,
+    vertices::Vector{Matrix{T}},
+    polytopes::Vector{Polyhedron},
+    intersecting_polytopes_polyhedra::Vector{Polyhedron},
+    intersecting_polytopes_jump::Vector{Model};
+    ) where T
+
+    @save filename vertices polytopes intersecting_polytopes_polyhedra intersecting_polytopes_jump
+    println("Saving data to $filename")
+end
+# (Multiple dispatch) Automatically generated .jld2 filename
+function save_intersecting_polytopes(
+    config::Config,
+    vertices::Vector{Matrix{T}},
+    polytopes::Vector{Polyhedron},
+    intersecting_polytopes_polyhedra::Vector{Polyhedron},
+    intersecting_polytopes_jump::Vector{Model};
+    ) where T
+    
+    filename = generate_filename(config)
+
+    @save filename vertices polytopes intersecting_polytopes_polyhedra intersecting_polytopes_jump
+    println("Saving data to $filename")
+
+    return filename
+end
+
+# Load data from .jld2 file
+function load_intersecting_polytopes(filename::String)
+    data = JLD2.load(filename)
+    vertices = data["vertices"]
+    polytopes = data["polytopes"]
+    intersecting_polytopes_polyhedra = data["intersecting_polytopes_polyhedra"]
+    intersecting_polytopes_jump = data["intersecting_polytopes_jump"]
     return vertices, polytopes, intersecting_polytopes_polyhedra, intersecting_polytopes_jump
 end
 
@@ -218,31 +295,31 @@ end
 #     println("°°°°°°°°°°°°°°°°---------------------------------> [$i]")
     
 #     println("\tVREP")
-#     for constraint in JuMP.list_of_constraint_types(intersecting_polytopes_jump[i])
+#     for constraint in list_of_constraint_types(intersecting_polytopes_jump[i])
 #         println("\t\tConstraint: $constraint")
 #     end
 #     println()
-#     println("\t\tall constraints: ", JuMP.all_constraints(intersecting_polytopes_jump[i]; include_variable_in_set_constraints = true))
-#     println("number of constraints: $(JuMP.num_constraints(intersecting_polytopes_jump[i]; count_variable_in_set_constraints = true))")
+#     println("\t\tall constraints: ", all_constraints(intersecting_polytopes_jump[i]; include_variable_in_set_constraints = true))
+#     println("number of constraints: $(num_constraints(intersecting_polytopes_jump[i]; count_variable_in_set_constraints = true))")
 #     println()   
 #     println()
 
 
-#     PP = Polyhedra.hrep(intersecting_polytopes_polyhedra[i])
+#     PP = hrep(intersecting_polytopes_polyhedra[i])
 #     println("\tHREP")
 #     PPJ = polyhedra_to_jump(config, intersecting_polytopes_polyhedra[i])
-#     for constraint in JuMP.list_of_constraint_types(PPJ)
+#     for constraint in list_of_constraint_types(PPJ)
 #         println("\t\tConstraint: $constraint")
 #     end
 #     println()
-#     println("\t\tall constraints: ", JuMP.all_constraints(intersecting_polytopes_jump[i]; include_variable_in_set_constraints = true))
-#     println("number of constraints: $(JuMP.num_constraints(intersecting_polytopes_jump[i]; count_variable_in_set_constraints = true))")
+#     println("\t\tall constraints: ", all_constraints(intersecting_polytopes_jump[i]; include_variable_in_set_constraints = true))
+#     println("number of constraints: $(num_constraints(intersecting_polytopes_jump[i]; count_variable_in_set_constraints = true))")
 #     println()   
 #     println()
 #     readline()
 # end
 # TODO: 
-# 1) implement deeper intersection, by moving polytopes towards the average of convex hull vertices? Maybe use https://github.com/JuliaPolyhedra/Polyhedra.jl/blob/8c131a6cc883c541922a8b8efe835932e8b2593f/src/center.jl#L7
+# 1) implement deeper intersection, by moving polytopes towards the average of convex hull vertices? Maybe use https://github.com/JuliaPolyhedra/jl/blob/8c131a6cc883c541922a8b8efe835932e8b2593f/src/center.jl#L7
 # 2) also, implement distance function calculator, so we know the optimal solution
 
 # - USE JUMP MODELS OF POLYTOPES INTO FRANKWOLFE.JL LMOS
