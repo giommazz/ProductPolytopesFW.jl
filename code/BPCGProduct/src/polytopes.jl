@@ -139,8 +139,11 @@ function intersect_polytopes(config::Config, V1::Matrix{T}, V2::Matrix{T}, polyt
     # Remove points that are not vertices of `Pint`
     removevredundancy!(Pint)
 
+    # Apply the translation to each vertex in V2 to get shifted_vertices
+    shifted_vertices = V2 .+ direction'
+
     # Return translated polytope and other info
-    return Pint, generators, v1_closest, v2_closest, distance
+    return Pint, shifted_vertices, generators, v1_closest, v2_closest, distance
 end
 # (Multiple Dispatch) Function to intersect two polytopes, moving the second unto a given vertex of the first
 function intersect_polytopes(config::Config, v::Vector, V2::Matrix{T}, polytope_to_move::Polyhedron{T}) where T
@@ -161,8 +164,11 @@ function intersect_polytopes(config::Config, v::Vector, V2::Matrix{T}, polytope_
     # Remove points that are not vertices of `Pint`
     removevredundancy!(Pint)
 
+    # Apply the translation to each vertex in V2 to get shifted_vertices
+    shifted_vertices = V2 .+ direction'
+
     # Return translated polytope and other info
-    return Pint, generators, v2_closest, distance
+    return Pint, shifted_vertices, generators, v2_closest, distance
 end
 # (Multiple Dispatch) Function to intersect k polytopes
 function intersect_polytopes(
@@ -177,14 +183,14 @@ function intersect_polytopes(
     push!(intersecting_polytopes_polyhedra, polytopes[1])
     push!(intersecting_polytopes_jump, polyhedra_to_jump(config, polytopes[1]))
     # Move P₂ towards P₁ so that they intersect (at least) in `v₁`
-    intersecting_polytope, _, v₁, _, distance = intersect_polytopes(config, vertices[1], vertices[2], polytopes[2])
+    intersecting_polytope, shifted_vertices, _, v₁, _, distance = intersect_polytopes(config, vertices[1], vertices[2], polytopes[2])
     push!(intersecting_polytopes_polyhedra, intersecting_polytope)
     push!(intersecting_polytopes_jump, polyhedra_to_jump(config, intersecting_polytope))
 
     # Move each subsequent polytope Pₖ, for k > 3, to intersect with P₁
     for i in 3:config.k
         # Move iᵗʰ polytope so that it intersects with the others (at least) in `v₁`
-        intersecting_polytope, _, _, distance = intersect_polytopes(config, v₁, vertices[i], polytopes[i])
+        intersecting_polytope, shifted_vertices, _, distance = intersect_polytopes(config, v₁, vertices[i], polytopes[i])
 
         # Append to list of intersecting polytopes
         push!(intersecting_polytopes_polyhedra, intersecting_polytope)
@@ -210,7 +216,6 @@ function check_intersection(config::Config, intersecting_polytopes::Vector{Polyh
     intersection_count = 0
     for i = 1:config.k-1
         for j = i+1:config.k
-            println("\t($i, $j)")
             intersection_size = npoints(intersect(intersecting_polytopes[i], intersecting_polytopes[j]))
             # println("\t\tIntersection of P$i and P$j contains $intersection_size points")
             @assert intersection_size ≥ 1 "There must be at least one point in P$i ∩ P$j"
@@ -224,13 +229,14 @@ end
 # `n_points` contains n. of vertices used to generate each polytope
 function generate_intersecting_polytopes(config::Config)
 
-    println("Generating $(config.k) intersecting polytopes")
+    println("Generating $(config.k) intersecting polytopes of dimension $(config.n) (n. vertices for each: $(config.n_points))")
     
     # Generate random, non-intersecting bounds
     bounds_list = generate_non_intersecting_bounds(config)
 
     # Initialize empty vectors for vertices, Polyhedra polytopes, and Polyhedra intersecting polytopes, JuMP intersecting polytopes
     vertices = Vector{Matrix{Float64}}()
+    shifted_vertices = Vector{Matrix{Float64}}()
     polytopes = Vector{Polyhedron}()
     intersecting_polytopes_polyhedra = Vector{Polyhedron}()
     intersecting_polytopes_jump = Vector{Model}()
@@ -238,13 +244,10 @@ function generate_intersecting_polytopes(config::Config)
     # Generate non intersecting polytopes
     generate_polytopes(config, bounds_list, vertices, polytopes)
 
-    vertices, polytopes, intersecting_polytopes_polyhedra, intersecting_polytopes_jump = 
+    vertices, shifted_vertices, polytopes, intersecting_polytopes_polyhedra, intersecting_polytopes_jump = 
         intersect_polytopes(config, vertices, polytopes, intersecting_polytopes_polyhedra, intersecting_polytopes_jump)
 
-    # Save the generated data
-    save_intersecting_polytopes(config, vertices, polytopes, intersecting_polytopes_polyhedra, intersecting_polytopes_jump)
-
-    return vertices, polytopes, intersecting_polytopes_polyhedra, intersecting_polytopes_jump
+    return vertices, shifted_vertices, polytopes, intersecting_polytopes_polyhedra, intersecting_polytopes_jump
 end
 
 function generate_filename(config::Config)    
@@ -261,7 +264,8 @@ function save_intersecting_polytopes(
     intersecting_polytopes_jump::Vector{Model};
     ) where T
 
-    @save filename vertices polytopes intersecting_polytopes_polyhedra intersecting_polytopes_jump
+    # TODO: SALVA VERTICES E VERTICES_INTERSECTING
+    jldsave(filename; vertices)#, polytopes, intersecting_polytopes_polyhedra, intersecting_polytopes_jump)
     println("Saving data to $filename")
 end
 # (Multiple dispatch) Automatically generated .jld2 filename
@@ -275,7 +279,7 @@ function save_intersecting_polytopes(
     
     filename = generate_filename(config)
 
-    @save filename vertices polytopes intersecting_polytopes_polyhedra intersecting_polytopes_jump
+    jldsave(filename; vertices, polytopes, intersecting_polytopes_polyhedra, intersecting_polytopes_jump)
     println("Saving data to $filename")
 
     return filename
@@ -283,11 +287,11 @@ end
 
 # Load data from .jld2 file
 function load_intersecting_polytopes(filename::String)
-    data = JLD2.load(filename)
+    data = jldopen(filename)
     vertices = data["vertices"]
-    polytopes = data["polytopes"]
-    intersecting_polytopes_polyhedra = data["intersecting_polytopes_polyhedra"]
-    intersecting_polytopes_jump = data["intersecting_polytopes_jump"]
+    # polytopes = data["polytopes"]
+    # intersecting_polytopes_polyhedra = data["intersecting_polytopes_polyhedra"]
+    # intersecting_polytopes_jump = data["intersecting_polytopes_jump"]
     return vertices, polytopes, intersecting_polytopes_polyhedra, intersecting_polytopes_jump
 end
 
