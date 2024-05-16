@@ -1,5 +1,10 @@
 # `lmos.jl`
-function create_product_lmo(lmos_list, config)
+function create_product_lmo(config::Config, lmos_list)
+    
+    println(typeof(lmos_list))
+    println("debug in lmos_list.jl and remember the readline()!!!")
+    readline()
+    
     # Check if length of LMO list matches `k`
     if length(lmos_list) != config.k
         error("The number of LMOs provided ($(length(lmos_list))) does not match the expected number ($(config.k)).")
@@ -11,7 +16,7 @@ function create_product_lmo(lmos_list, config)
 end
 
 # Find starting point `x0` over the product of different LMOs
-function find_starting_point(prod_lmo, config)
+function find_starting_point(config::Config, prod_lmo::FrankWolfe.ProductLMO)
     # Prepare datafor `x0`, which is of type `FrankWolfe.BlockVector{Float64, Vector{Float64}, Tuple{Int64}}`
     # 1) Compute extreme points for each LMO in the product
     extreme_points = [FrankWolfe.compute_extreme_point(lmo, zeros(config.n)) for lmo in prod_lmo.lmos]

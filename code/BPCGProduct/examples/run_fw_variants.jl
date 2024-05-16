@@ -5,7 +5,7 @@ using BPCGProduct: FrankWolfe
 config = Config("test/config.yml") # Use parameters from YAML file
 
 # Call the main function to run your experiments
-function main(config)
+function main(config::Config)
 
     println("k: $(config.k), n: $(config.n), target_tolerance: $(config.target_tolerance), max_iterations: $(config.max_iterations), seed: $(config.seed)")
 
@@ -28,32 +28,32 @@ function main(config)
     
     for lmos in lmo_products
         
-        prod_lmo = create_product_lmo(lmos, config)
+        prod_lmo = create_product_lmo(config, lmos)
         println("\n\n\n---------------------------------------------------------")
         println("---------------------------------------------------------")
         println("LMOs: ", [typeof(prod_lmo.lmos[i]) for i in 1:config.k])
         println("---------------------------------------------------------")
         println("---------------------------------------------------------")
-        x0 = find_starting_point(prod_lmo, config)
+        x0 = find_starting_point(config, prod_lmo)
 
         # Block-coordinate vanilla FW
         println("\n\n\n ----------> Cyclic Block-coordinate vanilla FW")
-        bc_fw_trajectories = run_FW(FrankWolfe.CyclicUpdate(), prod_lmo, x0, config)
+        bc_fw_trajectories = run_FW(config, FrankWolfe.CyclicUpdate(), prod_lmo, x0)
 
         # Block-coordinate BPCG
         println("\n\n\n ----------> Cyclic Block-coordinate BPCG")
-        bc_bpcg_cyclic_trajectories = run_FW(FrankWolfe.CyclicUpdate(), FrankWolfe.BPCGStep(), prod_lmo, x0, config)
+        bc_bpcg_cyclic_trajectories = run_FW(config, FrankWolfe.CyclicUpdate(), FrankWolfe.BPCGStep(), prod_lmo, x0)
         
         # TODO: TRY THIS! THIS SHOULD BE THE SAME AS CALLING FW.BPCG. IF NOT, SOMETHING IS WRONG
         println("\n\n\n ----------> Full Block-coordinate BPCG")
-        bc_bpcg_full_trajectories = run_FW(FrankWolfe.FullUpdate(), FrankWolfe.BPCGStep(), prod_lmo, x0, config)
+        bc_bpcg_full_trajectories = run_FW(config, FrankWolfe.FullUpdate(), FrankWolfe.BPCGStep(), prod_lmo, x0)
 
         # BPCG over full product LMO
         println("\n\n\n ----------> BPCG")
-        bpcg_trajectories = run_FW(prod_lmo, x0, config)
+        bpcg_trajectories = run_FW(config, prod_lmo, x0)
 
         println("\n\n\n ----------> AP")
-        altproj_trajectories = run_FW(prod_lmo, x0, config, true)
+        altproj_trajectories = run_FW(config, prod_lmo, x0, true)
 
         #plot_trajectories([bc_fw_trajectories, bc_fw_trajectories, bpcg_trajectories], ["BC-FW", "BC-BPCG", "Full domain BPCG"], xscalelog=true)
     end

@@ -4,8 +4,8 @@ struct Config
     k::Int
     # Dimension of the subspace in which each polytope lies
     n::Int
-    # list of `k` integers, each indicating the n. of points to be used to generate intersecting polytopes 
-    n_points::Vector{Int}
+    # Either 0 or a list of `k` integers, each indicating the number of points to be used to generate intersecting polytopes
+    n_points::Union{Int, Vector{Int}}
     # epsilon-optimality threshold
     target_tolerance::Float64
     # Number of FW iterations
@@ -27,38 +27,46 @@ function Config(yaml_file::String)
     # Validation checks (for YAML file dict)
     validate_config(config)
 
-    return Config(config["k"], config["n"], config["n_points"], config["target_tolerance"], config["max_iterations"], config["seed"])
+    # Handle the n_points field
+    n_points = config["n_points"]
+    if n_points == 0
+        # Generate a list of random integers in [3, 200] of length config["k"]
+        Random.seed!(config["seed"])  # Set the seed for reproducibility
+        n_points = [rand(config["n"]:config["n"]*2 + 1) for _ in 1:config["k"]]
+    end
+
+    return Config(config["k"], config["n"], n_points, config["target_tolerance"], config["max_iterations"], config["seed"])
 end
 
 # Validation checks (for YAML file dict)
-function validate_config(config)
+function validate_config(yaml_config::Dict{Any, Any})
     # Check for `k`
-    if typeof(config["k"]) != Int || config["k"] < 1
+    if typeof(yaml_config["k"]) != Int || yaml_config["k"] < 1
         error("Invalid value for 'k': must be a positive integer.")
     end
     
     # Check for `n`
-    if typeof(config["n"]) != Int || config["n"] < 0
+    if typeof(yaml_config["n"]) != Int || yaml_config["n"] < 0
         error("Invalid value for 'n': must be a non-negative integer.")
     end
-    
-    # Assuming 'config' is a dictionary and 'k' is a key in the dictionary
-    if typeof(config["n_points"]) != Vector{Int} || length(config["n_points"]) != config["k"]
-        error("Invalid configuration for 'n_points': must be a list of $(config["k"]) integers.")
+
+    # Check for `n_points`
+    if yaml_config["n_points"] != 0 && (typeof(yaml_config["n_points"]) != Vector{Int} || length(yaml_config["n_points"]) != yaml_config["k"])
+        error("Invalid configuration for 'n_points': must be 0 or a list of $(yaml_config["k"]) integers.")
     end
 
     # Check for `target_tolerance`
-    if typeof(config["target_tolerance"]) != Float64 || config["target_tolerance"] < 0
+    if typeof(yaml_config["target_tolerance"]) != Float64 || yaml_config["target_tolerance"] < 0
         error("Invalid value for 'target_tolerance': must be a non-negative float.")
     end
 
     # Check for `max_iterations`
-    if typeof(config["max_iterations"]) != Int || config["max_iterations"] < 1
+    if typeof(yaml_config["max_iterations"]) != Int || yaml_config["max_iterations"] < 1
         error("Invalid value for 'max_iterations': must be a positive integer.")
     end
 
     # Check for `seed`
-    if typeof(config["seed"]) != Int || config["seed"] < 0
+    if typeof(yaml_config["seed"]) != Int || yaml_config["seed"] < 0
         error("Invalid value for 'seed': must be a positive integer.")
     end
 end

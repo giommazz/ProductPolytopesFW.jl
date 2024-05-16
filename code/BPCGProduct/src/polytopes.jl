@@ -1,5 +1,8 @@
 # `polytopes.jl`
 
+#define dd_almostzero  1.0E-6
+
+
 # Function to generate non-overlapping bounds for multiple dimensions
 function generate_non_intersecting_bounds(config::Config; margin::Float64 = 1.0)
     bounds_list = Vector{Vector{Tuple{Float64, Float64}}}(undef, config.k)
@@ -209,7 +212,7 @@ function intersect_polytopes(
         push!(shifted_vertices, shifted_vertices_curr)
     end
 
-    check_intersection(intersecting_polytopes_polyhedra)
+    #check_intersection(intersecting_polytopes_polyhedra)
 end
 
 # Function to generate a polytope with a given JuMP model
@@ -259,9 +262,10 @@ function generate_intersecting_polytopes(config::Config)
     return vertices, shifted_vertices, polytopes, intersecting_polytopes_polyhedra, intersecting_polytopes_jump
 end
 
-function generate_filename(config::Config)    
+function generate_filename(config::Config, vertices::Vector{Matrix{T}}) where T
+    sizes = [size(poly_vertices)[1] for poly_vertices in vertices]
     timestamp = Dates.format(now(), "yyyymmddHHMMSS")
-    return "intersecting_polytopes_k$(config.k)_n$(config.n)_v$(join(config.n_points, "_"))_t$timestamp.jld2"
+    return "intersecting_polytopes_n$(config.n)_k$(config.k)_v$(join(sizes, "-"))_t$timestamp.jld2"
 end
 
 # Save data to given .jld2 file
@@ -282,7 +286,7 @@ function save_intersecting_polytopes(
     shifted_vertices::Vector{Matrix{T}}
     ) where T
     
-    filename = generate_filename(config)
+    filename = generate_filename(config, vertices)
     save(filename, Dict("vertices" => vertices, "shifted_vertices" => shifted_vertices))
     println("Saving data to $filename")
     return filename

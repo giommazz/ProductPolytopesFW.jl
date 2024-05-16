@@ -1,10 +1,10 @@
 # `utils.jl`
-function unique_combinations(config::Config, list::Vector)
+function unique_combinations(config::Config, list::Vector{T}) where T
     # Generate all unique combinations of length k
     return collect(combinations(list, config.k))
 end
 
-function generate_rand_float_vector(config::Config, lb=0::T, ub=100::T, seed=42::Int)
+function generate_rand_float_vector(config::Config; lb=0::T, ub=100::T, seed=42::Int)
     # Set the seed for reproducibility
     Random.seed!(config.seed)
     # Generate random Float64 in [a, b]

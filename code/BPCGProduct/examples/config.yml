@@ -2,11 +2,15 @@
 #   User parameters
 # ***************************
 # Number of polytopes
-k: 3
+k: 2
 # Dimension of the subspace in which each polytope lies
-n: 2
+n: 5
 # list of `k` integers, each indicating the n. of points to be used to generate intersecting polytopes 
-n_points: [4, 3, 4]
+n_points: 0
+#n_points: [12, 8]
+#n_points: [12, 8, 25]
+#n_points: [12, 8, 25, 50, 30]
+#n_points: [12, 8, 25, 50, 30, 23, 60, 37, 25, 10]
 # epsilon-optimality threshold
 target_tolerance: 1e-9
 # Number of FW iterations

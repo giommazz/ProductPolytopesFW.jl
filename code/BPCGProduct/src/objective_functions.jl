@@ -1,7 +1,12 @@
 # `objective_functions.jl`
 
 # Function to compute the pairwise distance objective: 1/2 ∑ᵢ₌₁ᵏ⁻¹∑ⱼ₌ᵢ₊₁ᵏ || xⁱ - xʲ ||₂²
-function objective(config, x)
+function objective(config::Config, x)
+
+    println(typeof(x))
+    println("debug in objective_functions.jl!!!")
+    readline()
+
     sum_dist = 0.0
     for i in 1:config.k  
         for j in i+1:config.k
@@ -15,7 +20,13 @@ function objective(config, x)
 end
 
 # Gradient computation for tuple of vectors
-function gradient!(config, storage, x)
+function gradient!(config::Config, storage, x)
+
+    println(typeof(x))
+    println(typeof(storage))
+    println("debug in objective_functions.jl!!!")
+    readline()
+
     for i in 1:config.k
         sum_terms = zeros(config.n)
         for j in 1:config.k

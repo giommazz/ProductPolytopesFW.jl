@@ -1,6 +1,6 @@
 # `fw_algorithms.jl`
 # Run Cyclic Block-Coordinate vanilla FW over product LMO
-function run_FW(order, prod_lmo, x0, config)
+function run_FW(config::Config, order::FrankWolfe.BlockCoordinateUpdateOrder, prod_lmo::FrankWolfe.ProductLMO, x0::FrankWolfe.BlockVector)
     
     f = x -> objective(config, x)
     grad! = (storage, x) -> gradient!(config, storage, x)
@@ -24,8 +24,8 @@ function run_FW(order, prod_lmo, x0, config)
     push!(trajectories, trajectory_data)    
     return trajectories
 end
-# Run Block-Coordinate BPCG with specific update order (full, cyclic, etc.) over product LMO
-function run_FW(order, update_step, prod_lmo, x0, config)
+# (Multiple dispatch) Run Block-Coordinate BPCG with specific update order (full, cyclic, etc.) over product LMO
+function run_FW(config::Config, order::FrankWolfe.BlockCoordinateUpdateOrder, update_step::FrankWolfe.UpdateStep, prod_lmo::FrankWolfe.ProductLMO, x0::FrankWolfe.BlockVector)
     
     f = x -> objective(config, x)
     grad! = (storage, x) -> gradient!(config, storage, x)
@@ -50,8 +50,8 @@ function run_FW(order, update_step, prod_lmo, x0, config)
     push!(trajectories, trajectory_data)    
     return trajectories
 end
-# Run BPCG over full product LMO
-function run_FW(prod_lmo, x0, config)
+# (Multiple dispatch) Run BPCG over full product LMO
+function run_FW(config::Config, prod_lmo::FrankWolfe.ProductLMO, x0::FrankWolfe.BlockVector)
     
     f = x -> objective(config, x)
     grad! = (storage, x) -> gradient!(config, storage, x)
@@ -74,8 +74,8 @@ function run_FW(prod_lmo, x0, config)
     push!(trajectories, trajectory_data)    
     return trajectories
 end
-# Run Alternating Projections over product LMO
-function run_FW(prod_lmo, x0, config, ap_flag)
+# (Multiple dispatch) Run Alternating Projections over product LMO
+function run_FW(config::Config, prod_lmo::FrankWolfe.ProductLMO, x0::FrankWolfe.BlockVector, ap_flag::Bool)
     if ap_flag
         trajectories = []
         # x, v, dual_gap, infeasible
