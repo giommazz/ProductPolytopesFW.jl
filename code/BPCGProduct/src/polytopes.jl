@@ -209,7 +209,7 @@ function intersect_polytopes(
         push!(shifted_vertices, shifted_vertices_curr)
     end
 
-    check_intersection(config, intersecting_polytopes_polyhedra)
+    check_intersection(intersecting_polytopes_polyhedra)
 end
 
 # Function to generate a polytope with a given JuMP model
@@ -222,18 +222,17 @@ function polyhedra_to_jump(config::Config, polytope::Polyhedron{T}) where T
 end
 
 # Check that intersection of `intersecting_polytopes` is not empty
-function check_intersection(config::Config, intersecting_polytopes::Vector{Polyhedron})
-    # By the end of the loop it must be == (k*(k-1))/2
-    intersection_count = 0
-    for i = 1:config.k-1
-        for j = i+1:config.k
-            intersection_size = npoints(intersect(intersecting_polytopes[i], intersecting_polytopes[j]))
-            # println("\t\tIntersection of P$i and P$j contains $intersection_size points")
-            @assert intersection_size ≥ 1 "There must be at least one point in P$i ∩ P$j"
-            intersection_count += intersection_size
-        end
-    end
-    @assert intersection_count ≥ (config.k*(config.k-1))/2 "Not all sets intersect"
+# Check that intersection of `intersecting_polytopes` is not empty
+function check_intersection(intersecting_polytopes::Vector{Polyhedron})
+    
+    # Get the number of points in the intersection of all polytopes
+    intersection_size = npoints(intersect(intersecting_polytopes...))
+    
+    # Print intersection size for debugging
+    println("Intersection of all polytopes is a polytope with $intersection_size vertices")
+    
+    # Assert that the intersection is not empty
+    @assert intersection_size ≥ 1 "There must be at least one point in the intersection of all polytopes"
 end
 
 # Main function to generate and move polytopes
@@ -327,6 +326,3 @@ end
 # TODO: 
 # 1) implement deeper intersection, by moving polytopes towards the average of convex hull vertices? Maybe use https://github.com/JuliaPolyhedra/jl/blob/8c131a6cc883c541922a8b8efe835932e8b2593f/src/center.jl#L7
 # 2) also, implement distance function calculator, so we know the optimal solution
-
-# - USE JUMP MODELS OF POLYTOPES INTO FRANKWOLFE.JL LMOS
-# - TRY IF EVERYTHING WORKS WITH BPCG

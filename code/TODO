@@ -1,7 +1,6 @@
 TODO list:
-1) check if code works
-2) check how to save data
-3) do LMOs in FrankWolfe.jl
+1) solve instances until solution
+3) link LMOs in FrankWolfe.jl
 4) implement alternating projections
 5) check dependencies (Ipopt, GLPK, JLD2)
 - understand how to plot stuff: #plot_trajectories([bpcg_trajectories, alm_trajectories], ["BPCG", "ALM"], xscalelog=true)

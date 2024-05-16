@@ -2,7 +2,7 @@
 using BPCGProduct
 
 # Use parameters from YAML file
-config = Config("test/config.yml")
+config = Config("examples/config.yml")
 # Generate instances 
 vertices, shifted_vertices, polytopes, intersecting_polytopes_polyhedra, intersecting_polytopes_jump = 
     generate_intersecting_polytopes(config)
@@ -14,4 +14,4 @@ filename = save_intersecting_polytopes(config, vertices, shifted_vertices)
 # save_intersecting_polytopes(filename, vertices)
 
 # Load the intersecting polytopes data for further analysis
-verticesj, shifted_verticesj = load_intersecting_polytopes(filename)
+# verticesj, shifted_verticesj = load_intersecting_polytopes(filename)

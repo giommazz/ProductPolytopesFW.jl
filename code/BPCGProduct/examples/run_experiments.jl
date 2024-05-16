@@ -42,15 +42,18 @@ function main(config)
 
         # Block-coordinate BPCG
         println("\n\n\n ----------> Cyclic Block-coordinate BPCG")
-        bc_bpcg_trajectories = run_FW(FrankWolfe.CyclicUpdate(), FrankWolfe.BPCGStep(), prod_lmo, x0, config)
+        bc_bpcg_cyclic_trajectories = run_FW(FrankWolfe.CyclicUpdate(), FrankWolfe.BPCGStep(), prod_lmo, x0, config)
         
         # TODO: TRY THIS! THIS SHOULD BE THE SAME AS CALLING FW.BPCG. IF NOT, SOMETHING IS WRONG
         println("\n\n\n ----------> Full Block-coordinate BPCG")
-        bpcg_trajectories = run_FW(FrankWolfe.FullUpdate(), FrankWolfe.BPCGStep(), prod_lmo, x0, config)
+        bc_bpcg_full_trajectories = run_FW(FrankWolfe.FullUpdate(), FrankWolfe.BPCGStep(), prod_lmo, x0, config)
 
         # BPCG over full product LMO
         println("\n\n\n ----------> BPCG")
         bpcg_trajectories = run_FW(prod_lmo, x0, config)
+
+        println("\n\n\n ----------> AP")
+        altproj_trajectories = run_FW(prod_lmo, x0, config, true)
 
         #plot_trajectories([bc_fw_trajectories, bc_fw_trajectories, bpcg_trajectories], ["BC-FW", "BC-BPCG", "Full domain BPCG"], xscalelog=true)
     end

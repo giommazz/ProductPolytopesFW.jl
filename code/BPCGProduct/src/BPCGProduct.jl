@@ -7,11 +7,8 @@ module BPCGProduct
     using YAML
     using JuMP
     using LinearAlgebra
-    using MathOptInterface
     using CDDLib
     using Polyhedra
-    using GLPK
-    using Ipopt
     using FileIO
     using Dates
 
