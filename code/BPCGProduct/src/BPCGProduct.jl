@@ -12,7 +12,7 @@ module BPCGProduct
     using Polyhedra
     using GLPK
     using Ipopt
-    using JLD2
+    using FileIO
     using Dates
 
     # Plotting utilities needed to run FrankWolfe/plot_utils.jl

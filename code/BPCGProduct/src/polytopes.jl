@@ -187,25 +187,28 @@ function intersect_polytopes(
     intersecting_polytopes_jump::Vector{Model}
     ) where T
     
-    # Push P₁ to `intersecting_polytopes_polyhedra` and to `intersecting_polytopes_jump`
+    # Update P₁ data
     push!(intersecting_polytopes_polyhedra, polytopes[1])
     push!(intersecting_polytopes_jump, polyhedra_to_jump(config, polytopes[1]))
-    # Move P₂ towards P₁ so that they intersect (at least) in `v₁`
-    shifted_polytope_curr, shifted_vertices_curr, _, v₁, _, distance = intersect_polytopes(config, vertices[1], vertices[2], polytopes[2])
-    push!(shifted_vertices, shifted_vertices_curr)
+    push!(shifted_vertices, vertices[1])
+    
+    # Move P₂ towards P₁ so that they intersect (at least) in v₁, then update P₂ data
+    shifted_polytope_curr, shifted_vertices_curr, v₁, _, distance = intersect_polytopes(config, vertices[1], vertices[2], polytopes[2])
     push!(intersecting_polytopes_polyhedra, shifted_polytope_curr)
     push!(intersecting_polytopes_jump, polyhedra_to_jump(config, shifted_polytope_curr))
+    push!(shifted_vertices, shifted_vertices_curr)
 
-    # Move each subsequent polytope Pₖ, for k > 3, to intersect with P₁
+    # Move each subsequent polytope Pᵢ, for k > 3, to intersect with P₁ in at least v₁, then update Pᵢ data
     for i in 3:config.k
-        # Move iᵗʰ polytope so that it intersects with the others (at least) in `v₁`
+        # Move iᵗʰ polytope so that it intersects with the others in (at least) v₁
         shifted_polytope_curr, shifted_vertices_curr, _, distance = intersect_polytopes(config, v₁, vertices[i], polytopes[i])
 
         # Update data
-        push!(shifted_vertices, shifted_vertices_curr)
         push!(intersecting_polytopes_polyhedra, shifted_polytope_curr)
         push!(intersecting_polytopes_jump, polyhedra_to_jump(config, shifted_polytope_curr))
+        push!(shifted_vertices, shifted_vertices_curr)
     end
+
     check_intersection(config, intersecting_polytopes_polyhedra)
 end
 
@@ -254,8 +257,6 @@ function generate_intersecting_polytopes(config::Config)
 
     intersect_polytopes(config, vertices, shifted_vertices, polytopes, intersecting_polytopes_polyhedra, intersecting_polytopes_jump)
 
-    println(shifted_vertices)
-
     return vertices, shifted_vertices, polytopes, intersecting_polytopes_polyhedra, intersecting_polytopes_jump
 end
 
@@ -268,40 +269,32 @@ end
 function save_intersecting_polytopes(
     filename::String,
     vertices::Vector{Matrix{T}},
-    polytopes::Vector{Polyhedron},
-    intersecting_polytopes_polyhedra::Vector{Polyhedron},
-    intersecting_polytopes_jump::Vector{Model};
+    shifted_vertices::Vector{Matrix{T}}
     ) where T
 
     # TODO: SALVA VERTICES E VERTICES_INTERSECTING: GABA
-    jldsave(filename; vertices)#, polytopes, intersecting_polytopes_polyhedra, intersecting_polytopes_jump)
+    save(filename, Dict("vertices" => vertices, "shifted_vertices" => shifted_vertices))
     println("Saving data to $filename")
 end
 # (Multiple dispatch) Automatically generated .jld2 filename
 function save_intersecting_polytopes(
     config::Config,
     vertices::Vector{Matrix{T}},
-    polytopes::Vector{Polyhedron},
-    intersecting_polytopes_polyhedra::Vector{Polyhedron},
-    intersecting_polytopes_jump::Vector{Model};
+    shifted_vertices::Vector{Matrix{T}}
     ) where T
     
     filename = generate_filename(config)
-
-    jldsave(filename; vertices, polytopes, intersecting_polytopes_polyhedra, intersecting_polytopes_jump)
+    save(filename, Dict("vertices" => vertices, "shifted_vertices" => shifted_vertices))
     println("Saving data to $filename")
-
     return filename
 end
 
 # Load data from .jld2 file
 function load_intersecting_polytopes(filename::String)
-    data = jldopen(filename)
-    vertices = data["vertices"]
-    # polytopes = data["polytopes"]
-    # intersecting_polytopes_polyhedra = data["intersecting_polytopes_polyhedra"]
-    # intersecting_polytopes_jump = data["intersecting_polytopes_jump"]
-    return vertices, polytopes, intersecting_polytopes_polyhedra, intersecting_polytopes_jump
+    f = load(filename)
+    vertices = f["vertices"]
+    shifted_vertices = f["shifted_vertices"]
+    return vertices, shifted_vertices
 end
 
 # for i in 1:config.k
