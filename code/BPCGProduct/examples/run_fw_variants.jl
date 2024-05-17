@@ -49,7 +49,7 @@ function main(config::Config)
         bc_bpcg_full_trajectories = run_FW(config, FrankWolfe.FullUpdate(), FrankWolfe.BPCGStep(), prod_lmo, x0)
         
         # BPCG over full product LMO
-        println("\n\n\n ----------> BPCG")
+        println("\n\n\n ----------> Full BPCG")
         bpcg_trajectories = run_FW(config, prod_lmo, x0)
 
         println("\n\n\n ----------> AP")

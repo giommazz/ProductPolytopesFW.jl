@@ -1,6 +1,5 @@
 # `lmos.jl`
 function create_product_lmo(config::Config, lmos_list)
-    
     println(typeof(lmos_list))
     println("debug in lmos_list.jl and remember the readline()!!!")
     readline()
@@ -27,4 +26,44 @@ function find_starting_point(config::Config, prod_lmo::FrankWolfe.ProductLMO)
 
     # Instantiate `x0`
     return FrankWolfe.BlockVector(extreme_points, block_sizes, total_size)
+end
+
+function get_lmos(config::Config, filename::String; cvxflag=false::Bool)
+
+    # Load data and transform to Polyhedra.Polyhedron or JuMP.Model
+    vertices, shifted_vertices = load_intersecting_polytopes(filename)    
+
+    # Create LMOs
+    for (v, vs) in zip(vertices, shifted_vertices)    
+        # FrankWolfe.ConvexHullOracle objects
+        if cvxflag
+            # Initialize data structures
+            lmo_list_nonintersecting = Vector{FrankWolfe.ConvexHullOracle}()    
+            lmo_list_intersecting = Vector{FrankWolfe.ConvexHullOracle}()
+            # Create FrankWolfe.ConvexHullOracle objects from Matrix{T} objects
+            lmo_nonintersecting = FrankWolfe.ConvexHullOracle(v)
+            lmo_intersecting = FrankWolfe.ConvexHullOracle(vs)
+            # Update data structures
+            push!(lmo_list_nonintersecting, lmo_nonintersecting)
+            push!(lmo_list_intersecting, lmo_intersecting)
+        # FrankWolfe.MathOptLMO objects
+        else
+            # Initialize data structures
+            lmo_list_nonintersecting = Vector{FrankWolfe.MathOptLMO}()
+            lmo_list_intersecting = Vector{FrankWolfe.MathOptLMO}()
+            # Instantiate Polyedra.Polyhedron objects
+            poly_nonintersecting = polytope(v)
+            poly_intersecting = polytope(vs)
+            # Create JuMP.Model objects from Polyedra.Polyhedron objects
+            jump_poly_nonintersecting = polyhedra_to_jump(config, poly_nonintersecting)
+            jump_poly_intersecting = polyhedra_to_jump(config, poly_intersecting)
+            # Create FrankWolfe.MathOptLMO objects from JuMP.Model objects
+            lmo_nonintersecting = FrankWolfe.MathOptLMO(jump_poly_nonintersecting.moi_backend)
+            lmo_intersecting = FrankWolfe.MathOptLMO(jump_poly_intersecting.moi_backend)
+            # Update data structures
+            push!(lmo_list_nonintersecting, lmo_nonintersecting)
+            push!(lmo_list_intersecting, lmo_intersecting)
+        end
+    end
+    return lmo_list_nonintersecting, lmo_list_intersecting
 end
