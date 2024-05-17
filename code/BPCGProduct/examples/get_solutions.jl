@@ -2,6 +2,19 @@
 using BPCGProduct
 
 config = Config("test/config.yml") # Use parameters from YAML file
+filename = "intersecting_polytopes_n2_k10_v12-8-25-50-30-23-60-37-25-10_t20240516194119.jld2"
+
+# Load data and transform to Polyhedra.Polyhedron or JuMP.Model
+vertices, shifted_vertices = load_intersecting_polytopes(filename)
+polytopes_polyhedra = Vector{Polyhedron}()
+polytopes_jump = Vector{Model}()
+for v in vertices
+    poly = polytope(v)
+    push!(polytopes_polyhedra, poly)
+    push!(polytopes_polyhedra, polyhedra_to_jump(config, poly))
+end
+
+# TODO: CREATE FRANKWOLFE LMOS FROM polytopes_polyhedra and from polytopes_jump
 
 
 # 1. get instances
@@ -31,7 +44,7 @@ function main(config::Config)
     lmo_onenormball_1 = FrankWolfe.ScaledBoundL1NormBall(6*ones(config.n), 15*ones(config.n))       # ℓ₁-norm ball
     lmo_onenormball_2 = FrankWolfe.ScaledBoundL1NormBall(bounds, 50*bounds)                      # scaled ℓ₁-norm ball
     lmo_onenormball_3 = FrankWolfe.ScaledBoundL1NormBall(-bounds, bounds)                       # scaled ℓ₁-norm ball 
-    
+
     #lmo_list = [lmo_probsmplx_1, lmo_probsmplx_3, lmo_infnormball_1, lmo_infnormball_3, lmo_onenormball_2, lmo_onenormball_3]
     lmo_list = [lmo_probsmplx_1, lmo_onenormball_1]
     lmo_products = unique_combinations(lmo_list, config)

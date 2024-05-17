@@ -1,8 +1,5 @@
 # `polytopes.jl`
 
-#define dd_almostzero  1.0E-6
-
-
 # Function to generate non-overlapping bounds for multiple dimensions
 function generate_non_intersecting_bounds(config::Config; margin::Float64 = 1.0)
     bounds_list = Vector{Vector{Tuple{Float64, Float64}}}(undef, config.k)
@@ -27,20 +24,25 @@ function generate_non_intersecting_bounds(config::Config; margin::Float64 = 1.0)
     return bounds_list
 end
 
-function retrieve_nonredundant_poly_vertices(poly::Polyhedron)
-    # Find vertices of `poly`
-    removevredundancy!(poly)
-
-    # Type conversion to obtain Matrix{Float64} from `Polyhedra.points(poly)`
-    vertices = stack(collect(points(poly)), dims=1)
-    
-    return vertices
+# Create Polyhedra.Polyhedron from list of vertices
+function polytope(vertices::Matrix{T}) where T
+    return polyhedron(vrep(vertices), CDDLib.Library())
+end
+# (Multiple dispatch)
+function polytope(vertices::Vector{Vector{T}}) where T
+    return polyhedron(vrep(vertices), CDDLib.Library())
 end
 
-function create_nonredundant_polytope(vertices::Matrix{T}) where T
+# Create non-redundant Polyhedra.Polyhedron from list of vertices
+function nonredundant_polytope(vertices::Matrix{T}; redundancy_flag=true::Bool) where T
     # Use vertices to create object of type Polyhedra.Polyhedron 
-    poly = polyhedron(vrep(vertices), CDDLib.Library())
-    vertices = retrieve_nonredundant_poly_vertices(poly)
+    poly = polytope(vertices)
+    if redundancy_flag
+        # Find vertices of `poly`
+        removevredundancy!(poly)
+    end
+    # Type conversion to obtain Matrix{Float64} from `Polyhedra.points(poly)`
+    vertices = stack(collect(points(poly)), dims=1)
     
     return vertices, poly
 end
@@ -62,7 +64,7 @@ function generate_polytopes(config::Config, idx::Int, bounds::Vector{Tuple{T, T}
         vertices[:, j] = lower_bound .+ (upper_bound - lower_bound) .* rand(Float64, config.n_points[idx])
     end
     # Generate polytope as convex hull of given points, and remove redundant (i.e. non-vertex) points
-    vertices, poly = create_nonredundant_polytope(vertices)
+    vertices, poly = nonredundant_polytope(vertices)
     
     return vertices, poly
 end
@@ -151,7 +153,7 @@ function intersect_polytopes(config::Config, V1::Matrix{T}, V2::Matrix{T}, polyt
     direction = v1_closest - v2_closest
 
     # Create "fake" offset polytope
-    P = polyhedron(vrep([direction]), CDDLib.Library())
+    P = polytope([direction])
     # Shift `polytope_to_move` along the offset, to obtain a shifted polytope
     shifted_polytope_curr = polytope_to_move + P
     # Apply the translation to each vertex in V2 to get shifted_vertices
@@ -170,7 +172,7 @@ function intersect_polytopes(config::Config, v::Vector{T}, V2::Matrix{T}, polyto
     direction = v - v2_closest
 
     # Create "fake" offset polytope
-    P = polyhedron(vrep([direction]), CDDLib.Library())
+    P = polytope([direction])
     # Shift `polytope_to_move` along the offset
     shifted_polytope_curr = polytope_to_move + P
     # Apply the translation to each vertex in V2 to get shifted_vertices
