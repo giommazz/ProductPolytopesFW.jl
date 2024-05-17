@@ -36,18 +36,18 @@ function main(config::Config)
         println("---------------------------------------------------------")
         x0 = find_starting_point(config, prod_lmo)
 
-        # Block-coordinate vanilla FW
+        # Block-coordinate vanilla FW with CyclicUpdate (cyclic updates over blocks)
         println("\n\n\n ----------> Cyclic Block-coordinate vanilla FW")
         bc_fw_trajectories = run_FW(config, FrankWolfe.CyclicUpdate(), prod_lmo, x0)
 
-        # Block-coordinate BPCG
+        # Block-coordinate BPCG with CyclicUpdate (cyclic updates over blocks)
         println("\n\n\n ----------> Cyclic Block-coordinate BPCG")
         bc_bpcg_cyclic_trajectories = run_FW(config, FrankWolfe.CyclicUpdate(), FrankWolfe.BPCGStep(), prod_lmo, x0)
         
-        # TODO: TRY THIS! THIS SHOULD BE THE SAME AS CALLING FW.BPCG. IF NOT, SOMETHING IS WRONG
+        # Block-coordinate BPCG with FullUpdate (Parallel updates over blocks)
         println("\n\n\n ----------> Full Block-coordinate BPCG")
         bc_bpcg_full_trajectories = run_FW(config, FrankWolfe.FullUpdate(), FrankWolfe.BPCGStep(), prod_lmo, x0)
-
+        
         # BPCG over full product LMO
         println("\n\n\n ----------> BPCG")
         bpcg_trajectories = run_FW(config, prod_lmo, x0)
