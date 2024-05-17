@@ -1,4 +1,4 @@
-# `run_experiments.jl`
+# `run_fw_variants.jl`
 using BPCGProduct
 using BPCGProduct: FrankWolfe
 
