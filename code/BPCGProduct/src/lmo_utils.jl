@@ -1,9 +1,5 @@
 # `lmos.jl`
 function create_product_lmo(config::Config, lmos_list)
-    println(typeof(lmos_list))
-    println("debug in lmos_list.jl and remember the readline()!!!")
-    readline()
-    
     # Check if length of LMO list matches `k`
     if length(lmos_list) != config.k
         error("The number of LMOs provided ($(length(lmos_list))) does not match the expected number ($(config.k)).")
@@ -29,18 +25,26 @@ function find_starting_point(config::Config, prod_lmo::FrankWolfe.ProductLMO)
 end
 
 function get_lmos(config::Config, filename::String; cvxflag=false::Bool)
-
     # Load data and transform to Polyhedra.Polyhedron or JuMP.Model
     vertices, shifted_vertices = load_intersecting_polytopes(filename)    
+
+    # Initialize data structures
+    if cvxflag
+        lmo_list_nonintersecting = Vector{FrankWolfe.ConvexHullOracle}()    
+        lmo_list_intersecting = Vector{FrankWolfe.ConvexHullOracle}()
+    else
+        lmo_list_nonintersecting = Vector{FrankWolfe.MathOptLMO}()
+        lmo_list_intersecting = Vector{FrankWolfe.MathOptLMO}()
+    end
 
     # Create LMOs
     for (v, vs) in zip(vertices, shifted_vertices)    
         # FrankWolfe.ConvexHullOracle objects
         if cvxflag
-            # Initialize data structures
-            lmo_list_nonintersecting = Vector{FrankWolfe.ConvexHullOracle}()    
-            lmo_list_intersecting = Vector{FrankWolfe.ConvexHullOracle}()
-            # Create FrankWolfe.ConvexHullOracle objects from Matrix{T} objects
+            # Convert from Matrix{T} to Vector{Vector{T}}
+            v = [v[i, :] for i in 1:size(v, 1)]
+            vs = [vs[i, :] for i in 1:size(vs, 1)]
+            # Create FrankWolfe.ConvexHullOracle objects from Matrix{T} objects ()
             lmo_nonintersecting = FrankWolfe.ConvexHullOracle(v)
             lmo_intersecting = FrankWolfe.ConvexHullOracle(vs)
             # Update data structures
@@ -48,9 +52,6 @@ function get_lmos(config::Config, filename::String; cvxflag=false::Bool)
             push!(lmo_list_intersecting, lmo_intersecting)
         # FrankWolfe.MathOptLMO objects
         else
-            # Initialize data structures
-            lmo_list_nonintersecting = Vector{FrankWolfe.MathOptLMO}()
-            lmo_list_intersecting = Vector{FrankWolfe.MathOptLMO}()
             # Instantiate Polyedra.Polyhedron objects
             poly_nonintersecting = polytope(v)
             poly_intersecting = polytope(vs)

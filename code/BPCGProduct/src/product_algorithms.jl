@@ -95,9 +95,31 @@ function run_FW(config::Config, prod_lmo::FrankWolfe.ProductLMO, x0::FrankWolfe.
     end
 end
 
-function get_solutions(lmo_list::FrankWolfe.LinearMinimizationOracle)
+function get_solutions(config::Config, lmo_list::Vector{FrankWolfe.MathOptLMO})
     # Find possible subsets of size `config.k`
-    lmo_products = unique_combinations(lmo_list, config)
+    lmo_products = unique_combinations(config, lmo_list)
+    
+    trajectories = []
+
+    for lmos in lmo_products
+        prod_lmo = create_product_lmo(config, lmos)
+        println("\n\n\n---------------------------------------------------------")
+        println("---------------------------------------------------------")
+        println("LMOs: ", [typeof(prod_lmo.lmos[i]) for i in 1:config.k])
+        println("---------------------------------------------------------")
+        println("---------------------------------------------------------")
+        x0 = find_starting_point(config, prod_lmo)
+        # Block-coordinate BPCG with CyclicUpdate
+        println("\n\n\n ----------> Cyclic Block-coordinate BPCG")
+        trajectories_curr = run_FW(config, FrankWolfe.CyclicUpdate(), FrankWolfe.BPCGStep(), prod_lmo, x0)
+        push!(trajectories, trajectories_curr)
+    end
+    return trajectories
+end
+# (Multiple dispatch)
+function get_solutions(config::Config, lmo_list::Vector{FrankWolfe.ConvexHullOracle})
+    # Find possible subsets of size `config.k`
+    lmo_products = unique_combinations(config, lmo_list)
     
     trajectories = []
 

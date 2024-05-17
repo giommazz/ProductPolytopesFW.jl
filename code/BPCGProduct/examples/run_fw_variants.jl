@@ -2,7 +2,7 @@
 using BPCGProduct
 using BPCGProduct: FrankWolfe
 
-config = Config("test/config.yml") # Use parameters from YAML file
+config = Config("examples/config.yml") # Use parameters from YAML file
 
 # Call the main function to run your experiments
 function main(config::Config)

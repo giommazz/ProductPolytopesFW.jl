@@ -41,7 +41,7 @@ function nonredundant_polytope(vertices::Matrix{T}; redundancy_flag=true::Bool) 
         # Find vertices of `poly`
         removevredundancy!(poly)
     end
-    # Type conversion to obtain Matrix{Float64} from `Polyhedra.points(poly)`
+    # Type conversion to obtain Matrix{T} from `Polyhedra.points(poly)`
     vertices = stack(collect(points(poly)), dims=1)
     
     return vertices, poly
@@ -219,8 +219,15 @@ end
 
 # Function to generate a polytope with a given JuMP model
 function polyhedra_to_jump(config::Config, polytope::Polyhedron{T}) where T
+    
+    println("°°°°°°°°°°°°°°°° Polytope dimension: ", Polyhedra.fulldim(polytope))
+    println("°°°°°°°°°°°°°°°° Config dimension: ", config.n)
+
     model = Model()
     @variable(model, x[1:config.n])
+    println("°°°°°°°°°°°°°°°° Variable dimension: ", length(x))
+    readline()
+
     @constraint(model, x in polytope)
     
     return model

@@ -21,16 +21,16 @@ module BPCGProduct
     include("utils.jl")
     include("polytopes.jl")
 
+    # From `config.jl`
+    export Config
     # From `objective_functions.jl`
     export objective, gradient!
     # From `lmos.jl`
-    export create_product_lmo, find_starting_point
-    # From `fw_algorithms.jl`
-    export run_FW
+    export create_product_lmo, find_starting_point, get_lmos
+    # From `product_algorithms_algorithms.jl`
+    export run_FW, get_solutions
     # From `utils.jl`
     export unique_combinations, generate_rand_float_vector
-    # From `config.jl`
-    export Config
     # From `polytopes.jl`
     export generate_intersecting_polytopes, save_intersecting_polytopes, load_intersecting_polytopes
 
