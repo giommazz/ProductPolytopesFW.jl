@@ -219,17 +219,12 @@ end
 
 # Function to generate a polytope with a given JuMP model
 function polyhedra_to_jump(config::Config, polytope::Polyhedron{T}) where T
-    
-    println("°°°°°°°°°°°°°°°° Polytope dimension: ", Polyhedra.fulldim(polytope))
-    println("°°°°°°°°°°°°°°°° Config dimension: ", config.n)
 
-    model = Model()
+    model = Model(GLPK.Optimizer)
     @variable(model, x[1:config.n])
-    println("°°°°°°°°°°°°°°°° Variable dimension: ", length(x))
-    readline()
-
     @constraint(model, x in polytope)
-    
+    # Ensure the model is optimized (neede for reusability of the model)
+    optimize!(model)  
     return model
 end
 

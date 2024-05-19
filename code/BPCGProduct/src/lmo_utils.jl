@@ -50,7 +50,7 @@ function get_lmos(config::Config, filename::String; cvxflag=false::Bool)
             # Update data structures
             push!(lmo_list_nonintersecting, lmo_nonintersecting)
             push!(lmo_list_intersecting, lmo_intersecting)
-        # FrankWolfe.MathOptLMO objects
+        # FrankWolfe.MathOptLMO objects 
         else
             # Instantiate Polyedra.Polyhedron objects
             poly_nonintersecting = polytope(v)
@@ -58,6 +58,9 @@ function get_lmos(config::Config, filename::String; cvxflag=false::Bool)
             # Create JuMP.Model objects from Polyedra.Polyhedron objects
             jump_poly_nonintersecting = polyhedra_to_jump(config, poly_nonintersecting)
             jump_poly_intersecting = polyhedra_to_jump(config, poly_intersecting)
+            # Ensure models are optimized
+            optimize!(jump_poly_nonintersecting)
+            optimize!(jump_poly_intersecting)
             # Create FrankWolfe.MathOptLMO objects from JuMP.Model objects
             lmo_nonintersecting = FrankWolfe.MathOptLMO(jump_poly_nonintersecting.moi_backend)
             lmo_intersecting = FrankWolfe.MathOptLMO(jump_poly_intersecting.moi_backend)
