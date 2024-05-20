@@ -24,12 +24,12 @@ function find_starting_point(config::Config, prod_lmo::FrankWolfe.ProductLMO)
     return FrankWolfe.BlockVector(extreme_points, block_sizes, total_size)
 end
 
-function get_lmos(config::Config, filename::String; cvxflag=false::Bool)
+function get_lmos(config::Config, filename::String; cvxhflag=false::Bool)
     # Load data and transform to Polyhedra.Polyhedron or JuMP.Model
     vertices, shifted_vertices = load_intersecting_polytopes(filename)    
 
     # Initialize data structures
-    if cvxflag
+    if cvxhflag
         lmo_list_nonintersecting = Vector{FrankWolfe.ConvexHullOracle}()    
         lmo_list_intersecting = Vector{FrankWolfe.ConvexHullOracle}()
     else
@@ -40,7 +40,7 @@ function get_lmos(config::Config, filename::String; cvxflag=false::Bool)
     # Create LMOs
     for (v, vs) in zip(vertices, shifted_vertices)    
         # FrankWolfe.ConvexHullOracle objects
-        if cvxflag
+        if cvxhflag
             # Convert from Matrix{T} to Vector{Vector{T}}
             v = [v[i, :] for i in 1:size(v, 1)]
             vs = [vs[i, :] for i in 1:size(vs, 1)]

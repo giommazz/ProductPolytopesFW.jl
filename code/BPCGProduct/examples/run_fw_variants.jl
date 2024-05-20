@@ -24,6 +24,7 @@ function main(config::Config)
     
     #lmo_list = [lmo_probsmplx_1, lmo_probsmplx_3, lmo_infnormball_1, lmo_infnormball_3, lmo_onenormball_2, lmo_onenormball_3]
     lmo_list = [lmo_probsmplx_1, lmo_onenormball_1]
+    # Find possible subsets of size `config.k`
     lmo_products = unique_combinations(lmo_list, config)
     
     for lmos in lmo_products
@@ -34,26 +35,25 @@ function main(config::Config)
         println("LMOs: ", [typeof(prod_lmo.lmos[i]) for i in 1:config.k])
         println("---------------------------------------------------------")
         println("---------------------------------------------------------")
-        x0 = find_starting_point(config, prod_lmo)
 
         # Block-coordinate vanilla FW with CyclicUpdate (cyclic updates over blocks)
         println("\n\n\n ----------> Cyclic Block-coordinate vanilla FW")
-        bc_fw_trajectories = run_FW(config, FrankWolfe.CyclicUpdate(), prod_lmo, x0)
+        bc_fw_trajectories = run_FW(config, FrankWolfe.CyclicUpdate(), prod_lmo)
 
         # Block-coordinate BPCG with CyclicUpdate (cyclic updates over blocks)
         println("\n\n\n ----------> Cyclic Block-coordinate BPCG")
-        bc_bpcg_cyclic_trajectories = run_FW(config, FrankWolfe.CyclicUpdate(), FrankWolfe.BPCGStep(), prod_lmo, x0)
+        bc_bpcg_cyclic_trajectories = run_FW(config, FrankWolfe.CyclicUpdate(), FrankWolfe.BPCGStep(), prod_lmo)
         
         # Block-coordinate BPCG with FullUpdate (Parallel updates over blocks)
         println("\n\n\n ----------> Full Block-coordinate BPCG")
-        bc_bpcg_full_trajectories = run_FW(config, FrankWolfe.FullUpdate(), FrankWolfe.BPCGStep(), prod_lmo, x0)
+        bc_bpcg_full_trajectories = run_FW(config, FrankWolfe.FullUpdate(), FrankWolfe.BPCGStep(), prod_lmo)
         
         # BPCG over full product LMO
         println("\n\n\n ----------> Full BPCG")
-        bpcg_trajectories = run_FW(config, prod_lmo, x0)
+        bpcg_trajectories = run_FW(config, prod_lmo)
 
         println("\n\n\n ----------> AP")
-        altproj_trajectories = run_FW(config, prod_lmo, x0, true)
+        altproj_trajectories = run_FW(config, prod_lmo, true)
 
         #plot_trajectories([bc_fw_trajectories, bc_fw_trajectories, bpcg_trajectories], ["BC-FW", "BC-BPCG", "Full domain BPCG"], xscalelog=true)
     end

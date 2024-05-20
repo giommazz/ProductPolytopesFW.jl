@@ -1,11 +1,12 @@
 # `fw_algorithms.jl`
 # Run Cyclic Block-Coordinate vanilla FW over product LMO
-function run_FW(config::Config, order::FrankWolfe.BlockCoordinateUpdateOrder, prod_lmo::FrankWolfe.ProductLMO, x0::FrankWolfe.BlockVector)
+function run_FW(config::Config, order::FrankWolfe.BlockCoordinateUpdateOrder, prod_lmo::FrankWolfe.ProductLMO)
     
     f = x -> objective(config, x)
     grad! = (storage, x) -> gradient!(config, storage, x)
-
+    x0 = find_starting_point(config, prod_lmo)
     trajectories = []
+
     # x, v, primal_gap, dual_gap
     _, _, _, _, trajectory_data = FrankWolfe.block_coordinate_frank_wolfe(
         f,
@@ -25,12 +26,13 @@ function run_FW(config::Config, order::FrankWolfe.BlockCoordinateUpdateOrder, pr
     return trajectories
 end
 # (Multiple dispatch) Run Block-Coordinate BPCG with specific update order (full, cyclic, etc.) over product LMO
-function run_FW(config::Config, order::FrankWolfe.BlockCoordinateUpdateOrder, update_step::FrankWolfe.UpdateStep, prod_lmo::FrankWolfe.ProductLMO, x0::FrankWolfe.BlockVector)
+function run_FW(config::Config, order::FrankWolfe.BlockCoordinateUpdateOrder, update_step::FrankWolfe.UpdateStep, prod_lmo::FrankWolfe.ProductLMO)
     
     f = x -> objective(config, x)
     grad! = (storage, x) -> gradient!(config, storage, x)
-    
+    x0 = find_starting_point(config, prod_lmo)
     trajectories = []
+
     # x, v, primal_gap, dual_gap
     _, _, _, _, trajectory_data = FrankWolfe.block_coordinate_frank_wolfe(
         f,
@@ -51,12 +53,13 @@ function run_FW(config::Config, order::FrankWolfe.BlockCoordinateUpdateOrder, up
     return trajectories
 end
 # (Multiple dispatch) Run BPCG over full product LMO
-function run_FW(config::Config, prod_lmo::FrankWolfe.ProductLMO, x0::FrankWolfe.BlockVector)
+function run_FW(config::Config, prod_lmo::FrankWolfe.ProductLMO)
     
     f = x -> objective(config, x)
     grad! = (storage, x) -> gradient!(config, storage, x)
-    
+    x0 = find_starting_point(config, prod_lmo)
     trajectories = []
+
     # x, v, primal_gap, dual_gap
     _, _, _, _, _, trajectory_data = FrankWolfe.blended_pairwise_conditional_gradient(
         f,
@@ -74,10 +77,13 @@ function run_FW(config::Config, prod_lmo::FrankWolfe.ProductLMO, x0::FrankWolfe.
     push!(trajectories, trajectory_data)    
     return trajectories
 end
+# TODO. DEBUG!!!
 # (Multiple dispatch) Run Alternating Projections over product LMO
-function run_FW(config::Config, prod_lmo::FrankWolfe.ProductLMO, x0::FrankWolfe.BlockVector, ap_flag::Bool)
+function run_FW(config::Config, prod_lmo::FrankWolfe.ProductLMO, ap_flag::Bool)
     if ap_flag
         trajectories = []
+        x0 = find_starting_point(config, prod_lmo)
+
         # x, v, dual_gap, infeasible
         _, _, _, _, trajectory_data = FrankWolfe.alternating_projections(
             prod_lmo,
@@ -93,48 +99,4 @@ function run_FW(config::Config, prod_lmo::FrankWolfe.ProductLMO, x0::FrankWolfe.
     
         return trajectories
     end
-end
-
-function get_solutions(config::Config, lmo_list::Vector{FrankWolfe.MathOptLMO})
-    # Find possible subsets of size `config.k`
-    lmo_products = unique_combinations(config, lmo_list)
-    
-    trajectories = []
-
-    for lmos in lmo_products
-        prod_lmo = create_product_lmo(config, lmos)
-        println("\n\n\n---------------------------------------------------------")
-        println("---------------------------------------------------------")
-        println("LMOs: ", [typeof(prod_lmo.lmos[i]) for i in 1:config.k])
-        println("---------------------------------------------------------")
-        println("---------------------------------------------------------")
-        x0 = find_starting_point(config, prod_lmo)
-        # Block-coordinate BPCG with CyclicUpdate
-        println("\n\n\n ----------> Cyclic Block-coordinate BPCG")
-        trajectories_curr = run_FW(config, FrankWolfe.CyclicUpdate(), FrankWolfe.BPCGStep(), prod_lmo, x0)
-        push!(trajectories, trajectories_curr)
-    end
-    return trajectories
-end
-# (Multiple dispatch)
-function get_solutions(config::Config, lmo_list::Vector{FrankWolfe.ConvexHullOracle})
-    # Find possible subsets of size `config.k`
-    lmo_products = unique_combinations(config, lmo_list)
-    
-    trajectories = []
-
-    for lmos in lmo_products
-        prod_lmo = create_product_lmo(config, lmos)
-        println("\n\n\n---------------------------------------------------------")
-        println("---------------------------------------------------------")
-        println("LMOs: ", [typeof(prod_lmo.lmos[i]) for i in 1:config.k])
-        println("---------------------------------------------------------")
-        println("---------------------------------------------------------")
-        x0 = find_starting_point(config, prod_lmo)
-        # Block-coordinate BPCG with CyclicUpdate
-        println("\n\n\n ----------> Cyclic Block-coordinate BPCG")
-        trajectories_curr = run_FW(config, FrankWolfe.CyclicUpdate(), FrankWolfe.BPCGStep(), prod_lmo, x0)
-        push!(trajectories, trajectories_curr)
-    end
-    return trajectories
 end
