@@ -19,32 +19,15 @@ function Config()
     return Config(2, 2, [5, 5], 1e-6, 10000, 42)
 end
 
-# Constructor from YAML file
-function Config(yaml_file::String)
+# Constructor from YAML file and possibly set values
+# Can be called, for eaxmple, as Config(<yaml_filename>) or Config(<yaml_filename>; n=n, k=k)
+function Config(yaml_file::String; kwargs...)
+    
     # Load and validate configuration from YAML file
     config = YAML.load(open(yaml_file))
-    
-    # Validation checks (for YAML file dict)
-    validate_config(config)
 
-    # Handle the n_points field
-    n_points = config["n_points"]
-    if n_points == 0
-        # Generate a list of random integers in [3, 200] of length config["k"]
-        Random.seed!(config["seed"])  # Set the seed for reproducibility
-        n_points = [rand(config["n"]:config["n"]*2 + 1) for _ in 1:config["k"]]
-    end
-
-    return Config(config["k"], config["n"], n_points, config["target_tolerance"], config["max_iterations"], config["seed"])
-end
-# (Multiple dispatch) Mixed constructor from YAML file and given values
-function Config(yaml_file::String, overrides::Dict{String, Any})
-    # Load and validate configuration from YAML file
-    config = YAML.load(open(yaml_file))
-    
-    # Apply overrides
-    for (key, value) in overrides
-        config[key] = value
+    for (key, value) in kwargs
+        config[string(key)] = value
     end
 
     # Validation checks (for YAML file dict)
@@ -60,7 +43,6 @@ function Config(yaml_file::String, overrides::Dict{String, Any})
 
     return Config(config["k"], config["n"], n_points, config["target_tolerance"], config["max_iterations"], config["seed"])
 end
-
 
 # Validation checks (for YAML file dict)
 function validate_config(yaml_config::Dict{Any, Any})
