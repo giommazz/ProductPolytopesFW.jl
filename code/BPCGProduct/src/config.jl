@@ -16,7 +16,9 @@ end
 
 # Constructor with default values
 function Config()
-    return Config(2, 2, [5, 5], 1e-6, 10000, 42)
+    c = Config(2, 2, [5, 5], 1e-6, 10000, 42)
+    print_config(c)
+    return c 
 end
 
 # Constructor from YAML file and possibly set values
@@ -40,8 +42,25 @@ function Config(yaml_file::String; kwargs...)
         Random.seed!(config["seed"])  # Set the seed for reproducibility
         n_points = [rand(config["n"]:config["n"]*2 + 1) for _ in 1:config["k"]]
     end
+    c = Config(config["k"], config["n"], n_points, config["target_tolerance"], config["max_iterations"], config["seed"])
+    print_config(c)
+    return c 
+end
 
-    return Config(config["k"], config["n"], n_points, config["target_tolerance"], config["max_iterations"], config["seed"])
+# Function to update Config with any number of arguments
+function update_config(config::Config; kwargs...)
+    # `get(kwargs, :key, default_value)` retrieves value for `:key` from `kwargs` if it exists, o/w returns default_value
+    k = get(kwargs, :k, config.k)
+    n = get(kwargs, :n, config.n)
+    n_points = get(kwargs, :n_points, config.n_points)
+    target_tolerance = get(kwargs, :target_tolerance, config.target_tolerance)
+    max_iterations = get(kwargs, :max_iterations, config.max_iterations)
+    seed = get(kwargs, :seed, config.seed)
+
+    # Return a new Config object with updated values
+    c = Config(k, n, n_points, target_tolerance, max_iterations, seed)
+    print_config(c)
+    return c
 end
 
 # Validation checks (for YAML file dict)
@@ -77,9 +96,13 @@ function validate_config(yaml_config::Dict{Any, Any})
     end
 end
 
-# Function to update Config with extracted `n` and `k`
-function update_config_with_n_k(config::Config, filename::String)
-    n, k = extract_n_k_from_filename(filename)
-    # Since Config is an immutable structure, it is necessary to return a new Config
-    return Config(k, n, config.n_points, config.target_tolerance, config.max_iterations, config.seed)
+# Function to print the config parameters
+function print_config(config::Config)
+    println("Configuration Parameters:")
+    println("  Number of polytopes (k): ", config.k)
+    println("  Dimension of the subspace (n): ", config.n)
+    println("  Number of points (n_points): ", config.n_points)
+    println("  Epsilon-optimality threshold (target_tolerance): ", config.target_tolerance)
+    println("  Number of FW iterations (max_iterations): ", config.max_iterations)
+    println("  Seed for reproducibility (seed): ", config.seed)
 end

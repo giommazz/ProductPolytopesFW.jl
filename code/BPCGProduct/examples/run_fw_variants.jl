@@ -31,9 +31,8 @@ function main(config::Config)
         
         prod_lmo = create_product_lmo(config, lmos)
         println("\n\n\n---------------------------------------------------------")
-        println("---------------------------------------------------------")
-        println("LMOs: ", [typeof(prod_lmo.lmos[i]) for i in 1:config.k])
-        println("---------------------------------------------------------")
+        println("LMOs in ProductLMO: ")
+        for i in [typeof(prod_lmo.lmos[i]) for i in 1:config.k] println("\t$i") end
         println("---------------------------------------------------------")
 
         # Block-coordinate vanilla FW with CyclicUpdate (cyclic updates over blocks)

@@ -266,12 +266,6 @@ function generate_intersecting_polytopes(config::Config)
     return vertices, shifted_vertices, polytopes, intersecting_polytopes_polyhedra, intersecting_polytopes_jump
 end
 
-function generate_filename(config::Config, vertices::Vector{Matrix{T}}) where T
-    sizes = [size(poly_vertices)[1] for poly_vertices in vertices]
-    timestamp = Dates.format(now(), "yyyymmddHHMMSS")
-    return "intersecting_polytopes_n$(config.n)_k$(config.k)_v$(join(sizes, "-"))_t$timestamp.jld2"
-end
-
 # Save data to given .jld2 file
 function save_intersecting_polytopes(
     filename::String,
