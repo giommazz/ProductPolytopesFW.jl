@@ -12,6 +12,7 @@ module BPCGProduct
     using FileIO
     using Dates
     using GLPK
+    using Printf
 
     # Plotting utilities needed to run FrankWolfe/plot_utils.jl
     include(joinpath(dirname(pathof(FrankWolfe)), "../examples/plot_utils.jl"))

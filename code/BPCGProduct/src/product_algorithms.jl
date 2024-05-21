@@ -17,7 +17,7 @@ function run_FW(config::Config, order::FrankWolfe.BlockCoordinateUpdateOrder, pr
         epsilon=config.target_tolerance,
         max_iteration=config.max_iterations,
         line_search=FrankWolfe.Shortstep(one(Int)),
-        print_iter=config.max_iterations / 10,
+        print_iter=100, # config.max_iterations / 10,
         memory_mode=FrankWolfe.InplaceEmphasis(),
         verbose=true,
         trajectory=true,
@@ -43,7 +43,7 @@ function run_FW(config::Config, order::FrankWolfe.BlockCoordinateUpdateOrder, up
         epsilon=config.target_tolerance,
         max_iteration=config.max_iterations,
         line_search=FrankWolfe.Shortstep(one(Int)),
-        print_iter=config.max_iterations / 10,
+        print_iter=100, # config.max_iterations / 10,
         memory_mode=FrankWolfe.InplaceEmphasis(),
         update_step=update_step,
         verbose=true,
@@ -69,7 +69,7 @@ function run_FW(config::Config, prod_lmo::FrankWolfe.ProductLMO)
         epsilon=config.target_tolerance,
         max_iteration=config.max_iterations,
         line_search=FrankWolfe.Shortstep(one(Int)),
-        print_iter=config.max_iterations / 10,
+        print_iter=100, # config.max_iterations / 10,
         memory_mode=FrankWolfe.InplaceEmphasis(),
         verbose=true,
         trajectory=true,
@@ -93,7 +93,7 @@ function run_FW(config::Config, prod_lmo::FrankWolfe.ProductLMO, ap_flag::Bool)
             memory_mode=FrankWolfe.InplaceEmphasis(),
             verbose=true,
             trajectory=true,
-            print_iter=config.max_iterations / 10
+            print_iter=100, # config.max_iterations / 10
         );
         push!(trajectories, trajectory_data);
     

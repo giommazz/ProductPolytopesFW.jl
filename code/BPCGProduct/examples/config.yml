@@ -12,7 +12,7 @@ n_points: 0
 #n_points: [12, 8, 25, 50, 30]
 #n_points: [12, 8, 25, 50, 30, 23, 60, 37, 25, 10]
 # epsilon-optimality threshold
-target_tolerance: 1e-9
+target_tolerance: 1e-12
 # Number of FW iterations
 max_iterations: 1000000
 # Set the seed for reproducibility
