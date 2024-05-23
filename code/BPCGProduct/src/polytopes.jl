@@ -26,15 +26,20 @@ end
 
 # Create Polyhedra.Polyhedron from list of vertices
 function polytope(vertices::Matrix{T}) where T
+    
     return polyhedron(vrep(vertices), CDDLib.Library())
+
 end
 # (Multiple dispatch)
 function polytope(vertices::Vector{Vector{T}}) where T
+    
     return polyhedron(vrep(vertices), CDDLib.Library())
+
 end
 
 # Create non-redundant Polyhedra.Polyhedron from list of vertices
 function nonredundant_polytope(vertices::Matrix{T}; redundancy_flag=true::Bool) where T
+    
     # Use vertices to create object of type Polyhedra.Polyhedron 
     poly = polytope(vertices)
     if redundancy_flag
@@ -47,8 +52,9 @@ function nonredundant_polytope(vertices::Matrix{T}; redundancy_flag=true::Bool) 
     return vertices, poly
 end
 
-# Function to generate a random vertex matrix with bounds for each column
+# Function to generate a random set of polytope vertices, within given bounds for each dimension
 function generate_polytopes(config::Config, idx::Int, bounds::Vector{Tuple{T, T}}) where T
+    
     # Check that the number of columns specified in `config.n` matches the length of `bounds`
     if config.n != length(bounds)
         error("Mismatch: The number of columns in `config` (config.n = $(config.n)) must match the number of elements in `bounds` (length = $(length(bounds))).")
@@ -68,8 +74,12 @@ function generate_polytopes(config::Config, idx::Int, bounds::Vector{Tuple{T, T}
     
     return vertices, poly
 end
-# Function to generate k random vertex matrices with bounds for each column
-function generate_polytopes(config::Config, bounds::Vector{Vector{Tuple{T, T}}}, vertices::Vector{Matrix{T}}, polytopes::Vector{Polyhedron}) where T
+# (Multiple dispatch) Function to generate k random sets of polytope vertices, within given bounds for each dimension
+function generate_polytopes(config::Config, bounds::Vector{Vector{Tuple{T, T}}}) where T
+    
+    vertices = Vector{Matrix{Float64}}()
+    polytopes = Vector{Polyhedron}()
+
     # Generate k polytopes within the specified bounds
     for i in 1:config.k
         # Generate vertices and corresponding polytope
@@ -79,6 +89,31 @@ function generate_polytopes(config::Config, bounds::Vector{Vector{Tuple{T, T}}},
         push!(vertices, verts)
         push!(polytopes, poly)
     end
+
+    # TODO: TRASFORMA I POLYTOPES IN JUMP MODELS E POI ESEGUI COMPUTE_DISTANCE
+    # TODO: RITORNA PURE PRIMAL E FW_GAP
+    return vertices, polytopes
+end
+# (Multiple dispatch) Generate non intersecting polytopes, then intersect them in (at least) one point, then compute tot. distance between them
+function generate_polytopes(config::Config)
+
+    # `n_points` contains n. of vertices used to generate each polytope
+    println("Generating $(config.k) intersecting polytopes of dimension $(config.n) (n. vertices for each: $(config.n_points))")
+    
+    # Generate random, non-intersecting bounds
+    bounds_list = generate_non_intersecting_bounds(config)
+
+    # Generate non intersecting polytopes
+    vertices, polytopes = generate_polytopes(config, bounds_list)
+
+    # Generate intersecting polytopes
+    shifted_vertices, intersecting_polytopes_jump = intersect_polytopes(config, vertices, polytopes)
+
+    # TODO: USE NON INTERSECTING POLYTOPES HERE. ANZI, TRASPORTA STA FUNZIONE DIRETTAMENTE DENTRO generate_polytopes
+    # TODO: QUINDI GENERATE_POLYTOPES DOVREBBE RITORNARE VERTICES, POLYTOPES, PRIMAL, FW_GAP
+    primal, fw_gap = compute_distance(config, intersecting_polytopes_jump)
+
+    return vertices, shifted_vertices, primal, fw_gap
 end
 
 # Function to find the closest points between two sets of points
@@ -116,6 +151,7 @@ function closest_pair(config::Config, V1::Matrix{T}, V2::Matrix{T}) where T
 end
 # (Multiple Dispatch) Here the first input is a vector (single point)
 function closest_pair(config::Config, v::Vector{T}, V2::Matrix{T}) where T
+    
     # Check that the vector and matrix have the correct number of columns
     if length(v) != config.n || size(V2, 2) != config.n
         error("Both the point and the point set must have the dimension specified in `config.n`.")
@@ -162,7 +198,7 @@ function intersect_polytopes(config::Config, V1::Matrix{T}, V2::Matrix{T}, polyt
     # Return translated polytope and other info (`points()` returns a matrix with the vertices)
     return shifted_polytope_curr, shifted_vertices_curr, v1_closest, v2_closest, distance
 end
-# (Multiple Dispatch) Function to intersect two polytopes, moving the second unto a given vertex of the first
+# (Multiple Dispatch) Function to intersect two polytopes, moving the second onto a given vertex of the first
 function intersect_polytopes(config::Config, v::Vector{T}, V2::Matrix{T}, polytope_to_move::Polyhedron{T}) where T
     
     # Find the closest pair of points between the two sets of points
@@ -181,25 +217,23 @@ function intersect_polytopes(config::Config, v::Vector{T}, V2::Matrix{T}, polyto
     # Return translated polytope and other info (`points()` returns a matrix with the vertices)
     return shifted_polytope_curr, shifted_vertices_curr, v2_closest, distance
 end
-
-# (Multiple Dispatch) Function to intersect k polytopes
+# (Multiple Dispatch) Function to intersect k polytopes so that the intersection contains (at least) one point
 function intersect_polytopes(
     config::Config,
     vertices::Vector{Matrix{T}},
-    shifted_vertices::Vector{Matrix{T}},
-    polytopes::Vector{Polyhedron},
-    intersecting_polytopes_polyhedra::Vector{Polyhedron},
-    intersecting_polytopes_jump::Vector{Model}
+    polytopes::Vector{Polyhedron}
     ) where T
     
+    # Initialize empty vectors for vertices, Polyhedra polytopes, and Polyhedra intersecting polytopes, JuMP intersecting polytopes
+    shifted_vertices = Vector{Matrix{Float64}}()
+    intersecting_polytopes_jump = Vector{Model}()
+
     # Update P₁ data
-    push!(intersecting_polytopes_polyhedra, polytopes[1])
     push!(intersecting_polytopes_jump, polyhedra_to_jump(config, polytopes[1]))
     push!(shifted_vertices, vertices[1])
     
     # Move P₂ towards P₁ so that they intersect (at least) in v₁, then update P₂ data
     shifted_polytope_curr, shifted_vertices_curr, v₁, _, distance = intersect_polytopes(config, vertices[1], vertices[2], polytopes[2])
-    push!(intersecting_polytopes_polyhedra, shifted_polytope_curr)
     push!(intersecting_polytopes_jump, polyhedra_to_jump(config, shifted_polytope_curr))
     push!(shifted_vertices, shifted_vertices_curr)
 
@@ -209,22 +243,24 @@ function intersect_polytopes(
         shifted_polytope_curr, shifted_vertices_curr, _, distance = intersect_polytopes(config, v₁, vertices[i], polytopes[i])
 
         # Update data
-        push!(intersecting_polytopes_polyhedra, shifted_polytope_curr)
         push!(intersecting_polytopes_jump, polyhedra_to_jump(config, shifted_polytope_curr))
         push!(shifted_vertices, shifted_vertices_curr)
     end
-
     #check_intersection(intersecting_polytopes_polyhedra)
+
+    return shifted_vertices, intersecting_polytopes_jump
+    
 end
 
 # Function to generate a polytope with a given JuMP model
 function polyhedra_to_jump(config::Config, polytope::Polyhedron{T}) where T
-
+    
     model = Model(GLPK.Optimizer)
     @variable(model, x[1:config.n])
     @constraint(model, x in polytope)
-    # Ensure the model is optimized (neede for reusability of the model)
+    # Ensure the model is optimized (needed for reusability of the model in FrankWolfe algorithms)
     optimize!(model)  
+
     return model
 end
 
@@ -242,39 +278,31 @@ function check_intersection(intersecting_polytopes::Vector{Polyhedron})
     @assert intersection_size ≥ 1 "There must be at least one point in the intersection of all polytopes"
 end
 
-# Main function to generate and move polytopes
-# `n_points` contains n. of vertices used to generate each polytope
-function generate_intersecting_polytopes(config::Config)
+# Compute distance between k polytopes, by running the FW algorithm
+function compute_distance(config::Config, lmo_list::Vector{FrankWolfe.LinearMinimizationOracle})
 
-    println("Generating $(config.k) intersecting polytopes of dimension $(config.n) (n. vertices for each: $(config.n_points))")
+    # Redefine `config.max_iterations`
+    configg = Config("examples/config.yml"; max_iterations=5*config.max_iterations)    
+
+    # Create FrankWolfe.ProductLMO from list of LMOs
+    prod_lmo = create_product_lmo(configg, lmo_list)
     
-    # Generate random, non-intersecting bounds
-    bounds_list = generate_non_intersecting_bounds(config)
-
-    # Initialize empty vectors for vertices, Polyhedra polytopes, and Polyhedra intersecting polytopes, JuMP intersecting polytopes
-    vertices = Vector{Matrix{Float64}}()
-    shifted_vertices = Vector{Matrix{Float64}}()
-    polytopes = Vector{Polyhedron}()
-    intersecting_polytopes_polyhedra = Vector{Polyhedron}()
-    intersecting_polytopes_jump = Vector{Model}()
-
-    # Generate non intersecting polytopes
-    generate_polytopes(config, bounds_list, vertices, polytopes)
-
-    intersect_polytopes(config, vertices, shifted_vertices, polytopes, intersecting_polytopes_polyhedra, intersecting_polytopes_jump)
-
-    return vertices, shifted_vertices, polytopes, intersecting_polytopes_polyhedra, intersecting_polytopes_jump
+    # Run Block-coordinate BPCG with CyclicUpdate
+    _, _, primal, fw_gap, _ = run_FW(configg, FrankWolfe.CyclicUpdate(), FrankWolfe.BPCGStep(), prod_lmo)
+    
+    return primal, fw_gap
 end
 
 # Save data to given .jld2 file
 function save_intersecting_polytopes(
     filename::String,
     vertices::Vector{Matrix{T}},
-    shifted_vertices::Vector{Matrix{T}}
+    shifted_vertices::Vector{Matrix{T}},
+    primal::T,
+    fw_gap::T
     ) where T
 
-    # TODO: SALVA VERTICES E VERTICES_INTERSECTING: GABA
-    save(filename, Dict("vertices" => vertices, "shifted_vertices" => shifted_vertices))
+    save(filename, Dict("vertices" => vertices, "shifted_vertices" => shifted_vertices, "primal" => primal, "fw_gap" => fw_gap))
     println("Saving data to $filename")
 end
 # (Multiple dispatch) Automatically generated .jld2 filename
@@ -285,46 +313,20 @@ function save_intersecting_polytopes(
     ) where T
     
     filename = generate_filename(config, vertices)
-    save(filename, Dict("vertices" => vertices, "shifted_vertices" => shifted_vertices))
+    save(filename, Dict("vertices" => vertices, "shifted_vertices" => shifted_vertices, "primal" => primal, "fw_gap" => fw_gap))
     println("Saving data to $filename")
+    
     return filename
 end
 
 # Load data from .jld2 file
 function load_intersecting_polytopes(filename::String)
+    
     f = load(filename)
     vertices = f["vertices"]
     shifted_vertices = f["shifted_vertices"]
-    return vertices, shifted_vertices
-end
-
-# for i in 1:config.k
-#     println("°°°°°°°°°°°°°°°°---------------------------------> [$i]")
+    primal = f["primal"]
+    fw_gap = f["fw_gap"]
     
-#     println("\tVREP")
-#     for constraint in list_of_constraint_types(intersecting_polytopes_jump[i])
-#         println("\t\tConstraint: $constraint")
-#     end
-#     println()
-#     println("\t\tall constraints: ", all_constraints(intersecting_polytopes_jump[i]; include_variable_in_set_constraints = true))
-#     println("number of constraints: $(num_constraints(intersecting_polytopes_jump[i]; count_variable_in_set_constraints = true))")
-#     println()   
-#     println()
-
-
-#     PP = hrep(intersecting_polytopes_polyhedra[i])
-#     println("\tHREP")
-#     PPJ = polyhedra_to_jump(config, intersecting_polytopes_polyhedra[i])
-#     for constraint in list_of_constraint_types(PPJ)
-#         println("\t\tConstraint: $constraint")
-#     end
-#     println()
-#     println("\t\tall constraints: ", all_constraints(intersecting_polytopes_jump[i]; include_variable_in_set_constraints = true))
-#     println("number of constraints: $(num_constraints(intersecting_polytopes_jump[i]; count_variable_in_set_constraints = true))")
-#     println()   
-#     println()
-#     readline()
-# end
-# TODO: 
-# 1) implement deeper intersection, by moving polytopes towards the average of convex hull vertices? Maybe use https://github.com/JuliaPolyhedra/jl/blob/8c131a6cc883c541922a8b8efe835932e8b2593f/src/center.jl#L7
-# 2) also, implement distance function calculator, so we know the optimal solution
+    return vertices, shifted_vertices, primal, fw_gap
+end

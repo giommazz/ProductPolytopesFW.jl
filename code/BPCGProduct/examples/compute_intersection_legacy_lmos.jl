@@ -1,4 +1,4 @@
-# `run_fw_variants.jl`
+# `compute_intersection_legacy_lmos.jl`
 using BPCGProduct
 using BPCGProduct: FrankWolfe
 

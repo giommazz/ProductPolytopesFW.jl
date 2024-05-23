@@ -299,7 +299,9 @@ weakdeps = ["StaticArrays"]
 
 [[deps.FrankWolfe]]
 deps = ["Arpack", "GenericSchur", "Hungarian", "LinearAlgebra", "MathOptInterface", "Printf", "ProgressMeter", "Random", "Setfield", "SparseArrays", "TimerOutputs"]
-git-tree-sha1 = "b4fc8b481206c01602d2df767ef5d2da5aeb3006"
+git-tree-sha1 = "eb83bb99a00d3ca3998c326c28e839c8961e7b30"
+repo-rev = "master"
+repo-url = "https://github.com/ZIB-IOL/FrankWolfe.jl.git"
 uuid = "f55ce6ea-fdc5-4628-88c5-0087fe54bd30"
 version = "0.3.4"
 

@@ -22,20 +22,23 @@ module BPCGProduct
     include("product_algorithms.jl")
     include("utils.jl")
     include("polytopes.jl")
+    include("plotting_utils.jl")
 
     # From `config.jl`
     export Config, update_config
     # From `objective_functions.jl`
     export objective, gradient!
     # From `lmos.jl`
-    export create_product_lmo, find_starting_point, get_lmos
+    export create_product_lmo, find_starting_point, create_lmos
     # From `product_algorithms_algorithms.jl`
-    export run_FW, get_solutions
+    export run_FW
     # From `utils.jl`
-    export unique_combinations, generate_rand_float_vector, extract_n_k_iters_from_filename
+    export unique_combinations, generate_rand_float_vector, extract_n_k_from_filename
     # From `polytopes.jl`
     export generate_intersecting_polytopes, save_intersecting_polytopes, load_intersecting_polytopes
-    #  from `plot_utils.jl`
+    # From `plot_utils.jl`
     export plot_trajectories
+    # From `plotting_utils.jl`
+    export print_trajdata, compute_primal_gap
 
 end # module BPCGProduct

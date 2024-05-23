@@ -1,4 +1,4 @@
-# `get_solutions.jl`
+# `compute_intersection_custom_instances.jl`
 using BPCGProduct
 using FrankWolfe
 
@@ -11,7 +11,7 @@ max_iterations = 5*1000000
 # Use parameters from YAML file
 config = Config("examples/config.yml"; n=n, k=k, max_iterations=max_iterations)
 
-# Use ConvexHullOracle
+# Use FrankWolfe.ConvexHullOracle LMOs (true) or FrankWolfe.MathOptLMO LMOs (false)
 cvxhflag = false
 
 # Load data and transform to Polyhedra.Polyhedron or JuMP.Model
@@ -41,7 +41,7 @@ for lmo_list in [lmo_list_nonintersecting, lmo_list_intersecting]
     
     # add optimal solution
     opt = 0.0
-    if ni_flag opt = 2.117541e+02 end
+    if ni_flag opt = primal end
 
     # Replace "Primal" in the FW log with "Primal Gap", i.e. f(x) with f(x) - f(x*) 
     trajectories_curr_pg = compute_primal_gap(trajectories_curr, opt)

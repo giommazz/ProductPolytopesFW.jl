@@ -4,7 +4,7 @@
 # Number of polytopes
 k: 2
 # Dimension of the subspace in which each polytope lies
-n: 4
+n: 10
 # list of `k` integers, each indicating the n. of points to be used to generate intersecting polytopes 
 n_points: 0
 #n_points: [12, 8]

@@ -21,9 +21,9 @@ function generate_filename(config::Config, vertices::Vector{Matrix{T}}) where T
 end
 
 # Function to extract `n`, `k`, and `max_iterations` from the filename
-function extract_n_k_iters_from_filename(filename::String)
+function extract_n_k_from_filename(filename::String)
     # Regex to match the pattern in the filename
-    m = match(r"_n(\d+)_k(\d+)_mi(\d+)_", filename)
+    m = match(r"_n(\d+)_k(\d+)_", filename)
     if m === nothing
         error("Filename format is incorrect.")
     end
@@ -31,7 +31,6 @@ function extract_n_k_iters_from_filename(filename::String)
     # Extract `n`, `k`, and `max_iterations` from the matched groups
     n = parse(Int, m.captures[1])
     k = parse(Int, m.captures[2])
-    max_iterations = parse(Int, m.captures[3])
     
-    return n, k, max_iterations
+    return n, k
 end

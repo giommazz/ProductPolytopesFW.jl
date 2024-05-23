@@ -5,10 +5,8 @@ function run_FW(config::Config, order::FrankWolfe.BlockCoordinateUpdateOrder, pr
     f = x -> objective(config, x)
     grad! = (storage, x) -> gradient!(config, storage, x)
     x0 = find_starting_point(config, prod_lmo)
-    trajectories = []
 
-    # x, v, primal_gap, dual_gap
-    _, _, _, _, trajectory_data = FrankWolfe.block_coordinate_frank_wolfe(
+    x, v, primal, fw_gap, trajectory_data = FrankWolfe.block_coordinate_frank_wolfe(
         f,
         grad!,
         prod_lmo,
@@ -17,13 +15,12 @@ function run_FW(config::Config, order::FrankWolfe.BlockCoordinateUpdateOrder, pr
         epsilon=config.target_tolerance,
         max_iteration=config.max_iterations,
         line_search=FrankWolfe.Shortstep(one(Int)),
-        print_iter=100, # config.max_iterations / 10,
+        print_iter=config.max_iterations / 10,
         memory_mode=FrankWolfe.InplaceEmphasis(),
         verbose=true,
         trajectory=true,
     );
-    push!(trajectories, trajectory_data)    
-    return trajectories
+    return x, v, primal, fw_gap, trajectory_data
 end
 # (Multiple dispatch) Run Block-Coordinate BPCG with specific update order (full, cyclic, etc.) over product LMO
 function run_FW(config::Config, order::FrankWolfe.BlockCoordinateUpdateOrder, update_step::FrankWolfe.UpdateStep, prod_lmo::FrankWolfe.ProductLMO)
@@ -31,10 +28,8 @@ function run_FW(config::Config, order::FrankWolfe.BlockCoordinateUpdateOrder, up
     f = x -> objective(config, x)
     grad! = (storage, x) -> gradient!(config, storage, x)
     x0 = find_starting_point(config, prod_lmo)
-    trajectories = []
 
-    # x, v, primal_gap, dual_gap
-    _, _, _, _, trajectory_data = FrankWolfe.block_coordinate_frank_wolfe(
+    return FrankWolfe.block_coordinate_frank_wolfe(
         f,
         grad!,
         prod_lmo,
@@ -43,14 +38,13 @@ function run_FW(config::Config, order::FrankWolfe.BlockCoordinateUpdateOrder, up
         epsilon=config.target_tolerance,
         max_iteration=config.max_iterations,
         line_search=FrankWolfe.Shortstep(one(Int)),
-        print_iter=100, # config.max_iterations / 10,
+        print_iter=config.max_iterations / 10,
         memory_mode=FrankWolfe.InplaceEmphasis(),
         update_step=update_step,
         verbose=true,
         trajectory=true,
-    );
-    push!(trajectories, trajectory_data)    
-    return trajectories
+    );  
+    #return x, v, primal, fw_gap, trajectory_data
 end
 # (Multiple dispatch) Run BPCG over full product LMO
 function run_FW(config::Config, prod_lmo::FrankWolfe.ProductLMO)
@@ -58,10 +52,8 @@ function run_FW(config::Config, prod_lmo::FrankWolfe.ProductLMO)
     f = x -> objective(config, x)
     grad! = (storage, x) -> gradient!(config, storage, x)
     x0 = find_starting_point(config, prod_lmo)
-    trajectories = []
 
-    # x, v, primal_gap, dual_gap
-    _, _, _, _, _, trajectory_data = FrankWolfe.blended_pairwise_conditional_gradient(
+    x, v, primal, fw_gap, trajectory_data = FrankWolfe.blended_pairwise_conditional_gradient(
         f,
         grad!,
         prod_lmo,
@@ -69,13 +61,12 @@ function run_FW(config::Config, prod_lmo::FrankWolfe.ProductLMO)
         epsilon=config.target_tolerance,
         max_iteration=config.max_iterations,
         line_search=FrankWolfe.Shortstep(one(Int)),
-        print_iter=100, # config.max_iterations / 10,
+        print_iter=config.max_iterations / 10,
         memory_mode=FrankWolfe.InplaceEmphasis(),
         verbose=true,
         trajectory=true,
     );
-    push!(trajectories, trajectory_data)    
-    return trajectories
+    return x, v, primal, fw_gap, trajectory_data
 end
 # TODO. DEBUG!!!
 # (Multiple dispatch) Run Alternating Projections over product LMO
@@ -84,8 +75,7 @@ function run_FW(config::Config, prod_lmo::FrankWolfe.ProductLMO, ap_flag::Bool)
         trajectories = []
         x0 = find_starting_point(config, prod_lmo)
 
-        # x, v, dual_gap, infeasible
-        _, _, _, _, trajectory_data = FrankWolfe.alternating_projections(
+        x, v, dual_gap, infeasible, trajectory_data = FrankWolfe.alternating_projections(
             prod_lmo,
             x0,
             epsilon=config.target_tolerance,
@@ -93,10 +83,10 @@ function run_FW(config::Config, prod_lmo::FrankWolfe.ProductLMO, ap_flag::Bool)
             memory_mode=FrankWolfe.InplaceEmphasis(),
             verbose=true,
             trajectory=true,
-            print_iter=100, # config.max_iterations / 10
+            print_iter=config.max_iterations / 10
         );
         push!(trajectories, trajectory_data);
     
-        return trajectories
+        return x, v, primal, fw_gap, trajectories
     end
 end
