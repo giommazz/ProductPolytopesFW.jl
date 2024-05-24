@@ -3,7 +3,7 @@ using BPCGProduct
 using FrankWolfe
 
 # Select instance file: contains two instances, with k polytopes, intersecting and non-intersecting
-filename = "intersecting_polytopes_n10_k2_v20-21_t20240524113914.jld2"
+filename = "intersecting_polytopes_n10_k2_v20-21_t20240524152154.jld2"
 
 n, k = extract_n_k_from_filename(filename)
 
@@ -15,7 +15,7 @@ print_config(config)
 cvxhflag = false
 
 # Load data and transform to Polyhedra.Polyhedron or JuMP.Model
-vertices, shifted_vertices, primal, fw_gap = load_intersecting_polytopes(filename)    
+vertices, shifted_vertices, primal, fw_gap = load_polytopes(filename)    
 
 # Retrieve nonintersecting and intersecting LMOs from previously generated instances
 lmo_list = create_lmos(config, [vertices, shifted_vertices], cvxhflag=cvxhflag)
@@ -57,3 +57,6 @@ labels = ["Non-Intersecting", "Intersecting"]
 plot_trajectories(trajectories, labels, yscalelog=false, xscalelog=true)
 
 #print_trajdata(trajectories, 10, 2.540537e+02)
+
+
+#cp lib-src/.libs/* ~/.julia/artifacts/ec0212406c820d6b35b1c8b400a5ad8c67743fda/lib/

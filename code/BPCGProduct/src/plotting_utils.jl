@@ -23,36 +23,15 @@ function print_trajdata(trajdata::Vector{Any}, print_iter::Int64, opt::Float64)
     end
 end
 
-# return new trajectory data, replacing "Primal" f(x) with "Primal Gap" f(x)  -f(x*)
-# function compute_primal_gap(trajectories_curr::Vector{Any}, opt::Float64)
-#     trajectories_curr_pg = deepcopy(trajectories_curr)
-#     # Iterate over each block of trajectory data
-#     for i in eachindex(trajectories_curr_pg)
-#         # Iterate over each tuple within the current block
-#         for j in eachindex(trajectories_curr_pg[i])
-#             iter, prim, dual, dgap, time = trajectories_curr_pg[i][j]
-#             # Compute primal gap
-#             pgap = prim - opt
-#             # Replace current tuple with a new one including the primal gap instead of the primal value
-#             trajectories_curr_pg[i][j] = (iter, pgap, dual, dgap, time)
-#         end
-#     end
-#     return trajectories_curr_pg
-# end
-
-
 function compute_primal_gap(trajectories_curr::Vector{Any}, opt::Float64)
     trajectories_curr_pg = deepcopy(trajectories_curr)
-    # Iterate over each block of trajectory data
-    for i in eachindex(trajectories_curr_pg)
-        # Iterate over each tuple within the current block
-        for j in eachindex(trajectories_curr_pg[i])
-            iter, prim, dual, dgap, time = trajectories_curr_pg[i][j]
-            # Compute primal gap
-            pgap = prim - opt
-            # Replace current tuple with a new one including the primal gap instead of the primal value
-            trajectories_curr_pg[i][j] = (iter, pgap, dual, dgap, time)
-        end
+    # Iterate over each tuple within the current block
+    for i in 1:length(trajectories_curr_pg)
+        iter, primal, dual, dgap, time = trajectories_curr_pg[i]    
+        # Compute primal gap
+        pgap = primal - opt
+        # Replace current tuple with a new one including the primal gap instead of the primal value
+        trajectories_curr_pg[i] = (iter, pgap, dual, dgap, time)
     end
     return trajectories_curr_pg
 end

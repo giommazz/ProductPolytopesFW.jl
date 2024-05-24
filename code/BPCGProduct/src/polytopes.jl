@@ -30,13 +30,13 @@ end
 # Create Polyhedra.Polyhedron from list of vertices
 function polytope(vertices::Matrix{T}) where T
     
-    # return polyhedron(vrep(vertices), CDDLib.Library(:exact))
-    return polyhedron(vrep(vertices), CDDLib.Library())
+    #return polyhedron(vrep(vertices), CDDLib.Library(:exact))
+    return polyhedron(vrep(vertices))#, CDDLib.Library())
 end
 # (Multiple dispatch)
 function polytope(vertices::Vector{Vector{T}}) where T
-    # return polyhedron(vrep(vertices), CDDLib.Library(:exact))
-    return polyhedron(vrep(vertices), CDDLib.Library())
+    #return polyhedron(vrep(vertices), CDDLib.Library(:exact))
+    return polyhedron(vrep(vertices))#, CDDLib.Library())
 end
 
 # Create non-redundant Polyhedra.Polyhedron from list of vertices
@@ -305,7 +305,7 @@ end
 
 
 # Save data to given .jld2 file
-function save_intersecting_polytopes(
+function save_polytopes(
     filename::String,
     vertices::Vector{Matrix{T}},
     shifted_vertices::Vector{Matrix{T}},
@@ -317,7 +317,7 @@ function save_intersecting_polytopes(
     println("Saving data to $filename")
 end
 # (Multiple dispatch) Automatically generated .jld2 filename
-function save_intersecting_polytopes(
+function save_polytopes(
     config::Config,
     vertices::Vector{Matrix{T}},
     shifted_vertices::Vector{Matrix{T}},
@@ -333,7 +333,7 @@ function save_intersecting_polytopes(
 end
 
 # Load data from .jld2 file
-function load_intersecting_polytopes(filename::String)
+function load_polytopes(filename::String)
     
     f = load(filename)
     vertices = f["vertices"]
