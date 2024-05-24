@@ -11,7 +11,7 @@ module BPCGProduct
     using Polyhedra
     using FileIO
     using Dates
-    using GLPK
+    using GLPK, SCIP, HiGHS
     using Printf
 
     # Plotting utilities needed to run FrankWolfe/plot_utils.jl
@@ -25,7 +25,7 @@ module BPCGProduct
     include("plotting_utils.jl")
 
     # From `config.jl`
-    export Config, update_config
+    export Config, print_config
     # From `objective_functions.jl`
     export objective, gradient!
     # From `lmos.jl`
@@ -35,7 +35,7 @@ module BPCGProduct
     # From `utils.jl`
     export unique_combinations, generate_rand_float_vector, extract_n_k_from_filename
     # From `polytopes.jl`
-    export generate_intersecting_polytopes, save_intersecting_polytopes, load_intersecting_polytopes
+    export generate_polytopes, save_intersecting_polytopes, load_intersecting_polytopes
     # From `plot_utils.jl`
     export plot_trajectories
     # From `plotting_utils.jl`

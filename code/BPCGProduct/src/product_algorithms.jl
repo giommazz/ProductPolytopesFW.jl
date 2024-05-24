@@ -29,7 +29,7 @@ function run_FW(config::Config, order::FrankWolfe.BlockCoordinateUpdateOrder, up
     grad! = (storage, x) -> gradient!(config, storage, x)
     x0 = find_starting_point(config, prod_lmo)
 
-    return FrankWolfe.block_coordinate_frank_wolfe(
+    x, v, primal, fw_gap, trajectory_data = FrankWolfe.block_coordinate_frank_wolfe(
         f,
         grad!,
         prod_lmo,
@@ -44,7 +44,7 @@ function run_FW(config::Config, order::FrankWolfe.BlockCoordinateUpdateOrder, up
         verbose=true,
         trajectory=true,
     );  
-    #return x, v, primal, fw_gap, trajectory_data
+    return x, v, primal, fw_gap, trajectory_data
 end
 # (Multiple dispatch) Run BPCG over full product LMO
 function run_FW(config::Config, prod_lmo::FrankWolfe.ProductLMO)
@@ -75,7 +75,7 @@ function run_FW(config::Config, prod_lmo::FrankWolfe.ProductLMO, ap_flag::Bool)
         trajectories = []
         x0 = find_starting_point(config, prod_lmo)
 
-        x, v, dual_gap, infeasible, trajectory_data = FrankWolfe.alternating_projections(
+        x, v, fw_gap, infeasible, trajectory_data = FrankWolfe.alternating_projections(
             prod_lmo,
             x0,
             epsilon=config.target_tolerance,
@@ -87,6 +87,6 @@ function run_FW(config::Config, prod_lmo::FrankWolfe.ProductLMO, ap_flag::Bool)
         );
         push!(trajectories, trajectory_data);
     
-        return x, v, primal, fw_gap, trajectories
+        return x, v, primal, fw_gap, infeasible, trajectories
     end
 end

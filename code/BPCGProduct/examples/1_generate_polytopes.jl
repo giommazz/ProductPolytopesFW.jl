@@ -3,6 +3,8 @@ using BPCGProduct
 
 # Use parameters from YAML file
 config = Config("examples/config.yml")
+print_config(config)
+
 # Generate instances 
 vertices, shifted_vertices, primal, fw_gap = generate_polytopes(config)
 

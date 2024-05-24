@@ -24,50 +24,44 @@ function find_starting_point(config::Config, prod_lmo::FrankWolfe.ProductLMO)
     return FrankWolfe.BlockVector(extreme_points, block_sizes, total_size)
 end
 
-# Initialize LMOs for given sets of `vertices` (non intersecting) and `shifted_vertices` (intersecting)
+# Initialize LMOs for given sets of `vertices`
 # Depending on `cvxhflag`, create either `FrankWolfe.ConvexHullOracle` (true) or `FrankWolfe.MathOptLMO` (false) objects.
-function create_lmos(config::Config, vertices::Vector{Matrix{T}}, shifted_vertices::Vector{Matrix{T}}; cvxhflag=false::Bool) where T
-
+function create_lmos(config::Config, vertices::Vector{Matrix{T}}; cvxhflag::Bool=false) where T
     # Initialize data structures
-    if cvxhflag
-        lmo_list_nonintersecting = Vector{FrankWolfe.ConvexHullOracle}()    
-        lmo_list_intersecting = Vector{FrankWolfe.ConvexHullOracle}()
-    else
-        lmo_list_nonintersecting = Vector{FrankWolfe.MathOptLMO}()
-        lmo_list_intersecting = Vector{FrankWolfe.MathOptLMO}()
-    end
+    if cvxhflag lmo_list = Vector{FrankWolfe.ConvexHullOracle}() else lmo_list = Vector{FrankWolfe.MathOptLMO}() end
 
     # Create LMOs
-    for (v, vs) in zip(vertices, shifted_vertices)    
-        # FrankWolfe.ConvexHullOracle objects
-        if cvxhflag
+    for v in vertices
+        if cvxhflag # FrankWolfe.ConvexHullOracle objects
             # Convert from Matrix{T} to Vector{Vector{T}}
             v = [v[i, :] for i in 1:size(v, 1)]
-            vs = [vs[i, :] for i in 1:size(vs, 1)]
-            # Create FrankWolfe.ConvexHullOracle objects from Matrix{T} objects ()
-            lmo_nonintersecting = FrankWolfe.ConvexHullOracle(v)
-            lmo_intersecting = FrankWolfe.ConvexHullOracle(vs)
+            # Create FrankWolfe.ConvexHullOracle objects from Matrix{T}
+            lmo = FrankWolfe.ConvexHullOracle(v)
             # Update data structures
-            push!(lmo_list_nonintersecting, lmo_nonintersecting)
-            push!(lmo_list_intersecting, lmo_intersecting)
-        # FrankWolfe.MathOptLMO objects 
-        else
+            push!(lmo_list, lmo)
+        else    # FrankWolfe.MathOptLMO objects 
             # Instantiate Polyedra.Polyhedron objects
-            poly_nonintersecting = polytope(v)
-            poly_intersecting = polytope(vs)
+            poly = polytope(v)
             # Create JuMP.Model objects from Polyedra.Polyhedron objects
-            jump_poly_nonintersecting = polyhedra_to_jump(config, poly_nonintersecting)
-            jump_poly_intersecting = polyhedra_to_jump(config, poly_intersecting)
+            jump_poly = polyhedra_to_jump(config, poly)
             # Ensure models are optimized
-            optimize!(jump_poly_nonintersecting)
-            optimize!(jump_poly_intersecting)
+            optimize!(jump_poly)
             # Create FrankWolfe.MathOptLMO objects from JuMP.Model objects
-            lmo_nonintersecting = FrankWolfe.MathOptLMO(jump_poly_nonintersecting.moi_backend)
-            lmo_intersecting = FrankWolfe.MathOptLMO(jump_poly_intersecting.moi_backend)
+            lmo = FrankWolfe.MathOptLMO(jump_poly.moi_backend)
             # Update data structures
-            push!(lmo_list_nonintersecting, lmo_nonintersecting)
-            push!(lmo_list_intersecting, lmo_intersecting)
+            push!(lmo_list, lmo)
         end
     end
-    return lmo_list_nonintersecting, lmo_list_intersecting
+    return lmo_list
 end
+function create_lmos(config::Config, vertices::Vector{Vector{Matrix{T}}}; cvxhflag::Bool=false) where T
+    lmo_list = []
+    for vs in vertices
+        lmos = create_lmos(config, vs, cvxhflag=cvxhflag)
+        push!(lmo_list, lmos)
+    end
+    return lmo_list
+end
+
+# Initialize LMOs for given sets of `vertices` (non intersecting) and `shifted_vertices` (intersecting)
+# Depending on `cvxhflag`, create either `FrankWolfe.ConvexHullOracle` (true) or `FrankWolfe.MathOptLMO` (false) objects.
