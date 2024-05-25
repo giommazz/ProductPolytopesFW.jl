@@ -1,6 +1,19 @@
-# `compute_intersection_custom_instances.jl`
+# `2_compute_intersection_custom_instances.jl`
 using BPCGProduct
 using FrankWolfe
+
+function push_to_trajectories!(ni_flag::Bool, trajectory_data_curr::Vector{Any}, trajectories_ni::Vector{Any}, trajectories_i::Vector{Any}, primal::Float64)
+    # `primal` ≠ 0.0: the polytopes don't intersect
+    if ni_flag
+        # Replace "Primal" with "Primal Gap" in the FW log, i.e., replace f(x) with f(x) - `primal` 
+        trajectory_data_pg = compute_primal_gap(trajectory_data_curr, primal)
+        push!(trajectories_ni, trajectory_data_pg)
+    # `primal` == 0.0: the polytopes do intersect
+    else    
+        push!(trajectories_i, trajectory_data_curr)
+    end
+end
+
 
 # Select instance file: contains two instances, with k polytopes, intersecting and non-intersecting
 filename = "intersecting_polytopes_n10_k2_v20-21_t20240524152154.jld2"
@@ -20,43 +33,38 @@ vertices, shifted_vertices, primal, fw_gap = load_polytopes(filename)
 # Retrieve nonintersecting and intersecting LMOs from previously generated instances
 lmo_list = create_lmos(config, [vertices, shifted_vertices], cvxhflag=cvxhflag)
 
-# run FW
-trajectories = []
+# Will contain data about diafferent FW runs, for non-intersecting and intersecting polytopes
+trajectories_ni, trajectories_i = [], []
 
 for (i, lmos) in enumerate(lmo_list)
     # nonintersecting flag
     ni_flag = i == 1
     println()
     if ni_flag println("\nNon intersecting") else println("\nIntersecting") end
-    # Find possible subsets of size `config.k`
-    # lmo_products = unique_combinations(config, lmo_list)
-    
-    prod_lmo = create_product_lmo(config, lmos)
-    # println("\n\n\n---------------------------------------------------------")
-    # println("LMOs in ProductLMO: ")
-    # for i in [typeof(prod_lmo.lmos[i]) for i in 1:config.k] println("\t$i") end
-    # println("---------------------------------------------------------")
-    # Block-coordinate BPCG with CyclicUpdate
-    println("----------> Cyclic Block-coordinate BPCG")
-    _, _, _, _, trajectory_data = run_FW(config, FrankWolfe.CyclicUpdate(), FrankWolfe.BPCGStep(), prod_lmo)
-    
-    # add optimal solution
-    opt = 0.0
-    if ni_flag opt = primal end
 
-    # Replace "Primal" in the FW log with "Primal Gap", i.e. f(x) with f(x) - f(x*) 
-    trajectory_data_pg = compute_primal_gap(trajectory_data, opt)
+    prod_lmo = create_product_lmo(config, lmos)
+
+    # Run Frank-Wolfe algorithms and alternating projectiopng, then record trajectory data
+    println("\n\n\n ----------> Cyclic Block-coordinate vanilla CG")
+    _, _, _, _, td_cyc_bc_cg = run_FW(config, FrankWolfe.CyclicUpdate(), prod_lmo)
+    println("\n\n\n ----------> Cyclic Block-coordinate BPCG")
+    _, _, _, _, td_cyc_bc_bpcg = run_FW(config, FrankWolfe.CyclicUpdate(), FrankWolfe.BPCGStep(), prod_lmo)
+    println("\n\n\n ----------> Full Block-coordinate BPCG")
+    _, _, _, _, td_full_bc_cg = run_FW(config, FrankWolfe.FullUpdate(), FrankWolfe.BPCGStep(), prod_lmo)  
+    println("\n\n\n ----------> Full BPCG")
+    _, _, _, _, td_bpcg = run_FW(config, prod_lmo)
+    println("\n\n\n ----------> AP")
+    _, _, _, _, _, td_ap = run_FW(config, prod_lmo, true)
     
-    # Gather data to plot
-    append!(trajectories, trajectory_data_pg)
+    push_to_trajectories!(ni_flag, td_cyc_bc_cg, trajectories_ni, trajectories_i, primal)
+    push_to_trajectories!(ni_flag, td_cyc_bc_bpcg, trajectories_ni, trajectories_i, primal)
+    push_to_trajectories!(ni_flag, td_full_bc_cg, trajectories_ni, trajectories_i, primal)
+    push_to_trajectories!(ni_flag, td_bpcg, trajectories_ni, trajectories_i, primal)
+    push_to_trajectories!(ni_flag, td_ap, trajectories_ni, trajectories_i, primal)
 end
 
 # Labels for the plots
-labels = ["Non-Intersecting", "Intersecting"]
+labels = ["C-BC-FW", "C-BC-BPCG", "F-BC-BPCG", "F-BPCG"] 
 # Plot trajectories
-plot_trajectories(trajectories, labels, yscalelog=false, xscalelog=true)
-
-#print_trajdata(trajectories, 10, 2.540537e+02)
-
-
-#cp lib-src/.libs/* ~/.julia/artifacts/ec0212406c820d6b35b1c8b400a5ad8c67743fda/lib/
+plot_trajectories(trajectories_ni, labels, yscalelog=false, xscalelog=true, filename="examples/plot_ni.png")
+plot_trajectories(trajectories_i, labels, yscalelog=false, xscalelog=true, filename="examples/plot_i.png")

@@ -13,16 +13,10 @@ n_points: 0
 #n_points: [12, 8, 25, 50, 30]
 #n_points: [12, 8, 25, 50, 30, 23, 60, 37, 25, 10]
 # epsilon-optimality threshold
-target_tolerance: 1e-12
+target_tolerance: 1e-06
 # Number of FW iterations
-max_iterations: 1000000
+max_iterations: 50
+# How often FW iteration log is printed to screen
+max_print_iterations: 10
 # Set the seed for reproducibility
-seed: 4
-
-
-
-# [[deps.CDDLib]]
-# deps = ["LinearAlgebra", "MathOptInterface", "Polyhedra", "SparseArrays", "cddlib_jll"]
-# git-tree-sha1 = "f49ad6ace210dc96b88f5c66bd1693c1aa05fefe"
-# uuid = "3391f64e-dcde-5f30-b752-e11513730f60"
-# version = "0.9.3"
+seed: 42

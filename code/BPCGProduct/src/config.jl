@@ -11,15 +11,16 @@ struct Config
     target_tolerance::Float64
     # Number of FW iterations
     max_iterations::Int
+    # How often FW iteration log is printed to screen
+    max_print_iterations::Int
     # Set the seed for reproducibility
     seed::Int
-
 end
 
 # Constructor with default values
 function Config()
     
-    c = Config(2, 2, [5, 5], 1e-6, 10000, 42)
+    c = Config(2, 2, [5, 5], 1e-6, 1000, 100, 42)
     
     return c 
 end
@@ -45,7 +46,7 @@ function Config(yaml_file::String; kwargs...)
         Random.seed!(config["seed"])  # Set the seed for reproducibility
         n_points = [rand(config["n"]:config["n"]*2 + 1) for _ in 1:config["k"]]
     end
-    c = Config(config["k"], config["n"], n_points, config["target_tolerance"], config["max_iterations"], config["seed"])
+    c = Config(config["k"], config["n"], n_points, config["target_tolerance"], config["max_iterations"], config["max_print_iterations"], config["seed"])
     
     return c 
 end
@@ -59,10 +60,11 @@ function update_config(config::Config; kwargs...)
     n_points = get(kwargs, :n_points, config.n_points)
     target_tolerance = get(kwargs, :target_tolerance, config.target_tolerance)
     max_iterations = get(kwargs, :max_iterations, config.max_iterations)
+    max_print_iterations = get(kwargs, :max_iterations, config.max_print_iterations)
     seed = get(kwargs, :seed, config.seed)
 
     # Return a new Config object with updated values
-    c = Config(k, n, n_points, target_tolerance, max_iterations, seed)
+    c = Config(k, n, n_points, target_tolerance, max_iterations, max_print_iterations, seed)
     
     return c
 end
@@ -95,6 +97,11 @@ function validate_config(yaml_config::Dict{Any, Any})
         error("Invalid value for 'max_iterations': must be a positive integer.")
     end
 
+    # Check for `max_print_iterations`
+    if typeof(yaml_config["max_print_iterations"]) != Int || yaml_config["max_print_iterations"] < 1
+        error("Invalid value for 'max_print_iterations': must be a positive integer.")
+    end
+
     # Check for `seed`
     if typeof(yaml_config["seed"]) != Int || yaml_config["seed"] < 0
         error("Invalid value for 'seed': must be a positive integer.")
@@ -111,6 +118,7 @@ function print_config(config::Config)
     println("  Number of points (n_points): ", config.n_points)
     println("  Epsilon-optimality threshold (target_tolerance): ", config.target_tolerance)
     println("  Number of FW iterations (max_iterations): ", config.max_iterations)
+    println("  How often FW iteration log is printed to screen (max_print_iterations): ", config.max_iterations)
     println("  Seed for reproducibility (seed): ", config.seed)
     println()
 
