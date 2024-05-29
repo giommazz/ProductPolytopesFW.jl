@@ -243,8 +243,8 @@ end
 # Function to generate a JuMP.Model object from a Polyhedra.Polyhedron object
 function polyhedra_to_jump(config::Config, polytope::Polyhedron{T}) where T
     
-    model = Model(HiGHS.Optimizer)
-    #set_optimizer_attribute(model, "display/verblevel", 0)
+    model = Model(SCIP.Optimizer)
+    set_optimizer_attribute(model, "display/verblevel", 0)
     @variable(model, x[1:config.n])
     @constraint(model, x in polytope)
     # Ensure the model is optimized (needed for reusability of the model in FrankWolfe algorithms)

@@ -72,8 +72,9 @@ end
 # (Multiple dispatch) Run Alternating Projections over product LMO
 function run_FW(config::Config, prod_lmo::FrankWolfe.ProductLMO, ap_flag::Bool)
     if ap_flag
-        trajectories = []
-        x0 = find_starting_point(config, prod_lmo)
+        
+        # starting point is computed on only one set (e.g. the first LMO in the product)
+        x0 = FrankWolfe.compute_extreme_point(prod_lmo.lmos[1], zeros(config.n))
 
         x, v, fw_gap, infeasible, trajectory_data = FrankWolfe.alternating_projections(
             prod_lmo,
@@ -85,8 +86,7 @@ function run_FW(config::Config, prod_lmo::FrankWolfe.ProductLMO, ap_flag::Bool)
             trajectory=true,
             print_iter=config.max_print_iterations
         );
-        push!(trajectories, trajectory_data);
     
-        return x, v, primal, fw_gap, infeasible, trajectories
+        return x, v, fw_gap, infeasible, trajectory_data
     end
 end

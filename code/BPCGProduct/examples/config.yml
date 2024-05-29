@@ -19,4 +19,4 @@ max_iterations: 50
 # How often FW iteration log is printed to screen
 max_print_iterations: 10
 # Set the seed for reproducibility
-seed: 42
+seed: 1

@@ -16,7 +16,7 @@ end
 
 
 # Select instance file: contains two instances, with k polytopes, intersecting and non-intersecting
-filename = "intersecting_polytopes_n10_k2_v20-21_t20240524152154.jld2"
+filename = "intersecting_polytopes_n10_k2_v20-21_t20240524152154.jld2" #"intersecting_polytopes_n5_k2_v10-11_t20240524121720.jld2" 
 
 n, k = extract_n_k_from_filename(filename)
 
@@ -35,6 +35,9 @@ lmo_list = create_lmos(config, [vertices, shifted_vertices], cvxhflag=cvxhflag)
 
 # Will contain data about diafferent FW runs, for non-intersecting and intersecting polytopes
 trajectories_ni, trajectories_i = [], []
+# Labels for the plots
+labels = ["C-BC-FW", "C-BC-BPCG", "F-BC-BPCG", "F-BPCG", "AP"] 
+
 
 for (i, lmos) in enumerate(lmo_list)
     # nonintersecting flag
@@ -54,7 +57,7 @@ for (i, lmos) in enumerate(lmo_list)
     println("\n\n\n ----------> Full BPCG")
     _, _, _, _, td_bpcg = run_FW(config, prod_lmo)
     println("\n\n\n ----------> AP")
-    _, _, _, _, _, td_ap = run_FW(config, prod_lmo, true)
+    _, _, _, _, td_ap = run_FW(config, prod_lmo, true)
     
     push_to_trajectories!(ni_flag, td_cyc_bc_cg, trajectories_ni, trajectories_i, primal)
     push_to_trajectories!(ni_flag, td_cyc_bc_bpcg, trajectories_ni, trajectories_i, primal)
@@ -63,8 +66,6 @@ for (i, lmos) in enumerate(lmo_list)
     push_to_trajectories!(ni_flag, td_ap, trajectories_ni, trajectories_i, primal)
 end
 
-# Labels for the plots
-labels = ["C-BC-FW", "C-BC-BPCG", "F-BC-BPCG", "F-BPCG"] 
 # Plot trajectories
 plot_trajectories(trajectories_ni, labels, yscalelog=false, xscalelog=true, filename="examples/plot_ni.png")
 plot_trajectories(trajectories_i, labels, yscalelog=false, xscalelog=true, filename="examples/plot_i.png")
