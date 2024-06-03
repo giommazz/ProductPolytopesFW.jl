@@ -278,24 +278,10 @@ function check_intersection(intersecting_polytopes::Vector{Polyhedron})
 end
 
 # Compute distance between k polytopes, by running the FW algorithm
-function compute_distance(config::Config, lmo_list::Vector{FrankWolfe.MathOptLMO})
+function compute_distance(config::Config, lmo_list::Vector{FrankWolfe.LinearMinimizationOracle})
 
     # Redefine `config.max_iterations`
-    configg = Config("examples/config.yml"; max_iterations=5*config.max_iterations)    
-
-    # Create FrankWolfe.ProductLMO from list of LMOs
-    prod_lmo = create_product_lmo(configg, lmo_list)
-    
-    # Run Block-coordinate BPCG with CyclicUpdate
-    _, _, primal, fw_gap, _ = run_FW(configg, FrankWolfe.CyclicUpdate(), FrankWolfe.BPCGStep(), prod_lmo)
-    
-    return primal, fw_gap
-end
-# (Multiple dispatch)
-function compute_distance(config::Config, lmo_list::Vector{FrankWolfe.ConvexHullOracle})
-
-    # Redefine `config.max_iterations`
-    configg = Config("examples/config.yml"; max_iterations=5*config.max_iterations)    
+    configg = Config("examples/config.yml"; max_iterations=config.max_iterations_opt)
 
     # Create FrankWolfe.ProductLMO from list of LMOs
     prod_lmo = create_product_lmo(configg, lmo_list)

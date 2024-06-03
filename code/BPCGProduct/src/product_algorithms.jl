@@ -106,6 +106,18 @@ function push_to_trajectories!(ni_flag::Bool, trajectory_data_curr::Vector{Any},
         push!(trajectories_i, trajectory_data_curr)
     end
 end
+# (Multiple dispatch)
+function push_to_trajectories!(ni_flag::Bool, trajectory_data_curr::Vector{Any}, trajectories::Vector{Any}, primal::Float64)
+    # `primal` ≠ 0.0: the polytopes don't intersect
+    if ni_flag
+        # Replace "Primal" with "Primal Gap" in the FW log, i.e., replace f(x) with f(x) - `primal` 
+        trajectory_data_pg = compute_primal_gap(trajectory_data_curr, primal)
+        push!(trajectories, trajectory_data_pg)
+    # `primal` == 0.0: the polytopes do intersect
+    else    
+        push!(trajectories, trajectory_data_curr)
+    end
+end
 
 # Save trajectory data to given .jld2 file
 function save_trajectories(filename::String, trajectories::Vector{Any})
