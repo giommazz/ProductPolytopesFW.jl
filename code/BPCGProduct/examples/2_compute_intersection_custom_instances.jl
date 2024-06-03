@@ -2,21 +2,9 @@
 using BPCGProduct
 using FrankWolfe
 
-function push_to_trajectories!(ni_flag::Bool, trajectory_data_curr::Vector{Any}, trajectories_ni::Vector{Any}, trajectories_i::Vector{Any}, primal::Float64)
-    # `primal` ≠ 0.0: the polytopes don't intersect
-    if ni_flag
-        # Replace "Primal" with "Primal Gap" in the FW log, i.e., replace f(x) with f(x) - `primal` 
-        trajectory_data_pg = compute_primal_gap(trajectory_data_curr, primal)
-        push!(trajectories_ni, trajectory_data_pg)
-    # `primal` == 0.0: the polytopes do intersect
-    else    
-        push!(trajectories_i, trajectory_data_curr)
-    end
-end
-
-
 # Select instance file: contains two instances, with k polytopes, intersecting and non-intersecting
-filename = "intersecting_polytopes_n10_k2_v20-21_t20240524152154.jld2" #"intersecting_polytopes_n5_k2_v10-11_t20240524121720.jld2" 
+filename = "intersecting_polytopes_n5_k2_v10-11_t20240524121720.jld2" # "intersecting_polytopes_n10_k2_v20-21_t20240524152154.jld2" 
+basename = base_name(filename)
 
 n, k = extract_n_k_from_filename(filename)
 
@@ -55,7 +43,7 @@ for (i, lmos) in enumerate(lmo_list)
     println("\n\n\n ----------> Full Block-coordinate BPCG")
     _, _, _, _, td_full_bc_cg = run_FW(config, FrankWolfe.FullUpdate(), FrankWolfe.BPCGStep(), prod_lmo)  
     println("\n\n\n ----------> Full BPCG")
-    _, _, _, _, td_bpcg = run_FW(config, prod_lmo)
+    _, _, _, _, td_bpcg = run_FW(config, prod_lmo)    
     println("\n\n\n ----------> AP")
     _, _, _, _, td_ap = run_FW(config, prod_lmo, true)
     
@@ -64,8 +52,12 @@ for (i, lmos) in enumerate(lmo_list)
     push_to_trajectories!(ni_flag, td_full_bc_cg, trajectories_ni, trajectories_i, primal)
     push_to_trajectories!(ni_flag, td_bpcg, trajectories_ni, trajectories_i, primal)
     push_to_trajectories!(ni_flag, td_ap, trajectories_ni, trajectories_i, primal)
+
+    # Save trajectories
+    save_trajectories("examples/traj_$basename.jld2", trajectories_ni, trajectories_i)
+
 end
 
 # Plot trajectories
-plot_trajectories(trajectories_ni, labels, yscalelog=false, xscalelog=true, filename="examples/plot_ni.png")
-plot_trajectories(trajectories_i, labels, yscalelog=false, xscalelog=true, filename="examples/plot_i.png")
+plot_trajectories(trajectories_ni, labels, yscalelog=false, xscalelog=true, filename="examples/plot_ni_$basename.png")
+plot_trajectories(trajectories_i, labels, yscalelog=false, xscalelog=true, filename="examples/plot_i_$basename.png")

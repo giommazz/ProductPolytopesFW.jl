@@ -34,3 +34,13 @@ function extract_n_k_from_filename(filename::String)
     
     return n, k
 end
+
+# Takes any variable and returns its name as a String. Use as a macro: @var_name
+macro var_name(var)
+    return string(var)
+end
+
+# Extract base name without extension, for files of following type: "intersecting_polytopes_n5_k2_v10-11_t20240524121720.jld2"
+function base_name(filename::String)
+    return splitext(filename)[1]
+end

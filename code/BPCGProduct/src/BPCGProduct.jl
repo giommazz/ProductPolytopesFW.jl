@@ -18,8 +18,8 @@ module BPCGProduct
     include("config.jl")
     include("objective_functions.jl")
     include("lmo_utils.jl")
-    include("product_algorithms.jl")
     include("utils.jl")
+    include("product_algorithms.jl")
     include("polytopes.jl")
     include("plotting_utils.jl")
 
@@ -30,9 +30,9 @@ module BPCGProduct
     # From `lmos.jl`
     export create_product_lmo, find_starting_point, create_lmos
     # From `product_algorithms_algorithms.jl`
-    export run_FW
+    export run_FW, push_to_trajectories!, save_trajectories, load_trajectories
     # From `utils.jl`
-    export unique_combinations, generate_rand_float_vector, extract_n_k_from_filename
+    export unique_combinations, generate_rand_float_vector, extract_n_k_from_filename, base_name
     # From `polytopes.jl`
     export generate_polytopes, save_polytopes, load_polytopes
     # From `plot_utils.jl`
