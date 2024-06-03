@@ -24,7 +24,7 @@ lmo_list = create_lmos(config, [vertices, shifted_vertices], cvxhflag=cvxhflag)
 # Will contain data about diafferent FW runs, for non-intersecting and intersecting polytopes
 trajectories_ni, trajectories_i = [], []
 # Labels for the plots
-labels = ["C-BC-FW", "C-BC-BPCG", "F-BC-BPCG", "F-BPCG"]#, "AP"] 
+labels = ["C-BC-FW", "C-BC-BPCG", "F-BC-BPCG", "F-BPCG", "AP"]
 
 
 for (i, lmos) in enumerate(lmo_list)
