@@ -56,6 +56,7 @@ To set up the Julia environment necessary to run the experiments, follow these s
 1. Clone this repository and navigate to the `code/BPCGProduct` directory.
 2. Start Julia and activate the local environment
 ```bash
+cd bpcg-product/code/BPCGProduct
 julia --project=. 
 ```
 3. Install and lock the exact package versions
