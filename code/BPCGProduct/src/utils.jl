@@ -5,7 +5,7 @@ function unique_combinations(config::Config, list::Vector{T}) where T
     return collect(combinations(list, config.k))
 end
 
-function generate_rand_float_vector(config::Config; lb=0::T, ub=100::T, seed=42::Int)
+function generate_rand_float_vector(config::Config; lb=0, ub=100, seed=42::Int)
     # Set the seed for reproducibility
     Random.seed!(config.seed)
     # Generate random Float64 in [a, b]

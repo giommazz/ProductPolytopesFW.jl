@@ -1,51 +1,61 @@
 # `polytopes.jl`
 
-# Function to generate non-overlapping bounds for multiple dimensions within [1e-04, 1e+04]
-function generate_nonintersecting_bounds(config::Config; margin::Float64 = 1.0)
+# Function to generate non-overlapping bounds for multiple dimensions within [1e-03, 1e+03]
+# `margin`: ensures min distance between current polytope's UB and next polytope's LB, to create non-overlapping polytopes
+function generate_nonintersecting_bounds(config::Config; margin::Float64 = 100.0)
+    
     bounds_list = Vector{Vector{Tuple{Float64, Float64}}}(undef, config.k)
 
-    # Generate the first bounds randomly within the range [1e-04, 1e+04]
-    # bounds_list[1] = [(rand(0.0:5.0), rand(5.0:10.0)) for _ in 1:config.n]
-    bounds_list[1] = [(rand(1e-04:5.0:1e+04 - 5.0), rand(5.0:5.0:1e+04)) for _ in 1:config.n]
+    # Generate the first bounds randomly as pairs (LB, UB), within the range [1e-03, 1e+03]
+    bounds_list[1] = [(rand(1e-03:100.0:1e+03 - 100.0), rand(100.0:100.0:1e+03)) for _ in 1:config.n]
 
-    # Generate subsequent bounds while ensuring no overlap within the range [1e-04, 1e+04]
+    # Generate subsequent bounds while ensuring no overlap within the range [1e-03, 1e+03]
     for i in 2:config.k
         bounds = Vector{Tuple{Float64, Float64}}(undef, config.n)
 
+        # Initialize bounds for current polytope
         for d in 1:config.n
-            prev_min, prev_max = bounds_list[i - 1][d]
-            # lower_bound = prev_max + margin
-            lower_bound = min(prev_max + margin, 1e+04 - 5.0)
-            # upper_bound = lower_bound + rand(5.0:10.0)
-            upper_bound = min(lower_bound + rand(5.0:5.0:1e+04 - lower_bound), 1e+04)
+            _, prev_max = bounds_list[i - 1][d]
+            # Ensure the new lower bound is at least 'margin' away from the previous upper bound
+            lower_bound = min(prev_max + margin, 1e+03 - 100.0)
+            # Generate the upper bound ensuring it stays within the range and maintains at least 100.0 gap
+            upper_bound = min(lower_bound + rand(100.0:100.0:1e+03 - lower_bound), 1e+03)
+            # Assign new bounds for current dimension
             bounds[d] = (lower_bound, upper_bound)
         end
-
+        # Add bounds for current polytope
         bounds_list[i] = bounds
     end
 
     return bounds_list
 end
 
-TODO: DEBUG
 # Function to generate non-overlapping bounds for multiple dimensions within [1e-04, 1e+04]
+# `margin`: ensures min distance between current polytope's UB and next polytope's LB, to create non-overlapping polytopes
 function generate_nonintersecting_bounds(config::Config; margin::Float64 = 100.0)
+    
     bounds_list = Vector{Vector{Tuple{Float64, Float64}}}(undef, config.k)
 
-    # Generate the first bounds randomly within the range [1e-04, 1e+04]
+    # Generate the first bounds randomly as pairs (LB, UB), within the range [1e-04, 1e+04]
     bounds_list[1] = [(rand(1e-04:1000.0:1e+04 - 1000.0), rand(1000.0:1000.0:1e+04)) for _ in 1:config.n]
 
     # Generate subsequent bounds while ensuring no overlap within the range [1e-04, 1e+04]
     for i in 2:config.k
         bounds = Vector{Tuple{Float64, Float64}}(undef, config.n)
 
+        # Initialize bounds for current polytope
         for d in 1:config.n
-            prev_min, prev_max = bounds_list[i - 1][d]
+            # Get UB from previous polytope for current dimension
+            _, prev_max = bounds_list[i - 1][d]
+            # Ensure new LB is at least `margin` away from previous UB
             lower_bound = min(prev_max + margin, 1e+04 - 1000.0)
+            # Ensure new UB is within the limit, and sufficiently away from LB            
             upper_bound = min(lower_bound + rand(1000.0:1000.0:1e+04 - lower_bound), 1e+04)
+            # Assign new bounds for current dimension
             bounds[d] = (lower_bound, upper_bound)
         end
 
+        # Add bounds for current polytope
         bounds_list[i] = bounds
     end
 
@@ -134,7 +144,9 @@ function generate_polytopes(config::Config)
     bounds_list = generate_nonintersecting_bounds(config)
     # Generate non intersecting polytopes
     vertices, primal, fw_gap = generate_nonintersecting_polytopes(config, bounds_list)
-    prinltn("°°°°°°°°°°°°°°°°°°°°")
+    println("°°°°°°°°°°°°°°°°°°°°")
+
+    TODO: DEBUG FROM HERE, YOU WANTED TO VERIFY TAHT THE POLYTOPES ACTUALLY DON'T OVERLAP, OR DO OVERLAP
     lmos = create_lmos(config, vertices)
     primal, fw_gap = compute_distance(config, lmos)
     readline()
