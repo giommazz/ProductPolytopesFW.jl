@@ -26,13 +26,13 @@ end
 
 # Initialize LMOs for given sets of `vertices`
 # Depending on `cvxhflag`, create either `FrankWolfe.ConvexHullOracle` (true) or `FrankWolfe.MathOptLMO` (false) objects.
-function create_lmos(config::Config, vertices::Vector{Matrix{T}}; cvxhflag::Bool=false) where T
+function create_lmos(config::Config, vertices::Vector{Matrix{T}}) where T
     # Initialize data structures
-    if cvxhflag lmo_list = Vector{FrankWolfe.ConvexHullOracle}() else lmo_list = Vector{FrankWolfe.MathOptLMO}() end
+    if config.cvxhflag lmo_list = Vector{FrankWolfe.ConvexHullOracle}() else lmo_list = Vector{FrankWolfe.MathOptLMO}() end
 
     # Create LMOs
     for v in vertices
-        if cvxhflag # FrankWolfe.ConvexHullOracle objects
+        if config.cvxhflag # FrankWolfe.ConvexHullOracle objects
             # Convert from Matrix{T} to Vector{Vector{T}}
             v = [v[i, :] for i in 1:size(v, 1)]
             # Create FrankWolfe.ConvexHullOracle objects from Matrix{T}
@@ -54,14 +54,11 @@ function create_lmos(config::Config, vertices::Vector{Matrix{T}}; cvxhflag::Bool
     end
     return lmo_list
 end
-function create_lmos(config::Config, vertices::Vector{Vector{Matrix{T}}}; cvxhflag::Bool=false) where T
+function create_lmos(config::Config, vertices::Vector{Vector{Matrix{T}}}) where T
     lmo_list = []
     for vs in vertices
-        lmos = create_lmos(config, vs, cvxhflag=cvxhflag)
+        lmos = create_lmos(config, vs)
         push!(lmo_list, lmos)
     end
     return lmo_list
 end
-
-# Initialize LMOs for given sets of `vertices` (non intersecting) and `shifted_vertices` (intersecting)
-# Depending on `cvxhflag`, create either `FrankWolfe.ConvexHullOracle` (true) or `FrankWolfe.MathOptLMO` (false) objects.

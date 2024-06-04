@@ -1,7 +1,7 @@
 # `polytopes.jl`
 
 # Function to generate non-overlapping bounds for multiple dimensions within [1e-04, 1e+04]
-function generate_non_intersecting_bounds(config::Config; margin::Float64 = 1.0)
+function generate_nonintersecting_bounds(config::Config; margin::Float64 = 1.0)
     bounds_list = Vector{Vector{Tuple{Float64, Float64}}}(undef, config.k)
 
     # Generate the first bounds randomly within the range [1e-04, 1e+04]
@@ -27,18 +27,48 @@ function generate_non_intersecting_bounds(config::Config; margin::Float64 = 1.0)
     return bounds_list
 end
 
+TODO: DEBUG
+# Function to generate non-overlapping bounds for multiple dimensions within [1e-04, 1e+04]
+function generate_nonintersecting_bounds(config::Config; margin::Float64 = 100.0)
+    bounds_list = Vector{Vector{Tuple{Float64, Float64}}}(undef, config.k)
+
+    # Generate the first bounds randomly within the range [1e-04, 1e+04]
+    bounds_list[1] = [(rand(1e-04:1000.0:1e+04 - 1000.0), rand(1000.0:1000.0:1e+04)) for _ in 1:config.n]
+
+    # Generate subsequent bounds while ensuring no overlap within the range [1e-04, 1e+04]
+    for i in 2:config.k
+        bounds = Vector{Tuple{Float64, Float64}}(undef, config.n)
+
+        for d in 1:config.n
+            prev_min, prev_max = bounds_list[i - 1][d]
+            lower_bound = min(prev_max + margin, 1e+04 - 1000.0)
+            upper_bound = min(lower_bound + rand(1000.0:1000.0:1e+04 - lower_bound), 1e+04)
+            bounds[d] = (lower_bound, upper_bound)
+        end
+
+        bounds_list[i] = bounds
+    end
+
+    return bounds_list
+end
+
+
+# TODO: THIS CAUSES NUMERICAL ISSUES WITH THE Polyhedra.jl LIBRARY, DON'T USE FOR NOW (relevant functions commented)
 # Create Polyhedra.Polyhedron from list of vertices
 function polytope(vertices::Matrix{T}) where T
     
-    #return polyhedron(vrep(vertices), CDDLib.Library(:exact))
-    return polyhedron(vrep(vertices))#, CDDLib.Library())
+    # return polyhedron(vrep(vertices), CDDLib.Library())
+    return polyhedron(vrep(vertices), CDDLib.Library(:exact))
+    # return polyhedron(vrep(vertices))
 end
 # (Multiple dispatch)
 function polytope(vertices::Vector{Vector{T}}) where T
-    #return polyhedron(vrep(vertices), CDDLib.Library(:exact))
-    return polyhedron(vrep(vertices))#, CDDLib.Library())
+    
+    # return polyhedron(vrep(vertices), CDDLib.Library())
+    return polyhedron(vrep(vertices), CDDLib.Library(:exact))
+    # return polyhedron(vrep(vertices))
 end
-
+# TODO: THIS CAUSES NUMERICAL ISSUES WITH THE Polyhedra.jl LIBRARY, DON'T USE FOR NOW (relevant functions commented)
 # Create non-redundant Polyhedra.Polyhedron from list of vertices
 function nonredundant_polytope(vertices::Matrix{T}; redundancy_flag=true::Bool) where T
     
@@ -72,7 +102,7 @@ function generate_polytope(config::Config, idx::Int, bounds::Vector{Tuple{T, T}}
         vertices[:, j] = lower_bound .+ (upper_bound - lower_bound) .* rand(Float64, config.n_points[idx])
     end
     # Generate polytope as convex hull of given points, and remove redundant (i.e. non-vertex) points
-    vertices = nonredundant_polytope(vertices)
+    # vertices = nonredundant_polytope(vertices)
     
     return vertices
 end
@@ -89,11 +119,8 @@ function generate_nonintersecting_polytopes(config::Config, bounds::Vector{Vecto
         # Append to `vertices` and `polytopes`
         push!(vertices, verts)
     end
-
     nonintersecting_polytopes_lmos = create_lmos(config, vertices)
-
     primal, fw_gap = compute_distance(config, nonintersecting_polytopes_lmos)
-
     return vertices, primal, fw_gap
 end
 
@@ -104,14 +131,17 @@ function generate_polytopes(config::Config)
     println("Generating $(config.k) intersecting polytopes of dimension $(config.n) (n. vertices for each: $(config.n_points))")
     
     # Generate random, non-intersecting bounds
-    bounds_list = generate_non_intersecting_bounds(config)
-
+    bounds_list = generate_nonintersecting_bounds(config)
     # Generate non intersecting polytopes
     vertices, primal, fw_gap = generate_nonintersecting_polytopes(config, bounds_list)
-
+    prinltn("°°°°°°°°°°°°°°°°°°°°")
+    lmos = create_lmos(config, vertices)
+    primal, fw_gap = compute_distance(config, lmos)
+    readline()
+    
+    
     # Generate intersecting polytopes
     shifted_vertices = intersect_polytopes(config, vertices)
-
     return vertices, shifted_vertices, primal, fw_gap
 end
 
@@ -232,9 +262,7 @@ function intersect_polytopes(
         # Update data
         push!(shifted_vertices, shifted_vertices_curr)
     end
-    println("°°°°°°°°°° Checking intersection! Press Enter")
-    readline()
-    check_intersection(intersecting_polytopes_polyhedra)
+    # check_intersection(intersecting_polytopes_polyhedra)
 
     return shifted_vertices
     
@@ -252,7 +280,7 @@ function polyhedra_to_jump(config::Config, polytope::Polyhedron{T}) where T
 
     return model
 end
-# (Multliple dispatch) Function to generate a Vector{JuMP.Model} from a Vector{Polyhedra.Polyhedron}
+# (Multiple dispatch) Function to generate a Vector{JuMP.Model} from a Vector{Polyhedra.Polyhedron}
 function polyhedra_to_jump(config::Config, polytopes::Vector{Polyhedron{T}}) where T
     
     polytopes_jump = Vector{Model()}()
@@ -263,7 +291,7 @@ function polyhedra_to_jump(config::Config, polytopes::Vector{Polyhedron{T}}) whe
     return polytopes_jump
 end
 
-# Check that intersection of `intersecting_polytopes` is not empty
+# TODO: THIS CAUSES NUMERICAL ISSUES WITH THE Polyhedra.jl LIBRARY, DON'T USE FOR NOW (relevant functions commented)
 # Check that intersection of `intersecting_polytopes` is not empty
 function check_intersection(intersecting_polytopes::Vector{Polyhedron})
     
@@ -279,6 +307,34 @@ end
 
 # Compute distance between k polytopes, by running the FW algorithm
 function compute_distance(config::Config, lmo_list::Vector{FrankWolfe.LinearMinimizationOracle})
+
+    # Redefine `config.max_iterations`
+    configg = Config("examples/config.yml"; max_iterations=config.max_iterations_opt)
+
+    # Create FrankWolfe.ProductLMO from list of LMOs
+    prod_lmo = create_product_lmo(configg, lmo_list)
+    
+    # Run Block-coordinate BPCG with CyclicUpdate
+    _, _, primal, fw_gap, _ = run_FW(configg, FrankWolfe.CyclicUpdate(), FrankWolfe.BPCGStep(), prod_lmo)
+    
+    return primal, fw_gap
+end
+# Compute distance between k polytopes, by running the FW algorithm
+function compute_distance(config::Config, lmo_list::Vector{FrankWolfe.ConvexHullOracle})
+
+    # Redefine `config.max_iterations`
+    configg = Config("examples/config.yml"; max_iterations=config.max_iterations_opt)
+
+    # Create FrankWolfe.ProductLMO from list of LMOs
+    prod_lmo = create_product_lmo(configg, lmo_list)
+    
+    # Run Block-coordinate BPCG with CyclicUpdate
+    _, _, primal, fw_gap, _ = run_FW(configg, FrankWolfe.CyclicUpdate(), FrankWolfe.BPCGStep(), prod_lmo)
+    
+    return primal, fw_gap
+end
+# Compute distance between k polytopes, by running the FW algorithm
+function compute_distance(config::Config, lmo_list::Vector{FrankWolfe.MathOptLMO})
 
     # Redefine `config.max_iterations`
     configg = Config("examples/config.yml"; max_iterations=config.max_iterations_opt)

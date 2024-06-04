@@ -2,13 +2,13 @@
 using BPCGProduct
 using FrankWolfe
 
-function main(config::Config, cvxhflag)
+function main(config::Config)
 
     # Load data and transform to Polyhedra.Polyhedron or JuMP.Model
     vertices, shifted_vertices, primal, _ = load_polytopes(filename)    
 
     # Retrieve nonintersecting and intersecting LMOs from previously generated instances
-    lmo_list = create_lmos(config, [vertices, shifted_vertices], cvxhflag=cvxhflag)
+    lmo_list = create_lmos(config, [vertices, shifted_vertices])
 
     # Will contain data about diafferent FW runs, for non-intersecting and intersecting polytopes
     trajectories_ni, trajectories_i = [], []
@@ -51,7 +51,9 @@ end
 # ---------------------------------------------------------------------------------
 
 # Select instance file: contains two instances, with k polytopes, intersecting and non-intersecting
-filename = "intersecting_polytopes_n5_k2_v10-11_t20240524121720.jld2" # "intersecting_polytopes_n10_k2_v20-21_t20240524152154.jld2" 
+#filename = "intersecting_polytopes_n5_k2_v10-11_t20240524121720.jld2" 
+#filename = "intersecting_polytopes_n10_k2_v20-21_t20240524152154.jld2" 
+filename = "intersecting_polytopes_n50_k2_v94-95_t20240524131142.jld2"
 basename = base_name(filename)
 
 n, k = extract_n_k_from_filename(filename)
@@ -60,11 +62,8 @@ n, k = extract_n_k_from_filename(filename)
 config = Config("examples/config.yml"; n=n, k=k)
 print_config(config)
 
-# Use FrankWolfe.ConvexHullOracle LMOs (true) or FrankWolfe.MathOptLMO LMOs (false)
-cvxhflag = false
-
 # execute main
-trajectories_ni, trajectories_i = main(config, cvxhflag)
+trajectories_ni, trajectories_i = main(config)
 
 # Labels for the plots
 labels = ["C-BC-FW", "C-BC-BPCG", "F-BC-BPCG", "F-BPCG", "AP"]

@@ -30,7 +30,7 @@ function main(config::Config, lmo_list::Vector{FrankWolfe.LinearMinimizationOrac
         
     primal, _ = compute_distance(config, lmo_list)
 
-    prod_lmo = create_product_lmo(config, lmos)
+    prod_lmo = create_product_lmo(config, lmo_list)
     println("\n\n\n---------------------------------------------------------")
     println("LMOs in ProductLMO: ")
     for i in [typeof(prod_lmo.lmos[i]) for i in 1:config.k] println("\t$i") end
@@ -45,14 +45,14 @@ function main(config::Config, lmo_list::Vector{FrankWolfe.LinearMinimizationOrac
     _, _, _, _, td_full_bc_cg = run_FW(config, FrankWolfe.FullUpdate(), FrankWolfe.BPCGStep(), prod_lmo)  
     println("\n\n\n ----------> Full BPCG")
     _, _, _, _, td_bpcg = run_FW(config, prod_lmo)    
-    println("\n\n\n ----------> AP")
-    _, _, _, _, td_ap = run_FW(config, prod_lmo, true)
+    # println("\n\n\n ----------> AP")
+    # _, _, _, _, td_ap = run_FW(config, prod_lmo, true)
 
     push_to_trajectories!(ni_flag, td_cyc_bc_cg, trajectories, primal)
     push_to_trajectories!(ni_flag, td_cyc_bc_bpcg, trajectories, primal)
     push_to_trajectories!(ni_flag, td_full_bc_cg, trajectories, primal)
     push_to_trajectories!(ni_flag, td_bpcg, trajectories, primal)
-    push_to_trajectories!(ni_flag, td_ap, trajectories, primal)
+    # push_to_trajectories!(ni_flag, td_ap, trajectories, primal)
 
     return trajectories
 end
@@ -95,12 +95,13 @@ lmo_list_10 = [lmo_infnormball_2, lmo_onenormball_4]   # intersecting
 lmo_list_11 = [lmo_infnormball_2, lmo_onenormball_3]   # intersecting
 lmo_list_12 = [lmo_infnormball_1, lmo_onenormball_2]   # non intersecting
 
+lmo_list = lmo_list_12
 name, ni_flag = lmo_name(lmo_list)
 
 # execute main
-trajectories = main(config, lmo_list_1, ni_flag)
+trajectories = main(config, lmo_list, ni_flag)
 
 # Labels for the plots
-labels = ["C-BC-FW", "C-BC-BPCG", "F-BC-BPCG", "F-BPCG", "AP"]
+labels = ["C-BC-FW", "C-BC-BPCG", "F-BC-BPCG", "F-BPCG"]#, "AP"]
 # Plot trajectories
-plot_trajectories(trajectories, labels, yscalelog=false, xscalelog=true, filename="examples/plot_$name.png")
+plot_trajectories(trajectories, labels, yscalelog=false, xscalelog=true, filename="examples/plot_$(name)_k$(config.k)_n$(config.n).png")

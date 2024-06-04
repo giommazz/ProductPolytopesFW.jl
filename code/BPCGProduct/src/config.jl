@@ -17,12 +17,14 @@ struct Config
     max_print_iterations::Int
     # Set the seed for reproducibility
     seed::Int
+    # Use FrankWolfe.ConvexHullOracle LMOs (true) or FrankWolfe.MathOptLMO LMOs (false)
+    cvxhflag::Bool
 end
 
 # Constructor with default values
 function Config()
     
-    c = Config(2, 2, [5, 5], 1e-6, 1000, 5000, 100, 42)
+    c = Config(2, 2, [5, 5], 1e-6, 1000, 5000, 100, 42, true)
     
     return c 
 end
@@ -48,7 +50,17 @@ function Config(yaml_file::String; kwargs...)
         Random.seed!(config["seed"])  # Set the seed for reproducibility
         n_points = [rand(config["n"]:config["n"]*2 + 1) for _ in 1:config["k"]]
     end
-    c = Config(config["k"], config["n"], n_points, config["target_tolerance"], config["max_iterations"], config["max_iterations_opt"], config["max_print_iterations"], config["seed"])
+    c = Config(
+            config["k"],
+            config["n"],
+            n_points,
+            config["target_tolerance"],
+            config["max_iterations"],
+            config["max_iterations_opt"],
+            config["max_print_iterations"],
+            config["seed"],
+            config["cvxhflag"]
+            )
     
     return c 
 end
@@ -65,9 +77,10 @@ function update_config(config::Config; kwargs...)
     max_iterations_opt = get(kwargs, :max_iterations_opt, config.max_iterations_opt)
     max_print_iterations = get(kwargs, :max_iterations, config.max_print_iterations)
     seed = get(kwargs, :seed, config.seed)
+    cvxhflag = get(kwargs, :cvxhflag, config.cvxhflag)
 
     # Return a new Config object with updated values
-    c = Config(k, n, n_points, target_tolerance, max_iterations, max_iterations_opt, max_print_iterations, seed)
+    c = Config(k, n, n_points, target_tolerance, max_iterations, max_iterations_opt, max_print_iterations, seed, cvxhflag)
     
     return c
 end
@@ -114,6 +127,11 @@ function validate_config(yaml_config::Dict{Any, Any})
     if typeof(yaml_config["seed"]) != Int || yaml_config["seed"] < 0
         error("Invalid value for 'seed': must be a positive integer.")
     end
+
+    # Check for `cvxhflag`
+    if typeof(yaml_config["cvxhflag"]) != Bool
+        error("Invalid value for 'cvxhflag': must be a boolean.")
+    end
 end
 
 # Function to print the config parameters
@@ -129,6 +147,7 @@ function print_config(config::Config)
     println("  Number of FW iterations to compute optimal solutions (max_iterations_opt): ", config.max_iterations_opt)
     println("  How often FW iteration log is printed to screen (max_print_iterations): ", config.max_print_iterations)
     println("  Seed for reproducibility (seed): ", config.seed)
+    println("  Use FW's ConvexHullOracle LMOs or MathOptLMO (cvxhflag): ", config.cvxhflag)
     println()
 
 end
