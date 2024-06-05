@@ -1,11 +1,9 @@
 # `lmos.jl`
-function create_product_lmo(config::Config, lmo_list)
-    # Check if length of LMO list matches `k`
-    if length(lmo_list) != config.k
-        error("The number of LMOs provided ($(length(lmo_list))) does not match the expected number ($(config.k)).")
-    end
+function create_product_lmo(lmo_list)
+    
     # Convert list of LMOs to a tuple, as required by `FrankWolfe.ProductLMO`
     lmos_tuple = Tuple(lmo_list)
+    
     # Create and return a ProductLMO object
     return FrankWolfe.ProductLMO(lmos_tuple)
 end

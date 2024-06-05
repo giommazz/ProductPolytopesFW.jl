@@ -81,10 +81,11 @@ function generate_polytope(config::Config, idx::Int, bounds::Vector{Tuple{T, T}}
         vertices[:, j] = lower_bound .+ (upper_bound - lower_bound) .* rand(Float64, config.n_points[idx])
     end
     # Generate polytope as convex hull of given points, and remove redundant (i.e. non-vertex) points
-    # vertices = nonredundant_polytope(vertices)
+    vertices = nonredundant_polytope(vertices)
     
     return vertices
 end
+
 # Generate k nonintersecting polytope: generate k random sets of vertices, within given bounds for each dimension
 function generate_nonintersecting_polytopes(config::Config, bounds::Vector{Vector{Tuple{T, T}}}) where T
     
@@ -98,9 +99,10 @@ function generate_nonintersecting_polytopes(config::Config, bounds::Vector{Vecto
         # Append to `vertices` and `polytopes`
         push!(vertices, verts)
     end
+
     nonintersecting_polytopes_lmos = create_lmos(config, vertices)
-    primal, fw_gap = compute_distance(config, nonintersecting_polytopes_lmos)
-    
+    _, _, primal, fw_gap = compute_distance(config, nonintersecting_polytopes_lmos)
+
     # Check that polytope intersection is empty
     if approxequal(primal, 0.0)
         error("Invalid polytopes: they should not intersect, but the total distance among them is $primal.")
@@ -120,12 +122,14 @@ function generate_polytopes(config::Config)
     # Generate non intersecting polytopes
     t = @elapsed vertices, primal, fw_gap = generate_nonintersecting_polytopes(config, bounds_list)
     println("°°°°°°°°°°°°°°°°°°°°°°°°°°°° time for generate_nonintersecting_polytopes: $t")
+    println("Press Enter")
+    readline()
     # Generate intersecting polytopes
     shifted_vertices = intersect_polytopes(config, vertices)
     
     # Check that polytope intersection is not empty
     lmos_shifted = create_lmos(config, shifted_vertices)
-    primal_shifted, _ = compute_distance(config, lmos_shifted)
+    _, _, primal_shifted, _ = compute_distance(config, lmos_shifted)
     if !approxequal(primal_shifted, 0.0)
         error("Invalid polytopes: they should intersect, but the total distance among them is $primal_shifted")
     end
@@ -133,6 +137,39 @@ function generate_polytopes(config::Config)
     return vertices, shifted_vertices, primal, fw_gap
 end
 
+# # Function to find the closest points between two sets of points
+# function closest_pair(config::Config, V1::Matrix{T}, V2::Matrix{T}) where T
+
+#     # Check that both matrices have the correct number of columns
+#     if size(V1, 2) != config.n || size(V2, 2) != config.n
+#         error("Both point sets must have the dimension specified in `config.n`.")
+#     end
+
+#     # Number of points in each set
+#     n_V1 = size(V1, 1)
+#     n_V2 = size(V2, 1)
+
+#     # Initialize minimum distance to infinity and empty indices
+#     min_dist = Inf
+#     closest_indices = (-1, -1)
+
+#     # Iterate through all pairs and find the minimum distance
+#     for i in 1:n_V1
+#         for j in 1:n_V2
+#             dist = sum((V1[i, :] - V2[j, :]).^2)  # Squared Euclidean distance
+#             if dist < min_dist
+#                 min_dist = dist
+#                 closest_indices = (i, j)
+#             end
+#         end
+#     end
+
+#     # Retrieve the closest points
+#     v1_closest = V1[closest_indices[1], :]
+#     v2_closest = V2[closest_indices[2], :]
+
+#     return v1_closest, v2_closest, min_dist
+# end
 # Function to find the closest points between two sets of points
 function closest_pair(config::Config, V1::Matrix{T}, V2::Matrix{T}) where T
 
@@ -140,32 +177,22 @@ function closest_pair(config::Config, V1::Matrix{T}, V2::Matrix{T}) where T
     if size(V1, 2) != config.n || size(V2, 2) != config.n
         error("Both point sets must have the dimension specified in `config.n`.")
     end
-
-    # Number of points in each set
-    n_V1 = size(V1, 1)
-    n_V2 = size(V2, 1)
-
-    # Initialize minimum distance to infinity and empty indices
-    min_dist = Inf
-    closest_indices = (-1, -1)
-
-    # Iterate through all pairs and find the minimum distance
-    for i in 1:n_V1
-        for j in 1:n_V2
-            dist = sum((V1[i, :] - V2[j, :]).^2)  # Squared Euclidean distance
-            if dist < min_dist
-                min_dist = dist
-                closest_indices = (i, j)
-            end
-        end
-    end
-
-    # Retrieve the closest points
-    v1_closest = V1[closest_indices[1], :]
-    v2_closest = V2[closest_indices[2], :]
+    
+    lmos = create_lmos(config, [V1, V2])
+    last_iterate, last_lmo_vertex, primal, _ = compute_distance(config, lmos)
+    println("V1: $V1")
+    println("V2: $V2")
+    println("°°°°°°°°°°°°°°°°°°°°°°°°°°°° last iterate 1: ", last_iterate.blocks[1])
+    println("°°°°°°°°°°°°°°°°°°°°°°°°°°°° last iterate 2: ", last_iterate.blocks[2])
+    println("°°°°°°°°°°°°°°°°°°°°°°°°°°°° last vertex 1: ", last_lmo_vertex.blocks[1])
+    println("°°°°°°°°°°°°°°°°°°°°°°°°°°°° last vertex 2: ", last_lmo_vertex.blocks[2])
+    println("°°°°°°°°°°°°°°°°°°°°°°°°°°°°", primal)
+    println("Press Enter")
+    readline()
 
     return v1_closest, v2_closest, min_dist
 end
+
 # (Multiple Dispatch) Here the first input is a vector (single point)
 function closest_pair(config::Config, v::Vector{T}, V2::Matrix{T}) where T
     
@@ -202,6 +229,9 @@ function intersect_polytopes(config::Config, V1::Matrix{T}, V2::Matrix{T}) where
     # Find the closest pair of points between the two sets of points
     v1_closest, v2_closest, distance = closest_pair(config, V1, V2)
 
+    println("°°°°°°°°°°°°°°°°°°°°°°°°°°°° closest vertices of of P1 and P2: $v1_closest, $v2_closest")
+    println("Press Enter")
+    readline()
     # Create offset vector `v1_closest - v2_closest`
     direction = v1_closest - v2_closest
 
@@ -305,9 +335,9 @@ function compute_distance(config::Config, lmo_list::Vector{FrankWolfe.LinearMini
     prod_lmo = create_product_lmo(config_opt, lmo_list)
     
     # Run Block-coordinate BPCG with CyclicUpdate
-    _, _, primal, fw_gap, _ = run_FW(config_opt, FrankWolfe.CyclicUpdate(), FrankWolfe.BPCGStep(), prod_lmo)
+    last_iterate, last_lmo_vertex, primal, fw_gap, _ = run_FW(config_opt, FrankWolfe.CyclicUpdate(), FrankWolfe.BPCGStep(), prod_lmo)
     
-    return primal, fw_gap
+    return last_iterate, last_lmo_vertex, primal, fw_gap
 end
 # Compute distance between k polytopes, by running the FW algorithm
 function compute_distance(config::Config, lmo_list::Vector{FrankWolfe.ConvexHullOracle})
@@ -316,12 +346,12 @@ function compute_distance(config::Config, lmo_list::Vector{FrankWolfe.ConvexHull
     config_opt = Config("examples/config.yml"; max_iterations=config.max_iterations_opt)
     
     # Create FrankWolfe.ProductLMO from list of LMOs
-    prod_lmo = create_product_lmo(config_opt, lmo_list)
+    prod_lmo = create_product_lmo(lmo_list)
     
     # Run Block-coordinate BPCG with CyclicUpdate
-    _, _, primal, fw_gap, _ = run_FW(config_opt, FrankWolfe.CyclicUpdate(), FrankWolfe.BPCGStep(), prod_lmo)
+    last_iterate, last_lmo_vertex, primal, fw_gap, _ = run_FW(config_opt, FrankWolfe.CyclicUpdate(), FrankWolfe.BPCGStep(), prod_lmo)
     
-    return primal, fw_gap
+    return last_iterate, last_lmo_vertex, primal, fw_gap
 end
 # Compute distance between k polytopes, by running the FW algorithm
 function compute_distance(config::Config, lmo_list::Vector{FrankWolfe.MathOptLMO})
@@ -333,9 +363,9 @@ function compute_distance(config::Config, lmo_list::Vector{FrankWolfe.MathOptLMO
     prod_lmo = create_product_lmo(config_opt, lmo_list)
     
     # Run Block-coordinate BPCG with CyclicUpdate
-    _, _, primal, fw_gap, _ = run_FW(config_opt, FrankWolfe.CyclicUpdate(), FrankWolfe.BPCGStep(), prod_lmo)
+    last_iterate, last_lmo_vertex, primal, fw_gap, _ = run_FW(config_opt, FrankWolfe.CyclicUpdate(), FrankWolfe.BPCGStep(), prod_lmo)
     
-    return primal, fw_gap
+    return last_iterate, last_lmo_vertex, primal, fw_gap
 end
 
 # Save data to given .jld2 file

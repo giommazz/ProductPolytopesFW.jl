@@ -2,13 +2,11 @@
 # Run Cyclic Block-Coordinate vanilla FW over product LMO
 function run_FW(config::Config, order::FrankWolfe.BlockCoordinateUpdateOrder, prod_lmo::FrankWolfe.ProductLMO)
     
-    f = x -> objective(config, x)
-    grad! = (storage, x) -> gradient!(config, storage, x)
     x0 = find_starting_point(config, prod_lmo)
 
     x, v, primal, fw_gap, trajectory_data = FrankWolfe.block_coordinate_frank_wolfe(
-        f,
-        grad!,
+        objective,
+        gradient!,
         prod_lmo,
         x0,
         update_order=order,
@@ -26,13 +24,11 @@ end
 # (Multiple dispatch) Run Block-Coordinate BPCG with specific update order (full, cyclic, etc.) over product LMO
 function run_FW(config::Config, order::FrankWolfe.BlockCoordinateUpdateOrder, update_step::FrankWolfe.UpdateStep, prod_lmo::FrankWolfe.ProductLMO)
     
-    f = x -> objective(config, x)
-    grad! = (storage, x) -> gradient!(config, storage, x)
     x0 = find_starting_point(config, prod_lmo)
 
     x, v, primal, fw_gap, trajectory_data = FrankWolfe.block_coordinate_frank_wolfe(
-        f,
-        grad!,
+        objective,
+        gradient!,
         prod_lmo,
         x0,
         update_order=order,
@@ -51,13 +47,11 @@ end
 # (Multiple dispatch) Run BPCG over full product LMO
 function run_FW(config::Config, prod_lmo::FrankWolfe.ProductLMO)
     
-    f = x -> objective(config, x)
-    grad! = (storage, x) -> gradient!(config, storage, x)
     x0 = find_starting_point(config, prod_lmo)
 
     x, v, primal, fw_gap, trajectory_data = FrankWolfe.blended_pairwise_conditional_gradient(
-        f,
-        grad!,
+        objective,
+        gradient!,
         prod_lmo,
         x0,
         epsilon=config.target_tolerance,
