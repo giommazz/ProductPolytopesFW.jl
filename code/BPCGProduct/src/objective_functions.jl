@@ -15,6 +15,23 @@ function objective(x::FrankWolfe.BlockVector)
     end
     return 0.5 * sum_dist
 end
+# (Multiple dispatch)
+function objective(x::FrankWolfe.BlockVector)
+    
+    TODO: FAI FUNZIONE PER LMO SEMPLICE CON NORMA
+
+    sum_dist = 0.0
+    k = length(x.block_sizes)
+    for i in 1:k  
+        for j in i+1:k
+            xi = x.blocks[i]
+            xj = x.blocks[j]
+            curr = sum((xi - xj).^2)
+            sum_dist += curr
+        end
+    end
+    return 0.5 * sum_dist
+end
 
 # Gradient computation for tuple of vectors
 function gradient!(storage::FrankWolfe.BlockVector, x::FrankWolfe.BlockVector)

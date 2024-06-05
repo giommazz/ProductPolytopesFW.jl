@@ -65,6 +65,28 @@ function run_FW(config::Config, prod_lmo::FrankWolfe.ProductLMO)
 
     return x, v, primal, fw_gap, trajectory_data
 end
+# (Multiple dispatch) Run BPCG over full product LMO
+function run_FW(config::Config, lmo::FrankWolfe.LinearMinimizationOracle)
+    
+    TODO: DEBUG QUI
+    x0 = find_starting_point(config, lmo)
+
+    x, v, primal, fw_gap, trajectory_data = FrankWolfe.blended_pairwise_conditional_gradient(
+        objective,
+        gradient!,
+        lmo,
+        x0,
+        epsilon=config.target_tolerance,
+        max_iteration=config.max_iterations,
+        line_search=FrankWolfe.Shortstep(one(Int)),
+        print_iter=config.max_print_iterations,
+        memory_mode=FrankWolfe.InplaceEmphasis(),
+        verbose=true,
+        trajectory=true,
+    );
+
+    return x, v, primal, fw_gap, trajectory_data
+end
 # (Multiple dispatch) Run Alternating Projections over product LMO
 function run_FW(config::Config, prod_lmo::FrankWolfe.ProductLMO, ap_flag::Bool)
     

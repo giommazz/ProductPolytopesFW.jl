@@ -22,7 +22,7 @@ function find_starting_point(config::Config, prod_lmo::FrankWolfe.ProductLMO)
     return FrankWolfe.BlockVector(extreme_points, block_sizes, total_size)
 end
 
-# Initialize LMOs for given sets of `vertices`
+# Initialize LMOs for given sets of `vertices` k=1 polytope
 # Depending on `cvxhflag`, create either `FrankWolfe.ConvexHullOracle` (true) or `FrankWolfe.MathOptLMO` (false) objects.
 function create_lmos(config::Config, vertices::Vector{Matrix{T}}) where T
     # Initialize data structures
@@ -52,6 +52,7 @@ function create_lmos(config::Config, vertices::Vector{Matrix{T}}) where T
     end
     return lmo_list
 end
+# (Multiple dispatch) k polytopes
 function create_lmos(config::Config, vertices::Vector{Vector{Matrix{T}}}) where T
     lmo_list = []
     for vs in vertices

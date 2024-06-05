@@ -137,39 +137,6 @@ function generate_polytopes(config::Config)
     return vertices, shifted_vertices, primal, fw_gap
 end
 
-# # Function to find the closest points between two sets of points
-# function closest_pair(config::Config, V1::Matrix{T}, V2::Matrix{T}) where T
-
-#     # Check that both matrices have the correct number of columns
-#     if size(V1, 2) != config.n || size(V2, 2) != config.n
-#         error("Both point sets must have the dimension specified in `config.n`.")
-#     end
-
-#     # Number of points in each set
-#     n_V1 = size(V1, 1)
-#     n_V2 = size(V2, 1)
-
-#     # Initialize minimum distance to infinity and empty indices
-#     min_dist = Inf
-#     closest_indices = (-1, -1)
-
-#     # Iterate through all pairs and find the minimum distance
-#     for i in 1:n_V1
-#         for j in 1:n_V2
-#             dist = sum((V1[i, :] - V2[j, :]).^2)  # Squared Euclidean distance
-#             if dist < min_dist
-#                 min_dist = dist
-#                 closest_indices = (i, j)
-#             end
-#         end
-#     end
-
-#     # Retrieve the closest points
-#     v1_closest = V1[closest_indices[1], :]
-#     v2_closest = V2[closest_indices[2], :]
-
-#     return v1_closest, v2_closest, min_dist
-# end
 # Function to find the closest points between two sets of points
 function closest_pair(config::Config, V1::Matrix{T}, V2::Matrix{T}) where T
 
@@ -179,19 +146,41 @@ function closest_pair(config::Config, V1::Matrix{T}, V2::Matrix{T}) where T
     end
     
     lmos = create_lmos(config, [V1, V2])
-    last_iterate, last_lmo_vertex, primal, _ = compute_distance(config, lmos)
-    println("V1: $V1")
-    println("V2: $V2")
-    println("°°°°°°°°°°°°°°°°°°°°°°°°°°°° last iterate 1: ", last_iterate.blocks[1])
-    println("°°°°°°°°°°°°°°°°°°°°°°°°°°°° last iterate 2: ", last_iterate.blocks[2])
-    println("°°°°°°°°°°°°°°°°°°°°°°°°°°°° last vertex 1: ", last_lmo_vertex.blocks[1])
-    println("°°°°°°°°°°°°°°°°°°°°°°°°°°°° last vertex 2: ", last_lmo_vertex.blocks[2])
-    println("°°°°°°°°°°°°°°°°°°°°°°°°°°°°", primal)
-    println("Press Enter")
-    readline()
+    _, last_lmo_solution, _, _ = compute_distance(config, lmos)
+    # `last_lmo_solution` is a FrankWolfe.BlockVector
+    v1_closest, v2_closest = last_lmo_solution.blocks[1], last_lmo_solution.blocks[2]
 
-    return v1_closest, v2_closest, min_dist
+    return v1_closest, v2_closest
 end
+# (Multiple Dispatch) Here the first input is a vector (single point)
+# function closest_pair(config::Config, v::Vector{T}, V2::Matrix{T}) where T
+    
+#     # Check that the vector and matrix have the correct number of columns
+#     if length(v) != config.n || size(V2, 2) != config.n
+#         error("Both the point and the point set must have the dimension specified in `config.n`.")
+#     end
+
+#     # Number of points in V2
+#     n_V2 = size(V2, 1)
+
+#     # Initialize minimum distance to infinity and the index of the closest point
+#     min_dist = Inf
+#     closest_index = -1
+
+#     # Iterate through all points in V2 to find the closest one
+#     for j in 1:n_V2
+#         dist = sum((v - V2[j, :]).^2)  # Squared Euclidean distance
+#         if dist < min_dist
+#             min_dist = dist
+#             closest_index = j
+#         end
+#     end
+
+#     # Retrieve the closest point
+#     v2_closest = V2[closest_index, :]
+
+#     return v2_closest
+# end
 
 # (Multiple Dispatch) Here the first input is a vector (single point)
 function closest_pair(config::Config, v::Vector{T}, V2::Matrix{T}) where T
@@ -200,6 +189,14 @@ function closest_pair(config::Config, v::Vector{T}, V2::Matrix{T}) where T
     if length(v) != config.n || size(V2, 2) != config.n
         error("Both the point and the point set must have the dimension specified in `config.n`.")
     end
+
+    lmo = create_lmos(config, vertices)
+    println(lmo)
+    println(lmo[1])
+    println("Press Enter")
+    readline()
+
+    _, last_lmo_solution, _, _ = compute_distance(config, lmos)
 
     # Number of points in V2
     n_V2 = size(V2, 1)
@@ -220,7 +217,7 @@ function closest_pair(config::Config, v::Vector{T}, V2::Matrix{T}) where T
     # Retrieve the closest point
     v2_closest = V2[closest_index, :]
 
-    return v2_closest, min_dist
+    return v2_closest
 end
 
 # Function to intersect two polytopes, moving the second onto the closest vertex of the first
@@ -325,6 +322,9 @@ function check_intersection(intersecting_polytopes::Vector{Polyhedron})
     @assert intersection_size ≥ 1 "There must be at least one point in the intersection of all polytopes"
 end
 
+TODO: FORSE COMPUTE DISTANCE PUò UTILIZZARE UN EPSILON PIù GREZZO RUSPETTO AL FW NORMALE
+
+
 # Compute distance between k polytopes, by running the FW algorithm
 function compute_distance(config::Config, lmo_list::Vector{FrankWolfe.LinearMinimizationOracle})
 
@@ -339,7 +339,7 @@ function compute_distance(config::Config, lmo_list::Vector{FrankWolfe.LinearMini
     
     return last_iterate, last_lmo_vertex, primal, fw_gap
 end
-# Compute distance between k polytopes, by running the FW algorithm
+# (Multiple dispatch) Compute distance between k polytopes, by running the FW algorithm
 function compute_distance(config::Config, lmo_list::Vector{FrankWolfe.ConvexHullOracle})
 
     # Redefine `config.max_iterations`
@@ -353,7 +353,7 @@ function compute_distance(config::Config, lmo_list::Vector{FrankWolfe.ConvexHull
     
     return last_iterate, last_lmo_vertex, primal, fw_gap
 end
-# Compute distance between k polytopes, by running the FW algorithm
+# (Multiple dispatch) Compute distance between k polytopes, by running the FW algorithm
 function compute_distance(config::Config, lmo_list::Vector{FrankWolfe.MathOptLMO})
 
     # Redefine `config.max_iterations`
@@ -367,6 +367,18 @@ function compute_distance(config::Config, lmo_list::Vector{FrankWolfe.MathOptLMO
     
     return last_iterate, last_lmo_vertex, primal, fw_gap
 end
+# (Multiple dispatch) Compute distance between k polytopes, by running the FW algorithm
+function compute_distance(config::Config, lmo::FrankWolfe.LinearMinimizationOracle)
+
+    # Redefine `config.max_iterations`
+    config_opt = Config("examples/config.yml"; max_iterations=config.max_iterations_opt)
+    
+    # Run Block-coordinate BPCG with CyclicUpdate
+    last_iterate, last_lmo_vertex, primal, fw_gap, _ = run_FW(config_opt, FrankWolfe.CyclicUpdate(), FrankWolfe.BPCGStep(), prod_lmo)
+    
+    return last_iterate, last_lmo_vertex, primal, fw_gap
+end
+TODO: do the same compute distance for MathOpt e ConvexHullOracle
 
 # Save data to given .jld2 file
 function save_polytopes(
