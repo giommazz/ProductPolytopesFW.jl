@@ -44,3 +44,7 @@ end
 function base_name(filename::String)
     return splitext(filename)[1]
 end
+
+# Check if two vectors/numbers are equal (i.e., their difference is equal at each element), up to given tolerance
+# Return true if yes 
+function approxequal(a, b; tol=1e-05) return all(abs.(a .- b) .≤ tol) end

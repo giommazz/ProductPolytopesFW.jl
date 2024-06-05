@@ -32,7 +32,7 @@ module BPCGProduct
     # From `product_algorithms_algorithms.jl`
     export run_FW, push_to_trajectories!, save_trajectories, load_trajectories
     # From `utils.jl`
-    export unique_combinations, generate_rand_float_vector, extract_n_k_from_filename, base_name
+    export unique_combinations, generate_rand_float_vector, extract_n_k_from_filename, base_name, approxequal
     # From `polytopes.jl`
     export generate_polytopes, compute_distance, save_polytopes, load_polytopes
     # From `plot_utils.jl`

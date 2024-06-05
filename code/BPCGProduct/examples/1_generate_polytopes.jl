@@ -6,7 +6,8 @@ config = Config("examples/config.yml")
 print_config(config)
 
 # Generate instances 
-vertices, shifted_vertices, primal, fw_gap = generate_polytopes(config)
+t = @elapsed vertices, shifted_vertices, primal, fw_gap = generate_polytopes(config)
+println("°°°°°°°°°°°°°°°°°°°°°°°°°°°° time generate_polytopes: $t")
 
 # Save data to .jld file
 filename = save_polytopes(config, vertices, shifted_vertices, primal, fw_gap)

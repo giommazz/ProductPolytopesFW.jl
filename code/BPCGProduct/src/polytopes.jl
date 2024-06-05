@@ -1,25 +1,27 @@
 # `polytopes.jl`
-
 # Function to generate non-overlapping bounds for multiple dimensions within [1e-03, 1e+03]
 # `margin`: ensures min distance between current polytope's UB and next polytope's LB, to create non-overlapping polytopes
-function generate_nonintersecting_bounds(config::Config; margin::Float64 = 100.0)
+function generate_nonintersecting_bounds(config::Config; margin::Float64=10.0, stepsize::Float64=200.0, start_point::Float64=-100.0)
     
     bounds_list = Vector{Vector{Tuple{Float64, Float64}}}(undef, config.k)
 
-    # Generate the first bounds randomly as pairs (LB, UB), within the range [1e-03, 1e+03]
-    bounds_list[1] = [(rand(1e-03:100.0:1e+03 - 100.0), rand(100.0:100.0:1e+03)) for _ in 1:config.n]
+    # Generate the first bounds randomly as pairs (LB, UB), within given range
+    lower_bound = rand(start_point : start_point + stepsize - margin)
+    upper_bound = rand(lower_bound + margin : lower_bound + stepsize + margin)
+    bounds_list[1] = [(lower_bound, upper_bound) for _ in 1:config.n]
 
-    # Generate subsequent bounds while ensuring no overlap within the range [1e-03, 1e+03]
+    # Generate subsequent bounds while ensuring no overlap
     for i in 2:config.k
         bounds = Vector{Tuple{Float64, Float64}}(undef, config.n)
 
         # Initialize bounds for current polytope
         for d in 1:config.n
+            # Check bounds from previous polytope
             _, prev_max = bounds_list[i - 1][d]
             # Ensure the new lower bound is at least 'margin' away from the previous upper bound
-            lower_bound = min(prev_max + margin, 1e+03 - 100.0)
-            # Generate the upper bound ensuring it stays within the range and maintains at least 100.0 gap
-            upper_bound = min(lower_bound + rand(100.0:100.0:1e+03 - lower_bound), 1e+03)
+            lower_bound = rand(prev_max + margin : prev_max + stepsize + margin)
+            # Generate the upper bound ensuring it stays within the range
+            upper_bound = rand(lower_bound + margin : lower_bound + stepsize + margin)
             # Assign new bounds for current dimension
             bounds[d] = (lower_bound, upper_bound)
         end
@@ -29,39 +31,6 @@ function generate_nonintersecting_bounds(config::Config; margin::Float64 = 100.0
 
     return bounds_list
 end
-
-# Function to generate non-overlapping bounds for multiple dimensions within [1e-04, 1e+04]
-# `margin`: ensures min distance between current polytope's UB and next polytope's LB, to create non-overlapping polytopes
-function generate_nonintersecting_bounds(config::Config; margin::Float64 = 100.0)
-    
-    bounds_list = Vector{Vector{Tuple{Float64, Float64}}}(undef, config.k)
-
-    # Generate the first bounds randomly as pairs (LB, UB), within the range [1e-04, 1e+04]
-    bounds_list[1] = [(rand(1e-04:1000.0:1e+04 - 1000.0), rand(1000.0:1000.0:1e+04)) for _ in 1:config.n]
-
-    # Generate subsequent bounds while ensuring no overlap within the range [1e-04, 1e+04]
-    for i in 2:config.k
-        bounds = Vector{Tuple{Float64, Float64}}(undef, config.n)
-
-        # Initialize bounds for current polytope
-        for d in 1:config.n
-            # Get UB from previous polytope for current dimension
-            _, prev_max = bounds_list[i - 1][d]
-            # Ensure new LB is at least `margin` away from previous UB
-            lower_bound = min(prev_max + margin, 1e+04 - 1000.0)
-            # Ensure new UB is within the limit, and sufficiently away from LB            
-            upper_bound = min(lower_bound + rand(1000.0:1000.0:1e+04 - lower_bound), 1e+04)
-            # Assign new bounds for current dimension
-            bounds[d] = (lower_bound, upper_bound)
-        end
-
-        # Add bounds for current polytope
-        bounds_list[i] = bounds
-    end
-
-    return bounds_list
-end
-
 
 # TODO: THIS CAUSES NUMERICAL ISSUES WITH THE Polyhedra.jl LIBRARY, DON'T USE FOR NOW (relevant functions commented)
 # Create Polyhedra.Polyhedron from list of vertices
@@ -131,6 +100,12 @@ function generate_nonintersecting_polytopes(config::Config, bounds::Vector{Vecto
     end
     nonintersecting_polytopes_lmos = create_lmos(config, vertices)
     primal, fw_gap = compute_distance(config, nonintersecting_polytopes_lmos)
+    
+    # Check that polytope intersection is empty
+    if approxequal(primal, 0.0)
+        error("Invalid polytopes: they should not intersect, but the total distance among them is $primal.")
+    end
+
     return vertices, primal, fw_gap
 end
 
@@ -143,17 +118,18 @@ function generate_polytopes(config::Config)
     # Generate random, non-intersecting bounds
     bounds_list = generate_nonintersecting_bounds(config)
     # Generate non intersecting polytopes
-    vertices, primal, fw_gap = generate_nonintersecting_polytopes(config, bounds_list)
-    println("°°°°°°°°°°°°°°°°°°°°")
-
-    TODO: DEBUG FROM HERE, YOU WANTED TO VERIFY TAHT THE POLYTOPES ACTUALLY DON'T OVERLAP, OR DO OVERLAP
-    lmos = create_lmos(config, vertices)
-    primal, fw_gap = compute_distance(config, lmos)
-    readline()
-    
-    
+    t = @elapsed vertices, primal, fw_gap = generate_nonintersecting_polytopes(config, bounds_list)
+    println("°°°°°°°°°°°°°°°°°°°°°°°°°°°° time for generate_nonintersecting_polytopes: $t")
     # Generate intersecting polytopes
     shifted_vertices = intersect_polytopes(config, vertices)
+    
+    # Check that polytope intersection is not empty
+    lmos_shifted = create_lmos(config, shifted_vertices)
+    primal_shifted, _ = compute_distance(config, lmos_shifted)
+    if !approxequal(primal_shifted, 0.0)
+        error("Invalid polytopes: they should intersect, but the total distance among them is $primal_shifted")
+    end
+
     return vertices, shifted_vertices, primal, fw_gap
 end
 
@@ -263,13 +239,15 @@ function intersect_polytopes(
     push!(shifted_vertices, vertices[1])
     
     # Move P₂ towards P₁ so that they intersect (at least) in v₁, then update P₂ data
-    shifted_vertices_curr, v₁, _, distance = intersect_polytopes(config, vertices[1], vertices[2])
+    t = @elapsed shifted_vertices_curr, v₁, _, distance = intersect_polytopes(config, vertices[1], vertices[2])
+    println("°°°°°°°°°°°°°°°°°°°°°°°°°°°° time to intersect P₁ and P₂: $t")
     push!(shifted_vertices, shifted_vertices_curr)
 
     # Move each subsequent polytope Pᵢ, for k > 3, to intersect with P₁ in at least v₁, then update Pᵢ data
     for i in 3:config.k
         # Move iᵗʰ polytope so that it intersects with the others in (at least) v₁
-        shifted_vertices_curr, _, distance = intersect_polytopes(config, v₁, vertices[i])
+        t = @elapsed shifted_vertices_curr, _, distance = intersect_polytopes(config, v₁, vertices[i])
+        println("°°°°°°°°°°°°°°°°°°°°°°°°°°°° time to intersect P₁ and P[$i]: $t")
 
         # Update data
         push!(shifted_vertices, shifted_vertices_curr)
@@ -321,13 +299,13 @@ end
 function compute_distance(config::Config, lmo_list::Vector{FrankWolfe.LinearMinimizationOracle})
 
     # Redefine `config.max_iterations`
-    configg = Config("examples/config.yml"; max_iterations=config.max_iterations_opt)
+    config_opt = Config("examples/config.yml"; max_iterations=config.max_iterations_opt)
 
     # Create FrankWolfe.ProductLMO from list of LMOs
-    prod_lmo = create_product_lmo(configg, lmo_list)
+    prod_lmo = create_product_lmo(config_opt, lmo_list)
     
     # Run Block-coordinate BPCG with CyclicUpdate
-    _, _, primal, fw_gap, _ = run_FW(configg, FrankWolfe.CyclicUpdate(), FrankWolfe.BPCGStep(), prod_lmo)
+    _, _, primal, fw_gap, _ = run_FW(config_opt, FrankWolfe.CyclicUpdate(), FrankWolfe.BPCGStep(), prod_lmo)
     
     return primal, fw_gap
 end
@@ -335,13 +313,13 @@ end
 function compute_distance(config::Config, lmo_list::Vector{FrankWolfe.ConvexHullOracle})
 
     # Redefine `config.max_iterations`
-    configg = Config("examples/config.yml"; max_iterations=config.max_iterations_opt)
-
+    config_opt = Config("examples/config.yml"; max_iterations=config.max_iterations_opt)
+    
     # Create FrankWolfe.ProductLMO from list of LMOs
-    prod_lmo = create_product_lmo(configg, lmo_list)
+    prod_lmo = create_product_lmo(config_opt, lmo_list)
     
     # Run Block-coordinate BPCG with CyclicUpdate
-    _, _, primal, fw_gap, _ = run_FW(configg, FrankWolfe.CyclicUpdate(), FrankWolfe.BPCGStep(), prod_lmo)
+    _, _, primal, fw_gap, _ = run_FW(config_opt, FrankWolfe.CyclicUpdate(), FrankWolfe.BPCGStep(), prod_lmo)
     
     return primal, fw_gap
 end
@@ -349,13 +327,13 @@ end
 function compute_distance(config::Config, lmo_list::Vector{FrankWolfe.MathOptLMO})
 
     # Redefine `config.max_iterations`
-    configg = Config("examples/config.yml"; max_iterations=config.max_iterations_opt)
+    config_opt = Config("examples/config.yml"; max_iterations=config.max_iterations_opt)
 
     # Create FrankWolfe.ProductLMO from list of LMOs
-    prod_lmo = create_product_lmo(configg, lmo_list)
+    prod_lmo = create_product_lmo(config_opt, lmo_list)
     
     # Run Block-coordinate BPCG with CyclicUpdate
-    _, _, primal, fw_gap, _ = run_FW(configg, FrankWolfe.CyclicUpdate(), FrankWolfe.BPCGStep(), prod_lmo)
+    _, _, primal, fw_gap, _ = run_FW(config_opt, FrankWolfe.CyclicUpdate(), FrankWolfe.BPCGStep(), prod_lmo)
     
     return primal, fw_gap
 end

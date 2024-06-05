@@ -24,7 +24,7 @@ function lmo_name(lmo_list::Vector{FrankWolfe.LinearMinimizationOracle})
 end
 
 # Call the main function to run your experiments
-function main(config::Config, lmo_list::Vector{FrankWolfe.LinearMinimizationOracle}, ni_flag::Bool)
+function main(config::Config, lmo_list::Vector{FrankWolfe.LinearMinimizationOracle}, ni_flag::Bool, basename::String)
 
     trajectories = []
         
@@ -53,6 +53,9 @@ function main(config::Config, lmo_list::Vector{FrankWolfe.LinearMinimizationOrac
     push_to_trajectories!(ni_flag, td_full_bc_cg, trajectories, primal)
     push_to_trajectories!(ni_flag, td_bpcg, trajectories, primal)
     # push_to_trajectories!(ni_flag, td_ap, trajectories, primal)
+
+    # Save trajectories
+    save_trajectories("examples/traj_$basename.jld2", trajectories_ni, trajectories_i)
 
     return trajectories
 end
@@ -99,7 +102,7 @@ lmo_list = lmo_list_12
 name, ni_flag = lmo_name(lmo_list)
 
 # execute main
-trajectories = main(config, lmo_list, ni_flag)
+trajectories = main(config, lmo_list, ni_flag, "$(name)_k$(config.k)_n$(config.n)")
 
 # Labels for the plots
 labels = ["C-BC-FW", "C-BC-BPCG", "F-BC-BPCG", "F-BPCG"]#, "AP"]
