@@ -96,21 +96,16 @@ function generate_nonintersecting_polytopes(config::Config, bounds::Vector{Vecto
     # Generate k polytopes within the specified bounds
     for i in 1:config.k
         # Generate vertices and corresponding polytope
-        t = @elapsed verts = generate_polytope(config, i, bounds[i])
-        println("°°°°°°°°°°°°°°°°°°°°°°°°°°°° time for generate_polytope: $t")
+        verts = generate_polytope(config, i, bounds[i])
 
         # Append to `vertices` and `polytopes`
         push!(vertices, verts)
     end
 
     nonintersecting_polytopes_lmos = create_lmos(config, vertices)
-    t = @elapsed _, _, primal, fw_gap = compute_distance(config, nonintersecting_polytopes_lmos)
-    println("°°°°°°°°°°°°°°°°°°°°°°°°°°°° time for compute_distance on nonintersecting_polytopes_lmos: $t")
+    _, _, primal, fw_gap = compute_distance(config, nonintersecting_polytopes_lmos)
 
     # Check that polytope intersection is empty
-    println(primal)
-    println(approxequal(primal, 0.0))
-    readline()
     if approxequal(primal, 0.0)
         error("Invalid polytopes: they should not intersect, but the total distance among them is $primal.")
     end
@@ -125,25 +120,18 @@ function generate_polytopes(config::Config)
     println("Generating $(config.k) intersecting polytopes of dimension $(config.n) (n. vertices for each: $(config.n_points))")
     
     # Generate random, non-intersecting bounds
-    t = @elapsed bounds_list = generate_nonintersecting_bounds(config)
-    println("°°°°°°°°°°°°°°°°°°°°°°°°°°°° time for generate_nonintersecting_bounds: $t")
+    bounds_list = generate_nonintersecting_bounds(config)
     
     # Generate non intersecting polytopes
-    t = @elapsed vertices, primal, fw_gap = generate_nonintersecting_polytopes(config, bounds_list)
-    println("°°°°°°°°°°°°°°°°°°°°°°°°°°°° time for generate_nonintersecting_polytopes: $t")
-    
+    vertices, primal, fw_gap = generate_nonintersecting_polytopes(config, bounds_list)
+        
     # Generate intersecting polytopes
     shifted_vertices = intersect_polytopes(config, vertices)
     
     # Check that polytope intersection is not empty
     lmos_shifted = create_lmos(config, shifted_vertices)
-    t = @elapsed _, _, primal_shifted, _ = compute_distance(config, lmos_shifted)
-    println("°°°°°°°°°°°°°°°°°°°°°°°°°°°° time for compute_distance on lmos_shifted: $t")
-
-    println(primal_shifted)
-    println(approxequal(primal_shifted, 0.0))
-    readline()
-
+    _, _, primal_shifted, _ = compute_distance(config, lmos_shifted)
+    
     if !approxequal(primal_shifted, 0.0)
         error("Invalid polytopes: they should intersect, but the total distance among them is $primal_shifted")
     end
@@ -239,15 +227,13 @@ function intersect_polytopes(
     push!(shifted_vertices, vertices[1])
     
     # Move P₂ towards P₁ so that they intersect (at least) in v₁, then update P₂ data
-    t = @elapsed shifted_vertices_curr, v₁, _ = intersect_polytopes(config, vertices[1], vertices[2])
-    println("°°°°°°°°°°°°°°°°°°°°°°°°°°°° time to intersect P₁ and P₂: $t")
+    shifted_vertices_curr, v₁, _ = intersect_polytopes(config, vertices[1], vertices[2])
     push!(shifted_vertices, shifted_vertices_curr)
 
     # Move each subsequent polytope Pᵢ, for k > 3, to intersect with P₁ in at least v₁, then update Pᵢ data
     for i in 3:config.k
         # Move iᵗʰ polytope so that it intersects with the others in (at least) v₁
-        t = @elapsed shifted_vertices_curr, _ = intersect_polytopes(config, v₁, vertices[i])
-        println("°°°°°°°°°°°°°°°°°°°°°°°°°°°° time to intersect P₁ and P[$i]: $t")
+        shifted_vertices_curr, _ = intersect_polytopes(config, v₁, vertices[i])
 
         # Update data
         push!(shifted_vertices, shifted_vertices_curr)
