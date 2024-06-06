@@ -302,7 +302,7 @@ function compute_distance(config::Config, lmo_list::Vector{FrankWolfe.LinearMini
     config_opt = Config("examples/config.yml"; max_iterations=config.max_iterations_opt)
 
     # Create FrankWolfe.ProductLMO from list of LMOs
-    prod_lmo = create_product_lmo(config_opt, lmo_list)
+    prod_lmo = create_product_lmo(lmo_list)
     
     # Run Block-coordinate BPCG with CyclicUpdate
     last_iterate, last_lmo_vertex, primal, fw_gap, _ = run_FW(config_opt, FrankWolfe.CyclicUpdate(), FrankWolfe.BPCGStep(), prod_lmo)
@@ -330,7 +330,7 @@ function compute_distance(config::Config, lmo_list::Vector{FrankWolfe.MathOptLMO
     config_opt = Config("examples/config.yml"; max_iterations=config.max_iterations_opt)
 
     # Create FrankWolfe.ProductLMO from list of LMOs
-    prod_lmo = create_product_lmo(config_opt, lmo_list)
+    prod_lmo = create_product_lmo(lmo_list)
     
     # Run Block-coordinate BPCG with CyclicUpdate
     last_iterate, last_lmo_vertex, primal, fw_gap, _ = run_FW(config_opt, FrankWolfe.CyclicUpdate(), FrankWolfe.BPCGStep(), prod_lmo)
