@@ -2,10 +2,7 @@
 using BPCGProduct
 using FrankWolfe
 
-function main(config::Config)
-
-    # Load data and transform to Polyhedra.Polyhedron or JuMP.Model
-    vertices, shifted_vertices, primal, _ = load_polytopes(filename)    
+function main(config::Config, vertices, shifted_vertices, primal, basename)
 
     # Retrieve nonintersecting and intersecting LMOs from previously generated instances
     lmo_list = create_lmos(config, [vertices, shifted_vertices])
@@ -40,7 +37,7 @@ function main(config::Config)
         # push_to_trajectories!(ni_flag, td_ap, trajectories_ni, trajectories_i, primal)
 
         # Save trajectories
-        save_trajectories("examples/traj_$basename.jld2", trajectories_ni, trajectories_i)
+        # save_trajectories("examples/traj_$basename.jld2", trajectories_ni, trajectories_i)
 
     end
 
@@ -49,19 +46,23 @@ end
 
 
 # ---------------------------------------------------------------------------------
-
-# Select instance file: contains two instances, with k polytopes, intersecting and non-intersecting
-filename = "intersecting_polytopes_n500_k2_v536-675_t20240609231630.jld2"
-basename = base_name(filename)
-
-n, k = extract_n_k_from_filename(filename)
-
 # Use parameters from YAML file
-config = Config("examples/config.yml"; n=n, k=k)
+config = Config("examples/config.yml")
 print_config(config)
 
+# Generate instances 
+println("********************************************************")
+println("Generating instances and solving them to optimum")
+println("********************************************************")
+vertices, shifted_vertices, primal, fw_gap = generate_polytopes_onepoint(config)
+
+basename = generate_filename(config, vertices)
+
 # execute main
-trajectories_ni, trajectories_i = main(config)
+println("\n\n********************************************************")
+println("Running FW on the instances")
+println("********************************************************")
+trajectories_ni, trajectories_i = main(config,vertices, shifted_vertices, primal, basename)
 
 # Labels for the plots
 labels = ["C-BC-FW", "F-BC-BPCG"]#"C-BC-BPCG", "F-BC-BPCG", "F-BPCG"]#, "AP"]

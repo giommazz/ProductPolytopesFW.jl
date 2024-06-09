@@ -1,5 +1,23 @@
 # `lmos.jl`
-function create_product_lmo(lmo_list)
+function create_product_lmo(lmo_list::Vector{FrankWolfe.LinearMinimizationOracle})
+    
+    # Convert list of LMOs to a tuple, as required by `FrankWolfe.ProductLMO`
+    lmos_tuple = Tuple(lmo_list)
+    
+    # Create and return a ProductLMO object
+    return FrankWolfe.ProductLMO(lmos_tuple)
+end
+# (Multiple dispatch)
+function create_product_lmo(lmo_list::Vector{FrankWolfe.ConvexHullOracle})
+    
+    # Convert list of LMOs to a tuple, as required by `FrankWolfe.ProductLMO`
+    lmos_tuple = Tuple(lmo_list)
+    
+    # Create and return a ProductLMO object
+    return FrankWolfe.ProductLMO(lmos_tuple)
+end
+# (Multiple dispatch)
+function create_product_lmo(lmo_list::Vector{FrankWolfe.MathOptLMO})
     
     # Convert list of LMOs to a tuple, as required by `FrankWolfe.ProductLMO`
     lmos_tuple = Tuple(lmo_list)

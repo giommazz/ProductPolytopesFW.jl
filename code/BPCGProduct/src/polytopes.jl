@@ -105,6 +105,11 @@ function generate_nonintersecting_polytopes(config::Config, bounds::Vector{Vecto
     nonintersecting_polytopes_lmos = create_lmos(config, vertices)
     _, _, primal, fw_gap = compute_distance(config, nonintersecting_polytopes_lmos)
 
+    println("°°°°°°°°°°°°°°°°°°°°°°°°°°")
+    println("Opt is : $primal")
+    println("press Enter")
+    readline()
+
     # Check that polytope intersection is empty
     if approxequal(primal, 0.0)
         error("Invalid polytopes: they should not intersect, but the total distance among them is $primal.")
@@ -114,7 +119,7 @@ function generate_nonintersecting_polytopes(config::Config, bounds::Vector{Vecto
 end
 
 # Generate nonintersecting polytopes, then intersect them in (at least) one point, then compute total distance between them
-function generate_polytopes(config::Config)
+function generate_polytopes_onepoint(config::Config)
 
     # `n_points` contains n. of vertices used to generate each polytope
     println("Generating $(config.k) intersecting polytopes of dimension $(config.n) (n. vertices for each: $(config.n_points))")
@@ -125,6 +130,50 @@ function generate_polytopes(config::Config)
     # Generate non intersecting polytopes
     vertices, primal, fw_gap = generate_nonintersecting_polytopes(config, bounds_list)
         
+    # Generate intersecting polytopes
+    shifted_vertices = intersect_polytopes(config, vertices)
+    
+    # Check that polytope intersection is not empty
+    lmos_shifted = create_lmos(config, shifted_vertices)
+    _, _, primal_shifted, _ = compute_distance(config, lmos_shifted)
+    
+    if !approxequal(primal_shifted, 0.0)
+        error("Invalid polytopes: they should intersect, but the total distance among them is $primal_shifted")
+    end
+
+    return vertices, shifted_vertices, primal, fw_gap
+end
+
+# Function to compute the analytic center of a given list of vertices
+function analytic_center(vertices::Matrix{T}) where T
+    # Check if the matrix is empty
+    if size(vertices, 1) == 0
+        error("The matrix of vertices is empty.")
+    end
+    
+    # Sum all the vertices
+    sum_vector = sum(vertices, dims=1)
+    
+    # Compute the analytic center by dividing by the number of vertices
+    analytic_center = sum_vector ./ size(vertices, 1)
+    
+    return analytic_center
+end
+
+# Generate nonintersecting polytopes, then intersect them in (at least) one point, then compute total distance between them
+function generate_polytopes_bigger_intersection(config::Config)
+
+    # `n_points` contains n. of vertices used to generate each polytope
+    println("Generating $(config.k) intersecting polytopes of dimension $(config.n) (n. vertices for each: $(config.n_points))")
+    
+    # Generate random, non-intersecting bounds
+    bounds_list = generate_nonintersecting_bounds(config)
+    
+    # Generate non intersecting polytopes
+    vertices, primal, fw_gap = generate_nonintersecting_polytopes(config, bounds_list)
+    
+    analytic_center_P1 = analytic_center(vertices[1])
+
     # Generate intersecting polytopes
     shifted_vertices = intersect_polytopes(config, vertices)
     

@@ -34,7 +34,7 @@ module BPCGProduct
     # From `utils.jl`
     export unique_combinations, generate_rand_float_vector, extract_n_k_from_filename, base_name, approxequal
     # From `polytopes.jl`
-    export generate_polytopes, compute_distance, save_polytopes, load_polytopes
+    export generate_polytopes_onepoint, generate_polytopes_bigger_intersection, compute_distance, save_polytopes, load_polytopes, generate_filename
     # From `plot_utils.jl`
     export plot_trajectories
     # From `plotting_utils.jl`
