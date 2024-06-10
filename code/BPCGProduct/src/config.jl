@@ -9,6 +9,8 @@ struct Config
     n_points::Union{Int, Vector{Int}}
     # epsilon-optimality threshold
     target_tolerance::Float64
+    # epsilon-optimality threshold for finding optimal solution
+    target_tolerance_opt::Float64
     # Number of FW iterations
     max_iterations::Int
     # Number of FW iterations to compute optimal solution
@@ -24,7 +26,7 @@ end
 # Constructor with default values
 function Config()
     
-    c = Config(2, 2, [5, 5], 1e-6, 1000, 5000, 100, 42, true)
+    c = Config(2, 2, [5, 5], 1e-6, 1e-08, 1000, 5000, 100, 42, true)
     
     return c 
 end
@@ -55,24 +57,25 @@ function Config(yaml_file::String; kwargs...)
             config["n"],
             n_points,
             config["target_tolerance"],
+            config["target_tolerance_opt"],
             config["max_iterations"],
             config["max_iterations_opt"],
             config["max_print_iterations"],
             config["seed"],
             config["cvxhflag"]
             )
-    
     return c 
 end
 
 # Function to update Config with any number of arguments
-function update_config(config::Config; kwargs...)
+function modify_config(config::Config; kwargs...)
     
     # `get(kwargs, :key, default_value)` retrieves value for `:key` from `kwargs` if it exists, o/w returns default_value
     k = get(kwargs, :k, config.k)
     n = get(kwargs, :n, config.n)
     n_points = get(kwargs, :n_points, config.n_points)
     target_tolerance = get(kwargs, :target_tolerance, config.target_tolerance)
+    target_tolerance_opt = get(kwargs, :target_tolerance_opt, config.target_tolerance_opt)
     max_iterations = get(kwargs, :max_iterations, config.max_iterations)
     max_iterations_opt = get(kwargs, :max_iterations_opt, config.max_iterations_opt)
     max_print_iterations = get(kwargs, :max_iterations, config.max_print_iterations)
@@ -80,7 +83,7 @@ function update_config(config::Config; kwargs...)
     cvxhflag = get(kwargs, :cvxhflag, config.cvxhflag)
 
     # Return a new Config object with updated values
-    c = Config(k, n, n_points, target_tolerance, max_iterations, max_iterations_opt, max_print_iterations, seed, cvxhflag)
+    c = Config(k, n, n_points, target_tolerance, target_tolerance_opt, max_iterations, max_iterations_opt, max_print_iterations, seed, cvxhflag)
     
     return c
 end
@@ -106,6 +109,11 @@ function validate_config(yaml_config::Dict{Any, Any})
     # Check for `target_tolerance`
     if typeof(yaml_config["target_tolerance"]) != Float64 || yaml_config["target_tolerance"] < 0
         error("Invalid value for 'target_tolerance': must be a non-negative float.")
+    end
+
+    # Check for `target_tolerance_opt`
+    if typeof(yaml_config["target_tolerance_opt"]) != Float64 || yaml_config["target_tolerance_opt"] < 0
+        error("Invalid value for 'target_tolerance_opt': must be a non-negative float.")
     end
 
     # Check for `max_iterations`
@@ -143,6 +151,7 @@ function print_config(config::Config)
     println("  Dimension of the subspace (n): ", config.n)
     println("  Number of points (n_points): ", config.n_points)
     println("  Epsilon-optimality threshold (target_tolerance): ", config.target_tolerance)
+    println("  Epsilon-optimality threshold to compute optimal sols (target_tolerance_opt): ", config.target_tolerance_opt)
     println("  Number of FW iterations (max_iterations): ", config.max_iterations)
     println("  Number of FW iterations to compute optimal solutions (max_iterations_opt): ", config.max_iterations_opt)
     println("  How often FW iteration log is printed to screen (max_print_iterations): ", config.max_print_iterations)

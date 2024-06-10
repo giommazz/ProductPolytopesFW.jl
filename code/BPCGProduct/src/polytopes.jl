@@ -103,7 +103,8 @@ function generate_nonintersecting_polytopes(config::Config, bounds::Vector{Vecto
     end
 
     nonintersecting_polytopes_lmos = create_lmos(config, vertices)
-    _, _, primal, fw_gap = compute_distance(config, nonintersecting_polytopes_lmos)
+    config_opt = modify_config(config, target_tolerance=config.target_tolerance_opt)    
+    _, _, primal, fw_gap = compute_distance(config_opt, nonintersecting_polytopes_lmos)
 
     println("°°°°°°°°°°°°°°°°°°°°°°°°°°")
     println("Opt is : $primal")

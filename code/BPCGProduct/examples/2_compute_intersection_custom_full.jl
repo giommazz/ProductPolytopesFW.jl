@@ -27,14 +27,14 @@ function main(config::Config, vertices, shifted_vertices, primal, basename)
         _, _, _, _, td_full_bc_cg = run_FW(config, FrankWolfe.FullUpdate(), FrankWolfe.BPCGStep(), prod_lmo)  
         # println("\n\n\n ----------> Full BPCG")
         # _, _, _, _, td_bpcg = run_FW(config, prod_lmo)    
-        # println("\n\n\n ----------> AP")
-        # _, _, _, _, td_ap = run_FW(config, prod_lmo, true)
+        println("\n\n\n ----------> AP")
+        _, _, _, _, td_ap = run_FW(config, prod_lmo, true)
         
         push_to_trajectories!(ni_flag, td_cyc_bc_cg, trajectories_ni, trajectories_i, primal)
         # push_to_trajectories!(ni_flag, td_cyc_bc_bpcg, trajectories_ni, trajectories_i, primal)
         push_to_trajectories!(ni_flag, td_full_bc_cg, trajectories_ni, trajectories_i, primal)
         # push_to_trajectories!(ni_flag, td_bpcg, trajectories_ni, trajectories_i, primal)
-        # push_to_trajectories!(ni_flag, td_ap, trajectories_ni, trajectories_i, primal)
+        push_to_trajectories!(ni_flag, td_ap, trajectories_ni, trajectories_i, primal)
 
         # Save trajectories
         # save_trajectories("examples/traj_$basename.jld2", trajectories_ni, trajectories_i)
@@ -55,7 +55,8 @@ println("********************************************************")
 println("Generating instances and solving them to optimum")
 println("********************************************************")
 vertices, shifted_vertices, primal, fw_gap = generate_polytopes_onepoint(config)
-
+# Numerical reasons
+primal = primal - 1
 basename = generate_filename(config, vertices)
 
 # execute main
@@ -65,7 +66,7 @@ println("********************************************************")
 trajectories_ni, trajectories_i = main(config,vertices, shifted_vertices, primal, basename)
 
 # Labels for the plots
-labels = ["C-BC-FW", "F-BC-BPCG"]#"C-BC-BPCG", "F-BC-BPCG", "F-BPCG"]#, "AP"]
+labels = ["C-BC-FW", "F-BC-BPCG", "AP"]#"C-BC-BPCG", "F-BC-BPCG", "F-BPCG"]#, "AP"]
 # Plot trajectories
-plot_trajectories(trajectories_ni, labels, yscalelog=false, xscalelog=true, filename="plot_ni_$basename.png")
-plot_trajectories(trajectories_i, labels, yscalelog=false, xscalelog=true, filename="plot_i_$basename.png")
+plot_trajectories(trajectories_ni, labels, yscalelog=true, xscalelog=true, filename="plot_ni_$basename.png")
+plot_trajectories(trajectories_i, labels, yscalelog=true, xscalelog=true, filename="plot_i_$basename.png")
