@@ -1,7 +1,7 @@
 # `polytopes.jl`
 # Function to generate non-overlapping bounds for multiple dimensions within [1e-03, 1e+03]
 # `margin`: ensures min distance between current polytope's UB and next polytope's LB, to create non-overlapping polytopes
-function generate_nonintersecting_bounds(config::Config; margin::Float64=50.0, stepsize::Float64=100.0, start_point::Float64=-100.0)
+function generate_nonintersecting_bounds(config::Config; margin::Float64=10.0, stepsize::Float64=100.0, start_point::Float64=-100.0)
     
     bounds_list = Vector{Vector{Tuple{Float64, Float64}}}(undef, config.k)
 
@@ -13,13 +13,11 @@ function generate_nonintersecting_bounds(config::Config; margin::Float64=50.0, s
     # Generate subsequent bounds while ensuring no overlap
     for i in 2:config.k
         # Current polytope
-        println(upper_bounds)
         lower_bounds = [upper_bounds[d] + margin + stepsize * rand(Float64) for d in 1:config.n]
-        println(lower_bounds)
         upper_bounds = [lower_bounds[d] + stepsize * rand(Float64) for d in 1:config.n]
         bounds_list[i] = [(lower_bounds[d], upper_bounds[d]) for d in 1:config.n]
     end
-
+    
     return bounds_list
 end
 
@@ -66,46 +64,43 @@ function generate_polytope(config::Config, idx::Int, bounds::Vector{Tuple{T, T}}
     vertices = zeros(Float64, config.n_points[idx], config.n)
 
     # # Fill each column based on the specified bounds
-    for d in 1:config.n
-        lower_bound, upper_bound = bounds[d]
-        # Generate vector containing `config.n_points[idx]` random Float64 within the given bounds
-        vertices[:, d] = lower_bound .+ (upper_bound - lower_bound) .* rand(Float64, config.n_points[idx])
-    end
-
-    # Generate `config.n_points` vertices of size `config.n` within the bounds for each dimension
-    # for i in 1:config.n_points[idx]
-    #     # Generate random Float64 within the given bounds for each coordinate
-    #     # lower_bound, upper_bound = bounds[d]
-    #     vertices[i,:] = [bounds[d][1] + (bounds[d][2] - bounds[d][1]) * rand(Float64) for d in 1:config.n]
+    # for d in 1:config.n
+    #     lower_bound, upper_bound = bounds[d]
+    #     # Generate vector containing `config.n_points[idx]` random Float64 within the given bounds
+    #     vertices[:, d] = lower_bound .+ (upper_bound - lower_bound) .* rand(Float64, config.n_points[idx])
     # end
-
-    println("°°°°°°°°°°°°°°°°°°°°°° bounds")
-    for d in config.n
-        println(bounds[d])
+    # Generate `config.n_points` vertices of size `config.n` within the bounds for each dimension
+    for i in 1:config.n_points[idx]
+        # Generate random Float64 within the given bounds for each coordinate
+        # lower_bound, upper_bound = bounds[d]
+        vertices[i,:] = [bounds[d][1] + (bounds[d][2] - bounds[d][1]) * rand(Float64) for d in 1:config.n]
     end
-    println("°°°°°°°°°°°°°°°°°°°°°° vertices")
-    println(vertices)
-    readline()
+
+    anc = analytic_center(vertices)
 
     # TODO: THIS CAUSES NUMERICAL ISSUES WITH THE Polyhedra.jl LIBRARY, DON'T USE FOR NOW (relevant functions commented)
     # Generate polytope as convex hull of given points, and remove redundant (i.e. non-vertex) points
     #vertices = nonredundant_polytope(vertices)
     
-    return vertices
+    return vertices, anc
 end
 
 # Generate k nonintersecting polytope: generate k random sets of vertices, within given bounds for each dimension
 function generate_nonintersecting_polytopes(config::Config, bounds::Vector{Vector{Tuple{T, T}}}) where T
     
     vertices = Vector{Matrix{Float64}}()
+    analytic_center = Matrix{Float64}()
+
+    # TODO: MODIFICA LE FUNZIONI PER CALCOLARE SOLO UN CENTRO ANALITICO, PER P₁
 
     # Generate k polytopes within the specified bounds
     for i in 1:config.k
         # Generate vertices and corresponding polytope
-        verts = generate_polytope(config, i, bounds[i])
+        verts, anc = generate_polytope(config, i, bounds[i])
 
-        # Append to `vertices` and `polytopes`
+        # Append to `vertices` and `analytic_centers`
         push!(vertices, verts)
+        push!(analytic_centers, anc)
     end
 
     nonintersecting_polytopes_lmos = create_lmos(config, vertices)
@@ -117,24 +112,28 @@ function generate_nonintersecting_polytopes(config::Config, bounds::Vector{Vecto
         error("Invalid polytopes: they should not intersect, but the total distance among them is $primal.")
     end
 
-    return vertices, primal, fw_gap
+    return vertices, analytic_centers, primal, fw_gap
 end
 
-# Generate nonintersecting polytopes, then intersect them in (at least) one point, then compute total distance between them
-function generate_polytopes(config::Config)
+# Generate nonintersecting polytopes, then intersect them in (at least) one point or close to the analytic center of P₁, then compute total distance between them
+function generate_polytopes(config::Config;anc_flag=false::Bool)
 
     # `n_points` contains n. of vertices used to generate each polytope
     println("Generating $(config.k) intersecting polytopes of dimension $(config.n) (n. vertices for each: $(config.n_points))")
     
     # Generate random, non-intersecting bounds
     bounds_list = generate_nonintersecting_bounds(config)
-    
+
     # Generate non intersecting polytopes
-    vertices, primal, fw_gap = generate_nonintersecting_polytopes(config, bounds_list)
-        
-    # Generate intersecting polytopes
-    shifted_vertices = intersect_polytopes(config, vertices)
+    vertices, analytic_center, primal, fw_gap = generate_nonintersecting_polytopes(config, bounds_list)
     
+    if anc_flag
+        # Generate intersecting polytopes
+        shifted_vertices = intersect_polytopes(config, vertices)
+    else
+        shifted_vertices = intersect_polytopes(config, vertices, analytic_center)
+    end
+  
     # Check that polytope intersection is not empty
     lmos_shifted = create_lmos(config, shifted_vertices)
     _, _, primal_shifted, _ = compute_distance(config, lmos_shifted)
@@ -157,12 +156,10 @@ function analytic_center(vertices::Matrix{T}) where T
     sum_vector = sum(vertices, dims=1)
     
     # Compute the analytic center by dividing by the number of vertices
-    analytic_center = sum_vector ./ size(vertices, 1)
+    _analytic_center = sum_vector ./ size(vertices, 1)
     
-    return analytic_center
+    return _analytic_center
 end
-
-
 
 # Function to find the closest points between two sets of points
 function closest_pair(config::Config, V1::Matrix{T}, V2::Matrix{T}) where T
@@ -239,7 +236,7 @@ function intersect_polytopes(config::Config, v::Vector{T}, V2::Matrix{T}) where 
     # Return translated polytope and other info (`points()` returns a matrix with the vertices)
     return shifted_vertices_curr, v2_closest
 end
-# (Multiple Dispatch) Function to intersect k polytopes so that the intersection contains (at least) one point
+# (Multiple Dispatch) Function to intersect k polytopes so that the intersection contains (at least) one vertex of P₁
 function intersect_polytopes(
     config::Config,
     vertices::Vector{Matrix{T}},
@@ -266,9 +263,42 @@ function intersect_polytopes(
     # check_intersection(intersecting_polytopes_polyhedra)
 
     return shifted_vertices
-    
 end
+# (Multiple Dispatch) Function to intersect k polytopes so by moving all Pᵢ towards the analytic center of P₁
+function intersect_polytopes(
+    config::Config,
+    vertices::Vector{Matrix{T}},
+    anc::Matrix{T};
+    steplength_towards_anc=.3::Float64
+    ) where T
+    
+    if steplength_towards_anc < 0.0 || steplength_towards_anc > 1
+        error("Wrong 'steplength_towards_anc' given, it should be a float in [0,1]")
+    end
+    # Initialize empty vectors for vertices, Polyhedra polytopes, and Polyhedra intersecting polytopes, JuMP intersecting polytopes
+    shifted_vertices = Vector{Matrix{Float64}}()
 
+    # Update P₁ data
+    push!(shifted_vertices, vertices[1])
+    
+    # Move P₂ towards P₁ so that they intersect (at least) in v₁, then update P₂ data
+    shifted_vertices_curr, v₁, _ = intersect_polytopes(config, vertices[1], vertices[2])
+    direction = anc - v₁
+    new_v₁ = v₁ + direction*steplength_towards_anc
+    push!(shifted_vertices, shifted_vertices_curr)
+
+    # Move each subsequent polytope Pᵢ, for k > 3, to intersect with P₁ in at least v₁, then update Pᵢ data
+    for i in 3:config.k
+        # Move iᵗʰ polytope so that it intersects with the others in (at least) v₁
+        shifted_vertices_curr, _ = intersect_polytopes(config, new_v₁, vertices[i])
+
+        # Update data
+        push!(shifted_vertices, shifted_vertices_curr)
+    end
+    # check_intersection(intersecting_polytopes_polyhedra)
+
+    return shifted_vertices
+end
 # Function to generate a JuMP.Model object from a Polyhedra.Polyhedron object
 function polyhedra_to_jump(config::Config, polytope::Polyhedron{T}) where T
     
