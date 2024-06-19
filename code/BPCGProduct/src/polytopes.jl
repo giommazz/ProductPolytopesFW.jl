@@ -1,32 +1,23 @@
 # `polytopes.jl`
 # Function to generate non-overlapping bounds for multiple dimensions within [1e-03, 1e+03]
 # `margin`: ensures min distance between current polytope's UB and next polytope's LB, to create non-overlapping polytopes
-function generate_nonintersecting_bounds(config::Config; margin::Float64=10.0, stepsize::Float64=200.0, start_point::Float64=-100.0)
+function generate_nonintersecting_bounds(config::Config; margin::Float64=50.0, stepsize::Float64=100.0, start_point::Float64=-100.0)
     
     bounds_list = Vector{Vector{Tuple{Float64, Float64}}}(undef, config.k)
 
     # Generate the first bounds randomly as pairs (LB, UB), within given range
-    lower_bound = rand(start_point : start_point + stepsize - margin)
-    upper_bound = rand(lower_bound + margin : lower_bound + stepsize + margin)
-    bounds_list[1] = [(lower_bound, upper_bound) for _ in 1:config.n]
+    lower_bounds = [start_point + stepsize * rand(Float64) for _ in 1:config.n]
+    upper_bounds = [lower_bounds[d] + (stepsize - lower_bounds[d]) * rand(Float64) for d in 1:config.n]
+    bounds_list[1] = [(lower_bounds[d], upper_bounds[d]) for d in 1:config.n]
 
     # Generate subsequent bounds while ensuring no overlap
     for i in 2:config.k
-        bounds = Vector{Tuple{Float64, Float64}}(undef, config.n)
-
-        # Initialize bounds for current polytope
-        for d in 1:config.n
-            # Check bounds from previous polytope
-            _, prev_max = bounds_list[i - 1][d]
-            # Ensure the new lower bound is at least 'margin' away from the previous upper bound
-            lower_bound = rand(prev_max + margin : prev_max + stepsize + margin)
-            # Generate the upper bound ensuring it stays within the range
-            upper_bound = rand(lower_bound + margin : lower_bound + stepsize + margin)
-            # Assign new bounds for current dimension
-            bounds[d] = (lower_bound, upper_bound)
-        end
-        # Add bounds for current polytope
-        bounds_list[i] = bounds
+        # Current polytope
+        println(upper_bounds)
+        lower_bounds = [upper_bounds[d] + margin + stepsize * rand(Float64) for d in 1:config.n]
+        println(lower_bounds)
+        upper_bounds = [lower_bounds[d] + stepsize * rand(Float64) for d in 1:config.n]
+        bounds_list[i] = [(lower_bounds[d], upper_bounds[d]) for d in 1:config.n]
     end
 
     return bounds_list
@@ -74,12 +65,27 @@ function generate_polytope(config::Config, idx::Int, bounds::Vector{Tuple{T, T}}
     # Initialize a matrix of zeros with the given number of points (rows) and columns
     vertices = zeros(Float64, config.n_points[idx], config.n)
 
-    # Fill each column based on the specified bounds
-    for j in 1:config.n
-        lower_bound, upper_bound = bounds[j]
+    # # Fill each column based on the specified bounds
+    for d in 1:config.n
+        lower_bound, upper_bound = bounds[d]
         # Generate vector containing `config.n_points[idx]` random Float64 within the given bounds
-        vertices[:, j] = lower_bound .+ (upper_bound - lower_bound) .* rand(Float64, config.n_points[idx])
+        vertices[:, d] = lower_bound .+ (upper_bound - lower_bound) .* rand(Float64, config.n_points[idx])
     end
+
+    # Generate `config.n_points` vertices of size `config.n` within the bounds for each dimension
+    # for i in 1:config.n_points[idx]
+    #     # Generate random Float64 within the given bounds for each coordinate
+    #     # lower_bound, upper_bound = bounds[d]
+    #     vertices[i,:] = [bounds[d][1] + (bounds[d][2] - bounds[d][1]) * rand(Float64) for d in 1:config.n]
+    # end
+
+    println("°°°°°°°°°°°°°°°°°°°°°° bounds")
+    for d in config.n
+        println(bounds[d])
+    end
+    println("°°°°°°°°°°°°°°°°°°°°°° vertices")
+    println(vertices)
+    readline()
 
     # TODO: THIS CAUSES NUMERICAL ISSUES WITH THE Polyhedra.jl LIBRARY, DON'T USE FOR NOW (relevant functions commented)
     # Generate polytope as convex hull of given points, and remove redundant (i.e. non-vertex) points
@@ -106,11 +112,6 @@ function generate_nonintersecting_polytopes(config::Config, bounds::Vector{Vecto
     config_opt = modify_config(config, target_tolerance=config.target_tolerance_opt)    
     _, _, primal, fw_gap = compute_distance(config_opt, nonintersecting_polytopes_lmos)
 
-    println("°°°°°°°°°°°°°°°°°°°°°°°°°°")
-    println("Opt is : $primal")
-    println("press Enter")
-    readline()
-
     # Check that polytope intersection is empty
     if approxequal(primal, 0.0)
         error("Invalid polytopes: they should not intersect, but the total distance among them is $primal.")
@@ -120,7 +121,7 @@ function generate_nonintersecting_polytopes(config::Config, bounds::Vector{Vecto
 end
 
 # Generate nonintersecting polytopes, then intersect them in (at least) one point, then compute total distance between them
-function generate_polytopes_onepoint(config::Config)
+function generate_polytopes(config::Config)
 
     # `n_points` contains n. of vertices used to generate each polytope
     println("Generating $(config.k) intersecting polytopes of dimension $(config.n) (n. vertices for each: $(config.n_points))")
@@ -161,33 +162,7 @@ function analytic_center(vertices::Matrix{T}) where T
     return analytic_center
 end
 
-# Generate nonintersecting polytopes, then intersect them in (at least) one point, then compute total distance between them
-function generate_polytopes_bigger_intersection(config::Config)
 
-    # `n_points` contains n. of vertices used to generate each polytope
-    println("Generating $(config.k) intersecting polytopes of dimension $(config.n) (n. vertices for each: $(config.n_points))")
-    
-    # Generate random, non-intersecting bounds
-    bounds_list = generate_nonintersecting_bounds(config)
-    
-    # Generate non intersecting polytopes
-    vertices, primal, fw_gap = generate_nonintersecting_polytopes(config, bounds_list)
-    
-    analytic_center_P1 = analytic_center(vertices[1])
-
-    # Generate intersecting polytopes
-    shifted_vertices = intersect_polytopes(config, vertices)
-    
-    # Check that polytope intersection is not empty
-    lmos_shifted = create_lmos(config, shifted_vertices)
-    _, _, primal_shifted, _ = compute_distance(config, lmos_shifted)
-    
-    if !approxequal(primal_shifted, 0.0)
-        error("Invalid polytopes: they should intersect, but the total distance among them is $primal_shifted")
-    end
-
-    return vertices, shifted_vertices, primal, fw_gap
-end
 
 # Function to find the closest points between two sets of points
 function closest_pair(config::Config, V1::Matrix{T}, V2::Matrix{T}) where T

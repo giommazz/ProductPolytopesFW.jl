@@ -4,14 +4,10 @@
 # Number of polytopes
 k: 2 #2, 3, 4, 5, 10 
 # Dimension of the subspace in which each polytope lies
-n: 500 # 100, 500, 1000, 2000
-# list of `k` integers, each indicating the n. of points to be used to generate intersecting polytopes
+n: 3 # 100, 500, 1000, 2000
+# list of `k` integers, each indicating the n. of points to be used to generate `k` polytopes
 # if `0` is given, n_points is generated randomly
 n_points: 0
-#n_points: [12, 8]
-#n_points: [12, 8, 25]
-#n_points: [12, 8, 25, 50, 30]
-#n_points: [12, 8, 25, 50, 30, 23, 60, 37, 25, 10]
 # epsilon-optimality threshold
 target_tolerance: 1e-06
 # epsilon-optimality threshold for finding optimal solution
