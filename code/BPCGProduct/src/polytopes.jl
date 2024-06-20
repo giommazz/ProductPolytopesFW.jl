@@ -62,15 +62,11 @@ function analytic_center(vertices::Matrix{T}) where T
     _analytic_center = Vector{T}()
 
     # Sum all the vertices
-    sum_vector = sum(vertices, dims=1)
+    sum_vector = vec(sum(vertices, dims=1))
     
     # Compute the analytic center by dividing by the number of vertices
     _analytic_center = sum_vector ./ size(vertices, 1)
     
-    println("°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°° inside analytic_center")
-    println(typeof(_analytic_center))
-    readline()
-
     return _analytic_center
 end
 
@@ -105,10 +101,6 @@ function generate_polytope(config::Config, idx::Int, bounds::Vector{Tuple{T, T}}
     # Generate polytope as convex hull of given points, and remove redundant (i.e. non-vertex) points
     #vertices = nonredundant_polytope(vertices)
     
-    println("°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°° inside generate_polytope")
-    println(typeof(anc))
-    readline()
-
     return vertices, anc
 end
 
@@ -117,10 +109,6 @@ function generate_nonintersecting_polytopes(config::Config, bounds::Vector{Vecto
     
     vertices = Vector{Matrix{T}}()
     anc_p1 = Vector{T}()
-
-    println("°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°° inside nonintersecting")
-    println(typeof(anc_p1))
-    readline()
 
     # Generate k polytopes within the specified bounds
     for i in 1:config.k
@@ -133,9 +121,7 @@ function generate_nonintersecting_polytopes(config::Config, bounds::Vector{Vecto
         # Append to `vertices` and `analytic_centers`
         push!(vertices, verts)
     end
-    println("°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°° inside nonintersecting 2")
-    println(typeof(anc_p1))
-
+    
     nonintersecting_polytopes_lmos = create_lmos(config, vertices)
     config_opt = modify_config(config, target_tolerance=config.target_tolerance_opt)    
     _, _, primal, fw_gap = compute_distance(config_opt, nonintersecting_polytopes_lmos)
@@ -209,7 +195,7 @@ function intersect_polytopes(config::Config, V1::Matrix{T}, V2::Matrix{T}) where
     return shifted_vertices_curr, v1_closest, v2_closest
 end
 # Function to intersect two polytopes, moving the second onto the closest vertex of the first
-function intersect_polytopes(config::Config, V1::Matrix{T}, V2::Matrix{T}, anc::Vector{T}; steplength_towards_anc=.3::Float64) where T
+function intersect_polytopes(config::Config, V1::Matrix{T}, V2::Matrix{T}, anc::Vector{T}; steplength_towards_anc=.1::Float64) where T
     
     if steplength_towards_anc < 0.0 || steplength_towards_anc > 1
         error("Wrong 'steplength_towards_anc' given, it should be a float in [0,1]")
@@ -221,26 +207,15 @@ function intersect_polytopes(config::Config, V1::Matrix{T}, V2::Matrix{T}, anc::
     # Create offset vector `v1_closest - v2_closest`
     direction = v1_closest - v2_closest
 
-    println("°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°° V2")
-    println("V2: $V2")
-    println("direction: $direction")
-    readline()
-
     # Shift each vertex in V2 along `direction`
     shifted_vertices_curr = V2 .+ direction'
-    println("shifted vertices: $shifted_vertices_curr")
 
     anc_direction = (anc - v1_closest)*steplength_towards_anc
-    anc_v1 = v1_closest + anc_direction
-    println("anc direction: $anc_direction")
-    println("new anc v1: $anc_v1")
-
+    anc_v1 = v1_closest .+ anc_direction
+    
     # Shift each vertex in V2 along `direction`
     shifted_vertices_curr = shifted_vertices_curr .+ anc_direction'
-    
-    println("shifted vertices: $shifted_vertices_curr")
-    readline()
-    
+
     # Return translated polytope and other info (`points()` returns a matrix with the vertices)
     return shifted_vertices_curr, anc_v1, v2_closest
 end
@@ -305,8 +280,6 @@ function generate_polytopes(config::Config)
 
     # Generate non intersecting polytopes
     vertices, anc_p1, primal, fw_gap = generate_nonintersecting_polytopes(config, bounds_list)
-    println("°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°°° inside generate_polytopes 1")
-    println(typeof(anc_p1))
 
     shifted_vertices = intersect_polytopes(config, vertices, anc_p1)
   

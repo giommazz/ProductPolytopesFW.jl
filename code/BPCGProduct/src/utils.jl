@@ -47,4 +47,4 @@ end
 
 # Check if two vectors/numbers are equal (i.e., their difference is equal at each element), up to given tolerance
 # Return true if yes 
-function approxequal(a, b; tol=1e-05) return all(abs.(a .- b) .≤ tol) end
+function approxequal(a, b; tol=1e-04) return all(abs.(a .- b) .≤ tol) end
