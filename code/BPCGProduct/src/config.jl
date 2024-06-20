@@ -21,12 +21,14 @@ struct Config
     seed::Int
     # Use FrankWolfe.ConvexHullOracle LMOs (true) or FrankWolfe.MathOptLMO LMOs (false)
     cvxhflag::Bool
+    # Intersect polytopes close to the first polytope's analytic center (true) or a vertex
+    anc_flag::Bool
 end
 
 # Constructor with default values
 function Config()
     
-    c = Config(2, 2, [5, 5], 1e-6, 1e-08, 1000, 5000, 100, 42, true)
+    c = Config(2, 2, [5, 5], 1e-6, 1e-08, 1000, 5000, 100, 42, true, false)
     
     return c 
 end
@@ -62,7 +64,8 @@ function Config(yaml_file::String; kwargs...)
             config["max_iterations_opt"],
             config["max_print_iterations"],
             config["seed"],
-            config["cvxhflag"]
+            config["cvxhflag"],
+            config["anc_flag"]
             )
     return c 
 end
@@ -81,9 +84,10 @@ function modify_config(config::Config; kwargs...)
     max_print_iterations = get(kwargs, :max_iterations, config.max_print_iterations)
     seed = get(kwargs, :seed, config.seed)
     cvxhflag = get(kwargs, :cvxhflag, config.cvxhflag)
+    anc_flag = get(kwargs, :anc_flag, config.anc_flag)
 
     # Return a new Config object with updated values
-    c = Config(k, n, n_points, target_tolerance, target_tolerance_opt, max_iterations, max_iterations_opt, max_print_iterations, seed, cvxhflag)
+    c = Config(k, n, n_points, target_tolerance, target_tolerance_opt, max_iterations, max_iterations_opt, max_print_iterations, seed, cvxhflag, anc_flag)
     
     return c
 end
@@ -140,6 +144,11 @@ function validate_config(yaml_config::Dict{Any, Any})
     if typeof(yaml_config["cvxhflag"]) != Bool
         error("Invalid value for 'cvxhflag': must be a boolean.")
     end
+
+    # Check for `anc_flag`
+    if typeof(yaml_config["anc_flag"]) != Bool
+        error("Invalid value for 'anc_flag': must be a boolean.")
+    end
 end
 
 # Function to print the config parameters
@@ -157,6 +166,7 @@ function print_config(config::Config)
     println("  How often FW iteration log is printed to screen (max_print_iterations): ", config.max_print_iterations)
     println("  Seed for reproducibility (seed): ", config.seed)
     println("  Use FW's ConvexHullOracle LMOs or MathOptLMO (cvxhflag): ", config.cvxhflag)
+    println("  Intersect polytopes close to first polytope's analytic center (true) or vertex (anc_flag): ", config.anc_flag)
     println()
 
 end

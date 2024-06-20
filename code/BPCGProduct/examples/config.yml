@@ -22,3 +22,6 @@ max_print_iterations: 500
 seed: 1
 # Use FrankWolfe.ConvexHullOracle LMOs (true) or FrankWolfe.MathOptLMO LMOs (false)
 cvxhflag: true
+# Intersect polytopes close to the first polytope's analytic center (true) or a vertex
+# Works well (true) if you only have two polytopes
+anc_flag: true

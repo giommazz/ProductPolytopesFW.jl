@@ -76,7 +76,8 @@ function generate_polytope(config::Config, idx::Int, bounds::Vector{Tuple{T, T}}
         vertices[i,:] = [bounds[d][1] + (bounds[d][2] - bounds[d][1]) * rand(Float64) for d in 1:config.n]
     end
 
-    anc = analytic_center(vertices)
+    # Only compute analytic center of P₁ 
+    if i == 1 anc = analytic_center(vertices) else anc = Nothing end
 
     # TODO: THIS CAUSES NUMERICAL ISSUES WITH THE Polyhedra.jl LIBRARY, DON'T USE FOR NOW (relevant functions commented)
     # Generate polytope as convex hull of given points, and remove redundant (i.e. non-vertex) points
@@ -89,19 +90,23 @@ end
 function generate_nonintersecting_polytopes(config::Config, bounds::Vector{Vector{Tuple{T, T}}}) where T
     
     vertices = Vector{Matrix{Float64}}()
-    analytic_center = Matrix{Float64}()
-
-    # TODO: MODIFICA LE FUNZIONI PER CALCOLARE SOLO UN CENTRO ANALITICO, PER P₁
+    anc_p1 = Matrix{Float64}()
 
     # Generate k polytopes within the specified bounds
     for i in 1:config.k
-        # Generate vertices and corresponding polytope
-        verts, anc = generate_polytope(config, i, bounds[i])
-
+        if i == 1
+            # Generate vertices and corresponding polytope
+            verts, anc_p1 = generate_polytope(config, i, bounds[i])
+        else
+            verts, _ = generate_polytope(config, i, bounds[i])
+        end
         # Append to `vertices` and `analytic_centers`
         push!(vertices, verts)
-        push!(analytic_centers, anc)
     end
+
+    println("°°°°°°°°°°°°°°°°°°°")
+    println(anc_p1)
+    readline()
 
     nonintersecting_polytopes_lmos = create_lmos(config, vertices)
     config_opt = modify_config(config, target_tolerance=config.target_tolerance_opt)    
@@ -112,11 +117,11 @@ function generate_nonintersecting_polytopes(config::Config, bounds::Vector{Vecto
         error("Invalid polytopes: they should not intersect, but the total distance among them is $primal.")
     end
 
-    return vertices, analytic_centers, primal, fw_gap
+    return vertices, anc_p1, primal, fw_gap
 end
 
 # Generate nonintersecting polytopes, then intersect them in (at least) one point or close to the analytic center of P₁, then compute total distance between them
-function generate_polytopes(config::Config;anc_flag=false::Bool)
+function generate_polytopes(config::Config)
 
     # `n_points` contains n. of vertices used to generate each polytope
     println("Generating $(config.k) intersecting polytopes of dimension $(config.n) (n. vertices for each: $(config.n_points))")
@@ -125,13 +130,18 @@ function generate_polytopes(config::Config;anc_flag=false::Bool)
     bounds_list = generate_nonintersecting_bounds(config)
 
     # Generate non intersecting polytopes
-    vertices, analytic_center, primal, fw_gap = generate_nonintersecting_polytopes(config, bounds_list)
+    vertices, anc_p1, primal, fw_gap = generate_nonintersecting_polytopes(config, bounds_list)
     
-    if anc_flag
+    println("°°°°°°°°°°°°°°°°°°°")
+    println(anc_p1)
+    readline()
+
+    if config.anc_flag
         # Generate intersecting polytopes
         shifted_vertices = intersect_polytopes(config, vertices)
     else
-        shifted_vertices = intersect_polytopes(config, vertices, analytic_center)
+        # can be called as intersect_polytopes(config, vertices, anc_p1, steplength_towards_anc=.4)
+        shifted_vertices = intersect_polytopes(config, vertices, anc_p1)
     end
   
     # Check that polytope intersection is not empty
@@ -269,7 +279,7 @@ function intersect_polytopes(
     config::Config,
     vertices::Vector{Matrix{T}},
     anc::Matrix{T};
-    steplength_towards_anc=.3::Float64
+    steplength_towards_anc=.3::Float64  # Decides how much to move towards analytic center of P₁
     ) where T
     
     if steplength_towards_anc < 0.0 || steplength_towards_anc > 1
