@@ -81,6 +81,7 @@ function generate_polytope(config::Config, idx::Int, bounds::Vector{Tuple{T, T}}
     # Initialize a matrix of zeros with the given number of points (rows) and columns
     vertices = zeros(Float64, config.n_points[idx], config.n)
 
+    # Below: two different vertex generation loops: the first iterates on all i in [n] first
     # # Fill each column based on the specified bounds
     # for d in 1:config.n
     #     lower_bound, upper_bound = bounds[d]
