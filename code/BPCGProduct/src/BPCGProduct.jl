@@ -12,6 +12,7 @@ module BPCGProduct
     using FileIO
     using Dates
     using GLPK, SCIP, HiGHS
+    using CSV, DataFrames
 
     # Plotting utilities needed to run FrankWolfe/plot_utils.jl
     include(joinpath(dirname(pathof(FrankWolfe)), "../examples/plot_utils.jl"))
@@ -32,7 +33,7 @@ module BPCGProduct
     # From `product_algorithms_algorithms.jl`
     export run_FW, push_to_trajectories!, save_trajectories, load_trajectories
     # From `utils.jl`
-    export unique_combinations, generate_rand_float_vector, extract_n_k_from_filename, base_name, approxequal
+    export unique_combinations, generate_rand_float_vector, extract_n_k_from_filename, base_name, approxequal, log_data
     # From `polytopes.jl`
     export generate_polytopes, compute_distance, save_polytopes, load_polytopes, generate_filename
     # From `plot_utils.jl`

@@ -1,4 +1,4 @@
-# `generate_polytopes.jl`
+# `1.1_generate_polytopes.jl`
 using BPCGProduct
 
 # Use parameters from YAML file

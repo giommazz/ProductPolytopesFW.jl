@@ -1,4 +1,4 @@
-# `2_compute_intersection_custom_instances.jl`
+# `1.2_compute_intersection_custom_instances.jl`
 using BPCGProduct
 using FrankWolfe
 

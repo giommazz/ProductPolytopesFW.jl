@@ -15,9 +15,8 @@ end
 function generate_filename(config::Config, vertices::Vector{Matrix{T}}) where T
     sizes = [size(poly_vertices)[1] for poly_vertices in vertices]
     timestamp = Dates.format(now(), "yyyymmddHHMMSS")
-    return "intersecting_polytopes_n$(config.n)_k$(config.k)_v$(join(sizes, "-"))_t$timestamp.jld2"
-    return "intersecting_polytopes_n$(config.n)_k$(config.k)_mi$(config.max_iterations)_v$(join(sizes, "-"))_t$timestamp.jld2"
-
+    return "n$(config.n)_k$(config.k)_v$(join(sizes, "-"))_t$timestamp"
+    return "n$(config.n)_k$(config.k)_mi$(config.max_iterations)_v$(join(sizes, "-"))_t$timestamp"
 end
 
 # Function to extract `n`, `k`, and `max_iterations` from the filename
@@ -48,3 +47,27 @@ end
 # Check if two vectors/numbers are equal (i.e., their difference is equal at each element), up to given tolerance
 # Return true if yes 
 function approxequal(a, b; tol=1e-04) return all(abs.(a .- b) .≤ tol) end
+
+# Compute avg iteration time and tot time of FW algo execution
+# Call as     `log_data(trajectories_i, ["C-BC-FW", "F-BC-BPCG"], "filename")`
+function log_data(traj_data::Vector{Any}, labels::Vector{String}, basename::String)
+    
+    if length(labels) ≠ length(traj_data)
+        error("There are $(length(labels)) labels but only $(length(traj_data)) FW algorithms were executed")
+    end
+
+    # Store results in DataFrame object
+    times = DataFrames.DataFrame(label=String[], iters=Int64[], tot_time=Float64[], avg_time=Float64[])
+
+    for i in 1:length(traj_data)
+        label = labels[i]
+        # Compute total time summing time over all iterations
+        tot_time = sum(iter -> iter[5], traj_data[i])
+        iters = length(traj_data[i])
+        avg_time = tot_time / iters
+        
+        println("Label: $label, Total Time: $tot_time, Average Time per Iteration: $avg_time")
+        push!(times, (label, iters, tot_time, avg_time))    
+    end
+    CSV.write(basename*".csv", times)
+end
