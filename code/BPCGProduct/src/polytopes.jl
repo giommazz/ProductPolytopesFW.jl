@@ -286,11 +286,12 @@ function generate_polytopes(config::Config)
   
     # Check that polytope intersection is not empty
     lmos_shifted = create_lmos(config, shifted_vertices)
-    _, _, primal_shifted, _ = compute_distance(config, lmos_shifted)
-    
-    if !approxequal(primal_shifted, 0.0)
-        error("Invalid polytopes: they should intersect, but the total distance among them is $primal_shifted")
-    end
+    # TODO: run following 4 lines to check polytopes actually intersect. 
+    # TODO: Commented out now b/c too expensive to compute and I built instances so that polytopes intersect
+    # _, _, primal_shifted, _ = compute_distance(config, lmos_shifted)
+    # if !approxequal(primal_shifted, 0.0)
+    #     error("Invalid polytopes: they should intersect, but the total distance among them is $primal_shifted")
+    # end
 
     return vertices, shifted_vertices, primal, fw_gap
 end

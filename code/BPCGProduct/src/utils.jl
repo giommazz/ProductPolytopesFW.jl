@@ -15,8 +15,10 @@ end
 function generate_filename(config::Config, vertices::Vector{Matrix{T}}) where T
     sizes = [size(poly_vertices)[1] for poly_vertices in vertices]
     timestamp = Dates.format(now(), "yyyymmddHHMMSS")
-    return "n$(config.n)_k$(config.k)_v$(join(sizes, "-"))_t$timestamp"
-    return "n$(config.n)_k$(config.k)_mi$(config.max_iterations)_v$(join(sizes, "-"))_t$timestamp"
+    
+    oracle = config.cvxhflag ? "cvxho" : "lmo"
+    anc = config.anc_flag ? "anc" : "vert"
+    return "n$(config.n)_k$(config.k)_$(oracle)_$(anc)_v$(join(sizes, "-"))_t$timestamp"
 end
 
 # Function to extract `n`, `k`, and `max_iterations` from the filename
