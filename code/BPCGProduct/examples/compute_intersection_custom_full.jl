@@ -20,25 +20,25 @@ function main(config::Config, vertices, shifted_vertices, primal, labels, basena
 
         # Run Frank-Wolfe algorithms and alternating projections, then record trajectory data
         
-        # println("\n\n\n ----------> Cyclic Block-coordinate vanilla CG")
-        # _, _, _, _, td_cyc_bc_fw = run_FW(config, FrankWolfe.CyclicUpdate(), prod_lmo)
-        # push_to_trajectories!(ni_flag, td_cyc_bc_fw, trajectories_ni, trajectories_i, primal)
+        println("\n\n\n ----------> Cyclic Block-coordinate vanilla FW")
+        _, _, _, _, td_cyc_bc_fw = run_FW(config, FrankWolfe.CyclicUpdate(), prod_lmo)
+        push_to_trajectories!(ni_flag, td_cyc_bc_fw, trajectories_ni, trajectories_i, primal)
 
-        println("\n\n\n ----------> Cyclic Block-coordinate BPCG")
-        _, _, _, _, td_cyc_bc_bpcg = run_FW(config, FrankWolfe.CyclicUpdate(), FrankWolfe.BPCGStep(), prod_lmo)
-        push_to_trajectories!(ni_flag, td_cyc_bc_bpcg, trajectories_ni, trajectories_i, primal)
+        # println("\n\n\n ----------> Cyclic Block-coordinate BPFW")
+        # _, _, _, _, td_cyc_bc_bpcg = run_FW(config, FrankWolfe.CyclicUpdate(), FrankWolfe.BPCGStep(), prod_lmo)
+        # push_to_trajectories!(ni_flag, td_cyc_bc_bpcg, trajectories_ni, trajectories_i, primal)
 
-        println("\n\n\n ----------> Full Block-coordinate BPCG")
+        println("\n\n\n ----------> Full Block-coordinate BPFW")
         _, _, _, _, td_full_bc_cg = run_FW(config, FrankWolfe.FullUpdate(), FrankWolfe.BPCGStep(), prod_lmo)  
         push_to_trajectories!(ni_flag, td_full_bc_cg, trajectories_ni, trajectories_i, primal)
 
-        # println("\n\n\n ----------> Full BPCG")
+        # println("\n\n\n ----------> Full BPFW")
         # _, _, _, _, td_bpcg = run_FW(config, prod_lmo)    
         # push_to_trajectories!(ni_flag, td_bpcg, trajectories_ni, trajectories_i, primal)
         
-        # println("\n\n\n ----------> AP")
-        # _, _, _, _, td_ap = run_FW(config, prod_lmo, true)    
-        # push_to_trajectories!(ni_flag, td_ap, trajectories_ni, trajectories_i, primal)
+        println("\n\n\n ----------> AP")
+        _, _, _, _, td_ap = run_FW(config, prod_lmo, true)    
+        push_to_trajectories!(ni_flag, td_ap, trajectories_ni, trajectories_i, primal)
 
         # Save trajectories
         # save_trajectories("examples/traj_$basename.jld2", trajectories_ni, trajectories_i)
@@ -67,7 +67,7 @@ primal = primal - 1
 basename = generate_filename(config, vertices)
 
 # Labels for the plots
-labels = ["C-BC-BPCG", "F-BC-BPCG"]# ["C-BC-FW", "C-BC-BPCG", "F-BC-BPCG", "F-BPCG", "AP"]
+labels = ["C-BC-FW", "F-BC-BPFW", "AP"]# ["C-BC-FW", "C-BC-BPFW", "F-BC-BPFW", "F-BPFW", "AP"]
 
 # execute main
 println("\n\n********************************************************")
