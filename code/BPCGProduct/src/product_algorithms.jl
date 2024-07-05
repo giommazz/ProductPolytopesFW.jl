@@ -4,6 +4,10 @@ function run_FW(config::Config, order::FrankWolfe.BlockCoordinateUpdateOrder, pr
     
     x0 = find_starting_point(config, prod_lmo)
 
+    # L-smoothness constant
+    config.k = k
+    L = (k-1)sqrt(2*k)
+
     x, v, primal, fw_gap, trajectory_data = FrankWolfe.block_coordinate_frank_wolfe(
         objective,
         gradient!,
@@ -12,7 +16,9 @@ function run_FW(config::Config, order::FrankWolfe.BlockCoordinateUpdateOrder, pr
         update_order=order,
         epsilon=config.target_tolerance,
         max_iteration=config.max_iterations,
-        line_search=FrankWolfe.Shortstep(one(Int)),
+        # line_search=FrankWolfe.Shortstep(one(Int)),
+        # line_search=FrankWolfe.Shortstep(L),
+        line_search=FrankWolfe.Goldenratio(),
         print_iter=config.max_print_iterations,
         memory_mode=FrankWolfe.InplaceEmphasis(),
         verbose=true,
@@ -26,6 +32,10 @@ function run_FW(config::Config, order::FrankWolfe.BlockCoordinateUpdateOrder, up
     
     x0 = find_starting_point(config, prod_lmo)
 
+    # L-smoothness constant
+    config.k = k
+    L = (k-1)sqrt(2*k)
+
     x, v, primal, fw_gap, trajectory_data = FrankWolfe.block_coordinate_frank_wolfe(
         objective,
         gradient!,
@@ -34,7 +44,9 @@ function run_FW(config::Config, order::FrankWolfe.BlockCoordinateUpdateOrder, up
         update_order=order,
         epsilon=config.target_tolerance,
         max_iteration=config.max_iterations,
-        line_search=FrankWolfe.Shortstep(one(Int)),
+        # line_search=FrankWolfe.Shortstep(one(Int)),
+        # line_search=FrankWolfe.Shortstep(L),
+        line_search=FrankWolfe.Goldenratio(),
         print_iter=config.max_print_iterations,
         memory_mode=FrankWolfe.InplaceEmphasis(),
         update_step=update_step,
@@ -49,6 +61,10 @@ function run_FW(config::Config, prod_lmo::FrankWolfe.ProductLMO)
     
     x0 = find_starting_point(config, prod_lmo)
 
+    # L-smoothness constant
+    config.k = k
+    L = (k-1)sqrt(2*k)
+
     x, v, primal, fw_gap, trajectory_data = FrankWolfe.blended_pairwise_conditional_gradient(
         objective,
         gradient!,
@@ -56,7 +72,9 @@ function run_FW(config::Config, prod_lmo::FrankWolfe.ProductLMO)
         x0,
         epsilon=config.target_tolerance,
         max_iteration=config.max_iterations,
-        line_search=FrankWolfe.Shortstep(one(Int)),
+        # line_search=FrankWolfe.Shortstep(one(Int)),
+        # line_search=FrankWolfe.Shortstep(L),
+        line_search=FrankWolfe.Goldenratio(),
         print_iter=config.max_print_iterations,
         memory_mode=FrankWolfe.InplaceEmphasis(),
         verbose=true,

@@ -36,9 +36,9 @@ function main(config::Config, vertices, shifted_vertices, primal, labels, basena
         # _, _, _, _, td_bpcg = run_FW(config, prod_lmo)    
         # push_to_trajectories!(ni_flag, td_bpcg, trajectories_ni, trajectories_i, primal)
         
-        # println("\n\n\n ----------> AP")
-        # _, _, _, _, td_ap = run_FW(config, prod_lmo, true)    
-        # push_to_trajectories!(ni_flag, td_ap, trajectories_ni, trajectories_i, primal)
+        println("\n\n\n ----------> AP")
+        _, _, _, _, td_ap = run_FW(config, prod_lmo, true)    
+        push_to_trajectories!(ni_flag, td_ap, trajectories_ni, trajectories_i, primal)
 
         # Save trajectories
         # save_trajectories("examples/traj_$basename.jld2", trajectories_ni, trajectories_i)
@@ -67,7 +67,7 @@ primal = primal - 1
 basename = generate_filename(config, vertices)
 
 # Labels for the plots
-labels = ["C-BC-FW", "C-BC-BPFW", "F-BC-BPFW"]# ["C-BC-FW", "C-BC-BPFW", "F-BC-BPFW", "F-BPFW", "AP"]
+labels = ["C-BC-FW", "C-BC-BPFW", "F-BC-BPFW", "AP"]# ["C-BC-FW", "C-BC-BPFW", "F-BC-BPFW", "F-BPFW", "AP"]
 
 # execute main
 println("\n\n********************************************************")
