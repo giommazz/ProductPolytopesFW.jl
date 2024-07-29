@@ -64,7 +64,7 @@ println("********************************************************")
 vertices, shifted_vertices, primal, fw_gap = generate_polytopes(config)
 # Numerical reasons
 primal = primal - 1
-basename = generate_filename(config, vertices)
+basename = generate_filename(config)
 
 # Labels for the plots
 labels = ["C-BC-FW", "C-BC-BPFW", "F-BC-BPFW", "AP"]# ["C-BC-FW", "C-BC-BPFW", "F-BC-BPFW", "F-BPFW", "AP"]

@@ -1,12 +1,26 @@
 # `product_algorithms.jl`
+
+sss = "ls"
+
+function stepsize_strategy(type::String, L::T) where T
+    if type == "1"
+        return FrankWolfe.Shortstep(one(Int))   # short step with L=1
+    elseif type == "L"
+        return FrankWolfe.Shortstep(L)          # short step with given L
+    elseif type == "ls"
+        return FrankWolfe.Goldenratio()         # simple line search
+    else
+        error("Invalid stepsize strategy type")
+    end
+end
+
 # Run Cyclic Block-Coordinate vanilla FW over product LMO
 function run_FW(config::Config, order::FrankWolfe.BlockCoordinateUpdateOrder, prod_lmo::FrankWolfe.ProductLMO)
     
-    x0 = find_starting_point(config, prod_lmo)
-
     # L-smoothness constant
-    config.k = k
-    L = (k-1)sqrt(2*k)
+    L = (config.k-1)sqrt(2*config.k)
+
+    x0 = find_starting_point(config, prod_lmo)
 
     x, v, primal, fw_gap, trajectory_data = FrankWolfe.block_coordinate_frank_wolfe(
         objective,
@@ -16,9 +30,7 @@ function run_FW(config::Config, order::FrankWolfe.BlockCoordinateUpdateOrder, pr
         update_order=order,
         epsilon=config.target_tolerance,
         max_iteration=config.max_iterations,
-        # line_search=FrankWolfe.Shortstep(one(Int)),
-        # line_search=FrankWolfe.Shortstep(L),
-        line_search=FrankWolfe.Goldenratio(),
+        line_search=stepsize_strategy(sss, L),
         print_iter=config.max_print_iterations,
         memory_mode=FrankWolfe.InplaceEmphasis(),
         verbose=true,
@@ -29,12 +41,11 @@ function run_FW(config::Config, order::FrankWolfe.BlockCoordinateUpdateOrder, pr
 end
 # (Multiple dispatch) Run Block-Coordinate BPCG with specific update order (full, cyclic, etc.) over product LMO
 function run_FW(config::Config, order::FrankWolfe.BlockCoordinateUpdateOrder, update_step::FrankWolfe.UpdateStep, prod_lmo::FrankWolfe.ProductLMO)
-    
-    x0 = find_starting_point(config, prod_lmo)
 
     # L-smoothness constant
-    config.k = k
-    L = (k-1)sqrt(2*k)
+    L = (config.k-1)sqrt(2*config.k)
+
+    x0 = find_starting_point(config, prod_lmo)
 
     x, v, primal, fw_gap, trajectory_data = FrankWolfe.block_coordinate_frank_wolfe(
         objective,
@@ -44,9 +55,7 @@ function run_FW(config::Config, order::FrankWolfe.BlockCoordinateUpdateOrder, up
         update_order=order,
         epsilon=config.target_tolerance,
         max_iteration=config.max_iterations,
-        # line_search=FrankWolfe.Shortstep(one(Int)),
-        # line_search=FrankWolfe.Shortstep(L),
-        line_search=FrankWolfe.Goldenratio(),
+        line_search=stepsize_strategy(sss, L),
         print_iter=config.max_print_iterations,
         memory_mode=FrankWolfe.InplaceEmphasis(),
         update_step=update_step,
@@ -58,12 +67,11 @@ function run_FW(config::Config, order::FrankWolfe.BlockCoordinateUpdateOrder, up
 end
 # (Multiple dispatch) Run BPCG over full product LMO
 function run_FW(config::Config, prod_lmo::FrankWolfe.ProductLMO)
-    
-    x0 = find_starting_point(config, prod_lmo)
 
     # L-smoothness constant
-    config.k = k
-    L = (k-1)sqrt(2*k)
+    L = (config.k-1)sqrt(2*config.k)
+
+    x0 = find_starting_point(config, prod_lmo)
 
     x, v, primal, fw_gap, trajectory_data = FrankWolfe.blended_pairwise_conditional_gradient(
         objective,
@@ -72,9 +80,7 @@ function run_FW(config::Config, prod_lmo::FrankWolfe.ProductLMO)
         x0,
         epsilon=config.target_tolerance,
         max_iteration=config.max_iterations,
-        # line_search=FrankWolfe.Shortstep(one(Int)),
-        # line_search=FrankWolfe.Shortstep(L),
-        line_search=FrankWolfe.Goldenratio(),
+        line_search=stepsize_strategy(sss, L),
         print_iter=config.max_print_iterations,
         memory_mode=FrankWolfe.InplaceEmphasis(),
         verbose=true,

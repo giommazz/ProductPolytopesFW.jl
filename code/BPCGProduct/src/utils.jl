@@ -12,13 +12,12 @@ function generate_rand_float_vector(config::Config; lb=0, ub=100, seed=42::Int)
     return lb .+ (ub - lb) .* rand(Float64, config.n)
 end
 
-function generate_filename(config::Config, vertices::Vector{Matrix{T}}) where T
-    sizes = [size(poly_vertices)[1] for poly_vertices in vertices]
+function generate_filename(config::Config) where T
     timestamp = Dates.format(now(), "yyyymmddHHMMSS")
     
     oracle = config.cvxhflag ? "cvxho" : "lmo"
     anc = config.anc_flag ? "anc" : "vert"
-    return "n$(config.n)_k$(config.k)_$(oracle)_$(anc)_v$(join(sizes, "-"))_t$timestamp"
+    return "n$(config.n)_k$(config.k)_$(oracle)_$(anc)_t$timestamp"
 end
 
 # Function to extract `n`, `k`, and `max_iterations` from the filename

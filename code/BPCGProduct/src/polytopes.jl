@@ -397,7 +397,7 @@ function save_polytopes(
     fw_gap::T
     ) where T
     
-    filename = generate_filename(config, vertices)
+    filename = generate_filename(config)
     save(filename, Dict("vertices" => vertices, "shifted_vertices" => shifted_vertices, "primal" => primal, "fw_gap" => fw_gap))
     println("Saving data to $filename")
     
