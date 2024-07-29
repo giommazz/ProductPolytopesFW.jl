@@ -77,5 +77,5 @@ trajectories_ni, trajectories_i = main(config,vertices, shifted_vertices, primal
 
 
 # Plot trajectories
-plot_trajectories(trajectories_ni, labels, yscalelog=true, xscalelog=true, filename="examples/results/plot_ni_$basename.png")
-plot_trajectories(trajectories_i, labels, yscalelog=true, xscalelog=true, filename="examples/results/plot_i_$basename.png")
+plot_trajectories(trajectories_ni, labels, yscalelog=true, xscalelog=true, filename="examples/results_ls/plot_ni_$basename.png")
+plot_trajectories(trajectories_i, labels, yscalelog=true, xscalelog=true, filename="examples/results_ls/plot_i_$basename.png")
