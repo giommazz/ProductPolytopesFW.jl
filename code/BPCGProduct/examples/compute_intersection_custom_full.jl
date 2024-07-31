@@ -45,8 +45,8 @@ function main(config::Config, vertices, shifted_vertices, primal, labels, basena
 
     end
     
-    log_data(trajectories_i, labels, "examples/results/times_i_"*basename)
-    log_data(trajectories_ni, labels, "examples/results/times_ni_"*basename)
+    log_data(trajectories_i, labels, "examples/"*results_directory*"/times_i_"*basename)
+    log_data(trajectories_ni, labels, "examples/"*results_directory*"/times_ni_"*basename)
 
     return trajectories_ni, trajectories_i
 end
@@ -56,6 +56,8 @@ end
 # Use parameters from YAML file
 config = Config("examples/config.yml")
 print_config(config)
+
+results_directory = "results_ls"
 
 # Generate instances 
 println("********************************************************")
@@ -77,5 +79,5 @@ trajectories_ni, trajectories_i = main(config,vertices, shifted_vertices, primal
 
 
 # Plot trajectories
-plot_trajectories(trajectories_ni, labels, yscalelog=true, xscalelog=true, filename="examples/results_ls/plot_ni_$basename.png")
-plot_trajectories(trajectories_i, labels, yscalelog=true, xscalelog=true, filename="examples/results_ls/plot_i_$basename.png")
+plot_trajectories(trajectories_ni, labels, yscalelog=true, xscalelog=true, filename="examples/"*results_directory*"/plot_ni_$basename.png")
+plot_trajectories(trajectories_i, labels, yscalelog=true, xscalelog=true, filename="examples/"*results_directory*"/plot_i_$basename.png")
