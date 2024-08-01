@@ -40,6 +40,14 @@ function main(config::Config, vertices, shifted_vertices, primal, labels, basena
         _, _, _, _, td_ap = run_FW(config, prod_lmo, true)    
         push_to_trajectories!(ni_flag, td_ap, trajectories_ni, trajectories_i, primal)
 
+        # GABA
+        # println("**************************")
+        # for i in 1:length(td_ap)
+        #     println(td_ap[i])
+        # end
+        # println(td_full_bc_cg[1])
+        # readline()
+
         # Save trajectories
         # save_trajectories("examples/traj_$basename.jld2", trajectories_ni, trajectories_i)
 
@@ -64,8 +72,9 @@ println("********************************************************")
 println("Generating instances and solving them to optimum")
 println("********************************************************")
 vertices, shifted_vertices, primal, fw_gap = generate_polytopes(config)
-# Numerical reasons
-primal = primal - 1
+
+# Optimal solution
+primal = primal - 1     # Numerical reasons
 basename = generate_filename(config)
 
 # Labels for the plots

@@ -12,7 +12,7 @@ function generate_rand_float_vector(config::Config; lb=0, ub=100, seed=42::Int)
     return lb .+ (ub - lb) .* rand(Float64, config.n)
 end
 
-function generate_filename(config::Config) where T
+function generate_filename(config::Config)
     timestamp = Dates.format(now(), "yyyymmddHHMMSS")
     
     oracle = config.cvxhflag ? "cvxho" : "lmo"
