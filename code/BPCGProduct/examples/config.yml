@@ -19,9 +19,11 @@ max_iterations_opt: 50000
 # How often FW iteration log is printed to screen
 max_print_iterations: 1000
 # Set the seed for reproducibility
-seed: 1
+seed: 42
 # Use FrankWolfe.ConvexHullOracle LMOs (true) or FrankWolfe.MathOptLMO LMOs (false)
 cvxhflag: true
 # Intersect polytopes close to the first polytope's analytic center (true) or a vertex
 # Works well (true) if you only have two polytopes
 anc_flag: true
+# stepsize strategy: `0` is line search; `1` uses short-step with given L (specified in `product_algorithms.jl`); `2` uses short-step with L=1
+stepsize_strategy: 0

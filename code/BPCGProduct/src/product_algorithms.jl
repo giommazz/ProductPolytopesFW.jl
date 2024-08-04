@@ -1,27 +1,17 @@
 # `product_algorithms.jl`
 
-sss = "ls"
-
-function stepsize_strategy(type::String, L::T) where T
-    if type == "1"
-        return FrankWolfe.Shortstep(one(Int))   # short step with L=1
-    elseif type == "L"
-        return FrankWolfe.Shortstep(L)          # short step with given L
-    elseif type == "ls"
-        return FrankWolfe.Goldenratio()         # simple line search
-    else
-        error("Invalid stepsize strategy type")
-    end
+function compute_L(config::Config)
+    return (config.k - 1) * sqrt(2 * config.k)
 end
 
 # Run Cyclic Block-Coordinate vanilla FW over product LMO
 function run_FW(config::Config, order::FrankWolfe.BlockCoordinateUpdateOrder, prod_lmo::FrankWolfe.ProductLMO)
-    
+
     # L-smoothness constant
-    L = (config.k-1)sqrt(2*config.k)
+    L =  compute_L(config)
 
     x0 = find_starting_point(config, prod_lmo)
-
+    
     x, v, primal, fw_gap, trajectory_data = FrankWolfe.block_coordinate_frank_wolfe(
         objective,
         gradient!,
@@ -30,7 +20,7 @@ function run_FW(config::Config, order::FrankWolfe.BlockCoordinateUpdateOrder, pr
         update_order=order,
         epsilon=config.target_tolerance,
         max_iteration=config.max_iterations,
-        line_search=stepsize_strategy(sss, L),
+        line_search=get_stepsize_strategy(config.stepsize_strategy, L),
         print_iter=config.max_print_iterations,
         memory_mode=FrankWolfe.InplaceEmphasis(),
         verbose=true,
@@ -43,7 +33,7 @@ end
 function run_FW(config::Config, order::FrankWolfe.BlockCoordinateUpdateOrder, update_step::FrankWolfe.UpdateStep, prod_lmo::FrankWolfe.ProductLMO)
 
     # L-smoothness constant
-    L = (config.k-1)sqrt(2*config.k)
+    L =  compute_L(config)
 
     x0 = find_starting_point(config, prod_lmo)
 
@@ -55,7 +45,7 @@ function run_FW(config::Config, order::FrankWolfe.BlockCoordinateUpdateOrder, up
         update_order=order,
         epsilon=config.target_tolerance,
         max_iteration=config.max_iterations,
-        line_search=stepsize_strategy(sss, L),
+        line_search=get_stepsize_strategy(config.stepsize_strategy, L),
         print_iter=config.max_print_iterations,
         memory_mode=FrankWolfe.InplaceEmphasis(),
         update_step=update_step,
@@ -69,7 +59,7 @@ end
 function run_FW(config::Config, prod_lmo::FrankWolfe.ProductLMO)
 
     # L-smoothness constant
-    L = (config.k-1)sqrt(2*config.k)
+    L =  compute_L(config)
 
     x0 = find_starting_point(config, prod_lmo)
 
@@ -80,7 +70,7 @@ function run_FW(config::Config, prod_lmo::FrankWolfe.ProductLMO)
         x0,
         epsilon=config.target_tolerance,
         max_iteration=config.max_iterations,
-        line_search=stepsize_strategy(sss, L),
+        line_search=get_stepsize_strategy(config.stepsize_strategy, L),
         print_iter=config.max_print_iterations,
         memory_mode=FrankWolfe.InplaceEmphasis(),
         verbose=true,

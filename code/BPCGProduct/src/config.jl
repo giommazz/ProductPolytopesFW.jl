@@ -23,12 +23,14 @@ struct Config
     cvxhflag::Bool
     # Intersect polytopes close to the first polytope's analytic center (true) or a vertex
     anc_flag::Bool
+    # stepsize strategy: `0` is line search; `1` uses short-step with given L (specified in `product_algorithms.jl`); `2` uses short-step with L=1
+    stepsize_strategy::Int 
 end
 
 # Constructor with default values
 function Config()
     
-    c = Config(2, 2, [5, 5], 1e-6, 1e-08, 1000, 5000, 100, 42, true, false)
+    c = Config(2, 2, [5, 5], 1e-6, 1e-08, 1000, 5000, 100, 42, true, false, 0)
     
     return c 
 end
@@ -65,7 +67,8 @@ function Config(yaml_file::String; kwargs...)
             config["max_print_iterations"],
             config["seed"],
             config["cvxhflag"],
-            config["anc_flag"]
+            config["anc_flag"],
+            config["stepsize_strategy"]
             )
     return c 
 end
@@ -85,9 +88,10 @@ function modify_config(config::Config; kwargs...)
     seed = get(kwargs, :seed, config.seed)
     cvxhflag = get(kwargs, :cvxhflag, config.cvxhflag)
     anc_flag = get(kwargs, :anc_flag, config.anc_flag)
+    stepsize_strategy = get(kwargs, :stepsize_strategy, config.stepsize_strategy)
 
     # Return a new Config object with updated values
-    c = Config(k, n, n_points, target_tolerance, target_tolerance_opt, max_iterations, max_iterations_opt, max_print_iterations, seed, cvxhflag, anc_flag)
+    c = Config(k, n, n_points, target_tolerance, target_tolerance_opt, max_iterations, max_iterations_opt, max_print_iterations, seed, cvxhflag, anc_flag, stepsize_strategy)
     
     return c
 end
@@ -149,6 +153,11 @@ function validate_config(yaml_config::Dict{Any, Any})
     if typeof(yaml_config["anc_flag"]) != Bool
         error("Invalid value for 'anc_flag': must be a boolean.")
     end
+
+    # Check for `stepsize_strategy`
+    if typeof(yaml_config["stepsize_strategy"]) != Int || yaml_config["stepsize_strategy"] < 0 || yaml_config["stepsize_strategy"] > 2
+        error("Invalid value for 'stepsize_strategy': must be a positive integer in {0, 1, 2}.")
+    end
 end
 
 # Function to print the config parameters
@@ -167,6 +176,18 @@ function print_config(config::Config)
     println("  Seed for reproducibility (seed): ", config.seed)
     println("  Use FW's ConvexHullOracle LMOs or MathOptLMO (cvxhflag): ", config.cvxhflag)
     println("  Intersect polytopes close to first polytope's analytic center (true) or vertex (anc_flag): ", config.anc_flag)
+    println("  stepsize strategy: `0` is line search; `1` uses short-step with given L (specified in `product_algorithms.jl`); `2` uses short-step with L=1: ", config.stepsize_strategy)
     println()
+end
 
+function get_stepsize_strategy(stepsize_strategy::Int, L::T) where T
+    if stepsize_strategy == 0
+        return FrankWolfe.Goldenratio()         # simple line search
+    elseif stepsize_strategy == 1
+        return FrankWolfe.Shortstep(L)          # short step with given L
+    elseif stepsize_strategy == 2
+        return FrankWolfe.Shortstep(one(Int))   # short step with L=1
+    else
+        error("Invalid stepsize strategy type")
+    end
 end
