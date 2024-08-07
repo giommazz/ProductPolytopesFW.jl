@@ -38,7 +38,8 @@ function main(config::Config, vertices, shifted_vertices, primal, labels, basena
         
         println("\n\n\n ----------> AP")
         _, _, _, _, td_ap = run_FW(config, prod_lmo, true)    
-        push_to_trajectories!(ni_flag, td_ap, trajectories_ni, trajectories_i, primal)
+        # `FrankWolfe.alternating_projections` computes ||x-y|| rather than 1/2 ||x-y||
+        push_to_trajectories!(ni_flag, td_ap, trajectories_ni, trajectories_i, 2*primal)
 
         # Save trajectories
         # save_trajectories("examples/traj_$basename.jld2", trajectories_ni, trajectories_i)
