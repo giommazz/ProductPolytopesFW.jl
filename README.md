@@ -69,11 +69,5 @@ julia --project=.
 2. decide LMOs in `run_experiments.jl`
 3. Run from terminal to have the output log printed to custom logfile
     ```bash
-    julia --project=. test/run_experiments.jl > <your_output_logfile>.log 2>&1
+    julia --project=. examples/compute_intersection_custom_full.jl > <your_output_logfile>.log 2>&1
     ```
-
-
-
-    
-    
-

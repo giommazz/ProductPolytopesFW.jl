@@ -31,7 +31,8 @@ module BPCGProduct
     # From `lmos.jl`
     export create_product_lmo, find_starting_point, create_lmos
     # From `product_algorithms_algorithms.jl`
-    export run_FW, push_to_trajectories!, save_trajectories, load_trajectories
+    export run_CyclicBlockCoordinateFW, run_BlockCoordinateBlendedPairwiseFW, run_FullBlendedPairwiseFW, run_AlternatingProjections
+    export push_to_trajectories!, save_trajectories, load_trajectories
     # From `utils.jl`
     export unique_combinations, generate_rand_float_vector, extract_n_k_from_filename, base_name, approxequal, log_data
     # From `polytopes.jl`

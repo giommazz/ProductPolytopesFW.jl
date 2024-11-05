@@ -5,7 +5,11 @@ function compute_L(config::Config)
 end
 
 # Run Cyclic Block-Coordinate vanilla FW over product LMO
-function run_FW(config::Config, order::FrankWolfe.BlockCoordinateUpdateOrder, prod_lmo::FrankWolfe.ProductLMO)
+function run_CyclicBlockCoordinateFW(
+    config::Config,
+    order::FrankWolfe.BlockCoordinateUpdateOrder,
+    prod_lmo::FrankWolfe.ProductLMO
+    )
 
     # L-smoothness constant
     L =  compute_L(config)
@@ -30,7 +34,12 @@ function run_FW(config::Config, order::FrankWolfe.BlockCoordinateUpdateOrder, pr
     return x, v, primal, fw_gap, trajectory_data
 end
 # (Multiple dispatch) Run Block-Coordinate BPCG with specific update order (full, cyclic, etc.) over product LMO
-function run_FW(config::Config, order::FrankWolfe.BlockCoordinateUpdateOrder, update_step::FrankWolfe.UpdateStep, prod_lmo::FrankWolfe.ProductLMO)
+function run_BlockCoordinateBlendedPairwiseFW(
+    config::Config,
+    order::FrankWolfe.BlockCoordinateUpdateOrder,
+    update_step::FrankWolfe.UpdateStep,
+    prod_lmo::FrankWolfe.ProductLMO
+    )
 
     # L-smoothness constant
     L =  compute_L(config)
@@ -56,7 +65,10 @@ function run_FW(config::Config, order::FrankWolfe.BlockCoordinateUpdateOrder, up
     return x, v, primal, fw_gap, trajectory_data
 end
 # (Multiple dispatch) Run BPCG over full product LMO
-function run_FW(config::Config, prod_lmo::FrankWolfe.ProductLMO)
+function run_FullBlendedPairwiseFW(
+    config::Config,
+    prod_lmo::FrankWolfe.ProductLMO
+    )
 
     # L-smoothness constant
     L =  compute_L(config)
@@ -80,7 +92,11 @@ function run_FW(config::Config, prod_lmo::FrankWolfe.ProductLMO)
     return x, v, primal, fw_gap, trajectory_data
 end
 # (Multiple dispatch) Run Alternating Projections over product LMO
-function run_FW(config::Config, prod_lmo::FrankWolfe.ProductLMO, ap_flag::Bool)
+function run_AlternatingProjections(
+    config::Config,
+    prod_lmo::FrankWolfe.ProductLMO,
+    ap_flag::Bool
+    )
     
     if ap_flag
         
@@ -103,7 +119,13 @@ function run_FW(config::Config, prod_lmo::FrankWolfe.ProductLMO, ap_flag::Bool)
 end
 
 # Push trajectory data into appropriate vector (intersecting or non-intersecting) based on the flag `ni_flag` 
-function push_to_trajectories!(ni_flag::Bool, trajectory_data_curr::Vector{Any}, trajectories_ni::Vector{Any}, trajectories_i::Vector{Any}, primal::Float64)
+function push_to_trajectories!(
+    ni_flag::Bool,
+    trajectory_data_curr::Vector{Any},
+    trajectories_ni::Vector{Any},
+    trajectories_i::Vector{Any},
+    primal::Float64
+    )
     # `primal` ≠ 0.0: the polytopes don't intersect
     if ni_flag
         # Replace "Primal" with "Primal Gap" in the FW log, i.e., replace f(x) with f(x) - `primal` 
@@ -115,7 +137,13 @@ function push_to_trajectories!(ni_flag::Bool, trajectory_data_curr::Vector{Any},
     end
 end
 # (Multiple dispatch)
-function push_to_trajectories!(ni_flag::Bool, trajectory_data_curr::Vector{Any}, trajectories::Vector{Any}, primal::Float64)
+function push_to_trajectories!(
+    ni_flag::Bool,
+    trajectory_data_curr::Vector{Any},
+    trajectories::Vector{Any},
+    primal::Float64
+    )
+
     # `primal` ≠ 0.0: the polytopes don't intersect
     if ni_flag
         # Replace "Primal" with "Primal Gap" in the FW log, i.e., replace f(x) with f(x) - `primal` 
@@ -128,13 +156,19 @@ function push_to_trajectories!(ni_flag::Bool, trajectory_data_curr::Vector{Any},
 end
 
 # Save trajectory data to given .jld2 file
-function save_trajectories(filename::String, trajectories::Vector{Any})
+function save_trajectories(
+    filename::String,
+    trajectories::Vector{Any}
+    )
     
     save(filename, Dict("trajectories" => trajectories))
     println("Saving data to $filename")
 end
 # (Multiple dispatch) handle several trajectory data elements
-function save_trajectories(filename::String, trajectories...)
+function save_trajectories(
+    filename::String,
+    trajectories...
+    )
     
     dict = Dict{String, Vector{Any}}()
     for td in trajectories

@@ -58,7 +58,7 @@ end
 config = Config("examples/config.yml")
 print_config(config)
 
-results_directory = "results_linesearch" # "results_shortstep", 
+results_directory = "results_linesearch_acg" # "results_shortstep", 
 
 # Generate instances 
 println("********************************************************")

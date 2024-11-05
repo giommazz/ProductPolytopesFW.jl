@@ -1,13 +1,2 @@
 TODO list:
-- implement alternating projections
-- 2l-1 norms. try intersect them, try not to intersect them. have them each one face that aligns, then rotate them a bit
-- see page rank code on zib gitlab
-- to show linear rates, in the plots you want: time in logarithm (look at one of the papers that have linear rates)
-- rotate them
-- rotations
-- print lmo characteristics on logs
-- comparison with BC: you can find a point in the intersection using our method: see COLT paper
 - implement deeper intersection, by moving polytopes towards the average of convex hull vertices? Maybe use https://github.com/JuliaPolyhedra/jl/blob/8c131a6cc883c541922a8b8efe835932e8b2593f/src/center.jl#L7
-
-
-check packages: SCIP, Printf, 
