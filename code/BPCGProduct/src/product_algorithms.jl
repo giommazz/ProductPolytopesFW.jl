@@ -43,89 +43,87 @@ function update_iterate(
 
     d = similar(x) # initialize direction vector to zero
 
-    # ********************
-    # Step 1: active set FW vertex and away vertex
-    # compute minimizer over active set, wrt gradient 
-    # `a`, `a_lambda`, `a_loc`: away vertex, its active set weight and index
-    _, _, _, _, a_lambda, a, a_loc, _, _ = FrankWolfe.active_set_argminmax(s.active_set, gradient)
-
-    # <∇f(xₜ), aₜ>: scalar products between gradient and away vertex
-    dot_away_vertex = fast_dot(gradient, a)
-    # <∇f(xₜ), xₜ>: scalar products between gradient and current iterate
-    grad_dot_x = fast_dot(gradient, x)
-    # <∇f(xₜ), aₜ - xₜ>
-    away_gap = dot_away_vertex - grad_dot_x
-
-    # ********************
-    # Step 2: FW vertex
     if !s.lazy
-        v = FrankWolfe.compute_extreme_point(lmo, gradient) # compute FW vertex
-        # <∇f(xₜ), xₜ - vₜ>
-        dual_gap = grad_dot_x - fast_dot(gradient, v)
-        s.phi = dual_gap
-    end
 
-    if dual_gap >= away_gap && dual_gap >= epsilon
-        step_type = ST_REGULAR # memory-saving settings
-        d = FrankWolfe.muladd_memory_mode(memory_mode, d, x, v)
-        gamma_max = one(a_lambda)
-        vertex_taken = v
-        away_step_taken = false
-        fw_step_taken = true
-        index = -1
-    
-    elseif away_gap >= epsilon
-        step_type = ST_AWAY
-        d =  FrankWolfe.muladd_memory_mode(memory_mode, d, a, x)
-        gamma_max = a_lambda / (1 - a_lambda)
+        # ********************
+        # Step 1: compute away vertex, FW vertex and related info
+        # `a`, `a_lambda`, `a_loc`: away vertex, its active set weight and index
+        _, _, _, _, a_lambda, a, a_loc, _, _ = FrankWolfe.active_set_argminmax(s.active_set, gradient) # away vertex
 
-        vertex_taken = a
-        away_step_taken = true
-        fw_step_taken = false
-        index = a_loc
-    else
-        step_type = ST_AWAY
-        gamma_max = zero(a_lambda)
-        vertex_taken = a
-        away_step_taken = false
-        fw_step_taken = false
-        index = a_loc
-    end
+        dot_away_vertex = fast_dot(gradient, a) # <∇f(xₜ), aₜ>
+        grad_dot_x = fast_dot(gradient, x) # <∇f(xₜ), xₜ>
+        away_gap = dot_away_vertex - grad_dot_x # <∇f(xₜ), aₜ - xₜ>
+        v = FrankWolfe.compute_extreme_point(lmo, gradient) # FW vertex
+        dual_gap = grad_dot_x - fast_dot(gradient, v) # <∇f(xₜ), xₜ - vₜ>
 
-    gamma = perform_line_search(
-            line_search,
-            t,
-            f,
-            grad!,
-            gradient,
-            x,
-            d,
-            gamma_max,
-            linesearch_workspace,
-            memory_mode,
-        )
-    gamma = min(gamma_max, gamma)
-    
-    step_type = gamma ≈ gamma_max ? ST_DROP : step_type
+        if dual_gap >= away_gap && dual_gap >= epsilon # FW step
+            step_type = ST_REGULAR # memory-saving settings
+            d = FrankWolfe.muladd_memory_mode(memory_mode, d, x, v)
+            gamma_max = one(a_lambda)
+            vertex_taken = v
+            away_step_taken = false
+            fw_step_taken = true
+            index = -1 # will be pushed in active set
+        
+        elseif away_gap >= epsilon # away step
+            step_type = ST_AWAY
+            d =  FrankWolfe.muladd_memory_mode(memory_mode, d, a, x)
+            gamma_max = a_lambda / (1 - a_lambda)
 
-    # cleanup and renormalize every x iterations. Only for the FW steps
-    renorm = mod(t, s.renorm_interval) == 0
-    if away_step_taken
-        FrankWolfe.active_set_update!(s.active_set, -gamma, vertex_taken, true, index, add_dropped_vertices=use_extra_vertex_storage, vertex_storage=extra_vertex_storage)
-    else
+            vertex_taken = a
+            away_step_taken = true
+            fw_step_taken = false
+            index = a_loc # atom weight will be updated in active set
+        
+        else # no step, algorithm termination
+            step_type = ST_AWAY
+            gamma_max = zero(a_lambda)
+            
+            vertex_taken = a
+            away_step_taken = false
+            fw_step_taken = false
+            index = a_loc
+        end
 
-        if add_dropped_vertices && gamma == gamma_max
-            for vtx in s.active_set.atoms
-                if vtx != v
-                    push!(extra_vertex_storage, vtx)
+        gamma = perform_line_search(
+                line_search,
+                t,
+                f,
+                grad!,
+                gradient,
+                x,
+                d,
+                gamma_max,
+                linesearch_workspace,
+                memory_mode,
+            )
+        gamma = min(gamma_max, gamma)
+        
+        step_type = gamma ≈ gamma_max ? ST_DROP : step_type
+
+        # every tot iterations: remove atoms w/small weight from active set, then renormalize weights to sum up to 1
+        renorm = mod(t, s.renorm_interval) == 0
+        if away_step_taken # away step: update active set weights, including that of `a`
+            # `renorm` always true when `away_step_take` == true
+            # `add_dropped_vertices` decides if vertices dropped from active set are saved somewhere else
+            FrankWolfe.active_set_update!(s.active_set, -gamma, vertex_taken, true, index, add_dropped_vertices=use_extra_vertex_storage, vertex_storage=extra_vertex_storage)
+        else # FW step
+            if add_dropped_vertices && gamma == gamma_max # `gamma` == 1
+                for vtx in s.active_set.atoms
+                    if vtx != v
+                        push!(extra_vertex_storage, vtx)
+                    end
                 end
             end
+            active_set_update!(s.active_set, gamma, vertex, renorm, index) # push `v` to active set and update weights
         end
-        active_set_update!(active_set, gamma, vertex, renorm, index)
-    end
 
-    x = muladd_memory_mode(memory_mode, x, gamma, d)
-    return (dual_gap, vertex_taken, d, gamma, step_type)
+        x = muladd_memory_mode(memory_mode, x, gamma, d)
+        return (dual_gap, vertex_taken, d, gamma, step_type)
+    else
+        println("Meeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeehhhhhhhhh")
+        readline()
+    end
 
 end
  
