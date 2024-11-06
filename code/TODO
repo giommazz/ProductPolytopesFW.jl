@@ -13,3 +13,22 @@ QUESTIONS FOR JANNIS
                         end
                     end
     shouldn't all atoms except the FW one be removed from the active set?
+- before my update_iterate is done, should i imitate lines294/307 of afw.jl?
+     if mod(t, renorm_interval) == 0
+            active_set_renormalize!(active_set)
+            x = compute_active_set_iterate!(active_set)
+        end
+
+        if (
+            (mod(t, print_iter) == 0 && verbose) ||
+            callback !== nothing ||
+            !(line_search isa Agnostic || line_search isa Nonconvex || line_search isa FixedStep)
+        )
+            primal = f(x)
+            dual_gap = phi_value
+        end
+    end
+
+- how to handle: add_dropped_vertices, use_extra_vertex_storage, vertex_storage, extra_vertex_storage
+- the implementation of the lazy steps doesn't follow Algorithm 3.8 in the survey "Conditional gradients"
+

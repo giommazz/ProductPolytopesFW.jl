@@ -41,22 +41,92 @@ function update_iterate(
     epsilon,
     )
 
-    d = similar(x) # initialize direction vector to zero
+    d = similar(x) # initialize direction vector
 
-    if !s.lazy
+    # ********************
+    # Step 1: compute away vertex, "local" FW vertex and related info (`lambda`, `loc`: active set weight and index)
+    _, lazy_v, lazy_v_loc, _, a_lambda, a, a_loc, _, _ = FrankWolfe.active_set_argminmax(s.active_set, gradient) # away and "local" FW vertices
+    grad_dot_x = fast_dot(gradient, x) # <∇f(xₜ), xₜ>
+    grad_dot_a = fast_dot(gradient, a) # <∇f(xₜ), aₜ>
 
+    if s.lazy    
+        grad_dot_lazy_v = fast_dot(gradient, lazy_v) # <∇f(xₜ), lazy_vₜ>
+        
+        if grad_dot_x - grad_dot_lazy_v >= grad_dot_a - grad_dot_x && 
+            grad_dot_x - grad_dot_lazy_v >= s.phi / s.lazy_tolerance &&
+            grad_dot_x - grad_dot_lazy_v >= epsilon
+            
+            step_type = ST_LAZY
+            gamma_max = one(a_lambda)
+            d = muladd_memory_mode(memory_mode, d, x, lazy_v)
+            vertex = lazy_v
+            away_step_taken = false
+            fw_step_taken = true
+            index = lazy_v_loc
+        else
+            #Do away step, as it promises enough progress.
+            if grad_dot_a - grad_dot_x > grad_dot_x - grad_dot_lazy_v &&
+               grad_dot_a - grad_dot_x >= s.phi / s.lazy_tolerance
+                step_type = ST_AWAY
+                gamma_max = a_lambda / (1 - a_lambda)
+                d = muladd_memory_mode(memory_mode, d, a, x)
+                vertex = a
+                away_step_taken = true
+                fw_step_taken = false
+                index = a_loc
+                #Resort to calling the LMO
+            else
+                # optionally: try vertex storage
+                if use_extra_vertex_storage
+                    lazy_threshold = grad_dot_x - s.phi / s.lazy_tolerance
+                    (found_better_vertex, new_forward_vertex) =
+                        storage_find_argmin_vertex(extra_vertex_storage, gradient, lazy_threshold)
+                    if found_better_vertex
+                        @debug("Found acceptable lazy vertex in storage")
+                        v = new_forward_vertex
+                        step_type = ST_LAZYSTORAGE
+                    else
+                        lazy_v = compute_extreme_point(lmo, gradient)
+                        step_type = ST_REGULAR
+                    end
+                else
+                    lazy_v = compute_extreme_point(lmo, gradient)
+                    step_type = ST_REGULAR
+                end
+                # Real dual gap promises enough progress.
+                grad_dot_fw_vertex = fast_dot(lazy_v, gradient)
+                dual_gap = grad_dot_x - grad_dot_fw_vertex
+                if dual_gap >= s.phi / s.lazy_tolerance
+                    gamma_max = one(a_lambda)
+                    d = muladd_memory_mode(memory_mode, d, x, lazy_v)
+                    vertex = lazy_v
+                    away_step_taken = false
+                    fw_step_taken = true
+                    index = -1
+                    #Lower our expectation for progress.
+                else
+                    step_type = ST_DUALSTEP
+                    s.phi = min(dual_gap, phi / 2.0)
+                    gamma_max = zero(a_lambda)
+                    vertex = lazy_v
+                    away_step_taken = false
+                    fw_step_taken = false
+                    index = -1
+                end
+            end
+        end
+
+    else
         # ********************
         # Step 1: compute away vertex, FW vertex and related info
-        # `a`, `a_lambda`, `a_loc`: away vertex, its active set weight and index
-        _, _, _, _, a_lambda, a, a_loc, _, _ = FrankWolfe.active_set_argminmax(s.active_set, gradient) # away vertex
-
-        dot_away_vertex = fast_dot(gradient, a) # <∇f(xₜ), aₜ>
-        grad_dot_x = fast_dot(gradient, x) # <∇f(xₜ), xₜ>
-        away_gap = dot_away_vertex - grad_dot_x # <∇f(xₜ), aₜ - xₜ>
+        away_gap = grad_dot_a - grad_dot_x # <∇f(xₜ), aₜ - xₜ>
         v = FrankWolfe.compute_extreme_point(lmo, gradient) # FW vertex
         dual_gap = grad_dot_x - fast_dot(gradient, v) # <∇f(xₜ), xₜ - vₜ>
 
-        if dual_gap >= away_gap && dual_gap >= epsilon # FW step
+        # ********************
+        # Step 2: compute step info
+        # FW step
+        if dual_gap >= away_gap && dual_gap >= epsilon
             step_type = ST_REGULAR # memory-saving settings
             d = FrankWolfe.muladd_memory_mode(memory_mode, d, x, v)
             gamma_max = one(a_lambda)
@@ -65,7 +135,8 @@ function update_iterate(
             fw_step_taken = true
             index = -1 # will be pushed in active set
         
-        elseif away_gap >= epsilon # away step
+        # away step
+        elseif away_gap >= epsilon
             step_type = ST_AWAY
             d =  FrankWolfe.muladd_memory_mode(memory_mode, d, a, x)
             gamma_max = a_lambda / (1 - a_lambda)
@@ -75,7 +146,8 @@ function update_iterate(
             fw_step_taken = false
             index = a_loc # atom weight will be updated in active set
         
-        else # no step, algorithm termination
+        # no step, algorithm termination
+        else
             step_type = ST_AWAY
             gamma_max = zero(a_lambda)
             
@@ -85,45 +157,55 @@ function update_iterate(
             index = a_loc
         end
 
-        gamma = perform_line_search(
-                line_search,
-                t,
-                f,
-                grad!,
-                gradient,
-                x,
-                d,
-                gamma_max,
-                linesearch_workspace,
-                memory_mode,
-            )
-        gamma = min(gamma_max, gamma)
-        
-        step_type = gamma ≈ gamma_max ? ST_DROP : step_type
+        # ********************
+        # Step 3: perform step and update active set
+        gamma = 0.0
+        # if a step is taken (i.e., algorithm will go on at least another iteration)
+        if fw_step_taken || away_step_taken
 
-        # every tot iterations: remove atoms w/small weight from active set, then renormalize weights to sum up to 1
-        renorm = mod(t, s.renorm_interval) == 0
-        if away_step_taken # away step: update active set weights, including that of `a`
-            # `renorm` always true when `away_step_take` == true
-            # `add_dropped_vertices` decides if vertices dropped from active set are saved somewhere else
-            FrankWolfe.active_set_update!(s.active_set, -gamma, vertex_taken, true, index, add_dropped_vertices=use_extra_vertex_storage, vertex_storage=extra_vertex_storage)
-        else # FW step
-            if add_dropped_vertices && gamma == gamma_max # `gamma` == 1
-                for vtx in s.active_set.atoms
-                    if vtx != v
-                        push!(extra_vertex_storage, vtx)
+            # perform stepsize strategy
+            gamma = perform_line_search(
+                    line_search,
+                    t,
+                    f,
+                    grad!,
+                    gradient,
+                    x,
+                    d,
+                    gamma_max,
+                    linesearch_workspace,
+                    memory_mode,
+                )
+            gamma = min(gamma_max, gamma) # decide stepsize
+            
+            step_type = gamma ≈ gamma_max ? ST_DROP : step_type
+
+            # Update active set
+            # every tot iterations: remove atoms w/small weight from active set, then renormalize weights to sum up to 1
+            renorm = mod(t, s.renorm_interval) == 0
+            if away_step_taken # active set update when away step
+                # `renorm` always true when `away_step_take` == true
+                # `add_dropped_vertices` decides if vertices dropped from active set are saved somewhere else
+                FrankWolfe.active_set_update!(s.active_set, -gamma, vertex_taken, true, index, add_dropped_vertices=use_extra_vertex_storage, vertex_storage=extra_vertex_storage) # `vertex_taken` is `a`
+            else # active set update when FW step
+                if add_dropped_vertices && gamma == gamma_max # `gamma` == 1
+                    for vtx in s.active_set.atoms
+                        if vtx != v
+                            push!(extra_vertex_storage, vtx)
+                        end
                     end
                 end
+                FrankWolfe.active_set_update!(s.active_set, gamma, vertex, renorm, index) # `vertex_taken` is `v`
             end
-            active_set_update!(s.active_set, gamma, vertex, renorm, index) # push `v` to active set and update weights
         end
-
-        x = muladd_memory_mode(memory_mode, x, gamma, d)
-        return (dual_gap, vertex_taken, d, gamma, step_type)
+    
     else
-        println("Meeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeehhhhhhhhh")
+        println("TODO!")
         readline()
     end
+
+    x = muladd_memory_mode(memory_mode, x, gamma, d)
+    return (dual_gap, vertex_taken, d, gamma, step_type)
 
 end
  
