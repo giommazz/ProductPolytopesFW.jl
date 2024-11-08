@@ -5,30 +5,21 @@ TODO list:
 QUESTIONS FOR JANNIS            
 
 
-- a line in afw.jl says: "cleanup and renormalize every x iterations. Only for the fw steps.": this is called later why only fo FW steps? this is also called on FW steps, see line 268 "active_set_update!(active_set, gamma, vertex, renorm, index)"
-- line 112 of active_set.jl: push!(active_set, (lambda, atom)) what if the FW vertex is already in the active set? does "push!" check for distinct elements?
+- a line in afw.jl says: "cleanup and renormalize every x iterations. Only for the fw steps.": this is because if away step then renorm always true, else only every tot. iterations. Right?
+- line 112 of active_set.jl: push!(active_set, (lambda, atom)) what if the FW vertex is already in the active set?
+    If i do a FW step ("dual_gap >= away_gap && dual_gap >= epsilon") then index = -1. 
+    So the algorithm will call "active_set_update!(active_set, gamma, vertex, renorm, -1)" (line 268 of afw.jl) and 
+        push the FW atom in the active set ("push!(active_set, (lambda, atom)", line 112 of active_set.jl)
 - line 262 of afw.jl:  for vtx in active_set.atoms
                         if vtx != v
                             push!(extra_vertex_storage, vtx)
                         end
                     end
     shouldn't all atoms except the FW one be removed from the active set?
-- before my update_iterate is done, should i imitate lines294/307 of afw.jl?
-     if mod(t, renorm_interval) == 0
-            active_set_renormalize!(active_set)
-            x = compute_active_set_iterate!(active_set)
-        end
-
-        if (
-            (mod(t, print_iter) == 0 && verbose) ||
-            callback !== nothing ||
-            !(line_search isa Agnostic || line_search isa Nonconvex || line_search isa FixedStep)
-        )
-            primal = f(x)
-            dual_gap = phi_value
-        end
-    end
-
+- before my update_iterate is done, should i imitate lines 294/307 of afw.jl? 
+    For example, active_set_renormalize is already in active_set_update...
 - how to handle: add_dropped_vertices, use_extra_vertex_storage, vertex_storage, extra_vertex_storage
 - the implementation of the lazy steps doesn't follow Algorithm 3.8 in the survey "Conditional gradients"
-
+- the thirds else in afw_step is when the algorithm should terminate, right? 
+    because "fw_step_taken==away_step_taken==false"...but then why is "step_type = ST_AWAY"??
+    what is the equivalent for the lazy version?
