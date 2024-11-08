@@ -180,28 +180,22 @@ function update_iterate(
         gamma = min(gamma_max, gamma) # decide stepsize
         step_type = gamma ≈ gamma_max ? ST_DROP : step_type
 
+        # DEBUG: DA QUI...
         # Update active set
         # every tot iterations: remove atoms w/small weight from active set, then renormalize weights to sum up to 1
         renorm = mod(t, s.renorm_interval) == 0
         if away_step_taken # active set update when away step
             # `renorm` always true when `away_step_take` == true
             # `add_dropped_vertices` decides if vertices dropped from active set are saved somewhere else
-            FrankWolfe.active_set_update!(s.active_set, -gamma, vertex_taken, true, index, add_dropped_vertices=use_extra_vertex_storage, vertex_storage=extra_vertex_storage) # `vertex_taken` is `a`
+            FrankWolfe.active_set_update!(s.active_set, -gamma, vertex_taken, true, index) # `vertex_taken` is `a`
         else # active set update when FW step
-            if add_dropped_vertices && gamma == gamma_max # `gamma` == 1
-                for vtx in s.active_set.atoms
-                    if vtx != v
-                        push!(extra_vertex_storage, vtx)
-                    end
-                end
-            end
             FrankWolfe.active_set_update!(s.active_set, gamma, vertex, renorm, index) # `vertex_taken` is `v`
         end
     end
     
-    else
-        println("TODO!")
-        readline()
+    if mod(t, s.renorm_interval) == 0
+        FrankWolfe.active_set_renormalize!(s.active_set)
+        x = FrankWolfe.compute_active_set_iterate!(s.active_set)
     end
 
     x = FrankWolfe.muladd_memory_mode(memory_mode, x, gamma, d)
