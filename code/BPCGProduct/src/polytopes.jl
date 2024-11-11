@@ -343,7 +343,7 @@ function compute_distance(config::Config, lmo_list::Vector{FrankWolfe.LinearMini
     prod_lmo = create_product_lmo(lmo_list)
     
     # Run Block-coordinate BPCG with CyclicUpdate
-    last_iterate, last_lmo_vertex, primal, fw_gap, _ = run_BlockCoordinateBlendedPairwiseFW(config_opt, FrankWolfe.CyclicUpdate(), FrankWolfe.BPCGStep(), prod_lmo)
+    last_iterate, last_lmo_vertex, primal, fw_gap, _ = run_BlockCoordinateFW(config_opt, FrankWolfe.CyclicUpdate(), FrankWolfe.BPCGStep(), prod_lmo)
     
     return last_iterate, last_lmo_vertex, primal, fw_gap
 end
@@ -357,7 +357,7 @@ function compute_distance(config::Config, lmo_list::Vector{FrankWolfe.ConvexHull
     prod_lmo = create_product_lmo(lmo_list)
     
     # Run Block-coordinate BPCG with CyclicUpdate
-    last_iterate, last_lmo_vertex, primal, fw_gap, _ = run_BlockCoordinateBlendedPairwiseFW(config_opt, FrankWolfe.CyclicUpdate(), FrankWolfe.BPCGStep(), prod_lmo)
+    last_iterate, last_lmo_vertex, primal, fw_gap, _ = run_BlockCoordinateFW(config_opt, FrankWolfe.CyclicUpdate(), FrankWolfe.BPCGStep(), prod_lmo)
     
     return last_iterate, last_lmo_vertex, primal, fw_gap
 end
@@ -371,7 +371,7 @@ function compute_distance(config::Config, lmo_list::Vector{FrankWolfe.MathOptLMO
     prod_lmo = create_product_lmo(lmo_list)
     
     # Run Block-coordinate BPCG with CyclicUpdate
-    last_iterate, last_lmo_vertex, primal, fw_gap, _ = run_BlockCoordinateBlendedPairwiseFW(config_opt, FrankWolfe.CyclicUpdate(), FrankWolfe.BPCGStep(), prod_lmo)
+    last_iterate, last_lmo_vertex, primal, fw_gap, _ = run_BlockCoordinateFW(config_opt, FrankWolfe.CyclicUpdate(), FrankWolfe.BPCGStep(), prod_lmo)
     
     return last_iterate, last_lmo_vertex, primal, fw_gap
 end

@@ -5,7 +5,7 @@ function compute_L(config::Config)
 end
 
 # Implementation Away-Step for block-coordinate setting
-mutable struct AwayStep <: UpdateStep
+mutable struct AwayStep <: FrankWolfe.UpdateStep
     lazy::Bool
     active_set::Union{FrankWolfe.AbstractActiveSet, Nothing}
     lazy_tolerance::Float64
@@ -205,11 +205,13 @@ end
  
 
 
+
+
 # (Multiple dispatch) Run Block-Coordinate BPCG with specific update order (full, cyclic, etc.) over product LMO
-function run_BlockCoordinateBlendedPairwiseFW(
+function run_BlockCoordinateFW(
     config::Config,
-    order::FrankWolfe.BlockCoordinateUpdateOrder,
-    update_step::FrankWolfe.UpdateStep, #FrankWolfe.BPCGStep(), FrankWolfe.FrankWolfeStep(), FrankWolfe.AwayStep()
+    order::FrankWolfe.BlockCoordinateUpdateOrder, # FrankWolfe.CyclicUpdate(), FrankWolfe.FullUpdate()
+    update_step::FrankWolfe.UpdateStep, # FrankWolfe.BPCGStep(), FrankWolfe.FrankWolfeStep(), AwayStep()
     prod_lmo::FrankWolfe.ProductLMO
     )
 

@@ -1,8 +1,17 @@
-# Workflow
+# General
+To run a script, do 
+```bash
+cd BPCGProduct
+```
+```julia
+include("examples/script.jl")
+```
 
-1. run `1.1_generate_polytopes.jl`: generate instances, find optimal solutions, then save instances to `.jld2` files
-2. run `1.2_compute_intersection_custom_instances.jl`: test several FW variants on those instances
+# Workflows
 
-As an alternative, the scripts `compute_intersection_custom_full.jl`, or `compute_intersection_legacy_lmos.jl` do the two steps above (with custom instances, or using the FW legacy LMOs) but don't save the instances to `.jld2` files
+0. Set up parameters in `examples/config.yml`
+1. `1.1_generate_polytopes.jl` script: generate instances, find optimal solutions, then save instances to `.jld2` files
+2. `1.2_compute_intersection_custom_instances.jl` script: test several FW variants on those instances
 
-Note: to decide stepsizes, go into `product_algorithms.jl`
+As an alternative, the scripts `compute_intersection_custom_full.jl` (custom instances, with parameters decided in `config.yml`) or `compute_intersection_legacy_lmos.jl` (using `FrankWolfe.jl`'s legacy LMOs) perform both steps above in one script.  
+However, they do not save the instances to `.jld2` files
