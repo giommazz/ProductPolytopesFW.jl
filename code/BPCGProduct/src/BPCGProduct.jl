@@ -27,7 +27,7 @@ module BPCGProduct
     # From `config.jl`
     export Config, print_config, modify_config
     # From `objective_functions.jl`
-    export objective, gradient!
+    export convex_feasibility_objective, convex_feasibility_gradient!
     # From `lmos.jl`
     export create_product_lmo, find_starting_point, create_lmos
     # From `product_algorithms_algorithms.jl`

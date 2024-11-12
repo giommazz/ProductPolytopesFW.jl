@@ -1,7 +1,7 @@
 # `objective_functions.jl`
 
 # Function to compute the pairwise distance objective: 1/2 ∑ᵢ₌₁ᵏ⁻¹∑ⱼ₌ᵢ₊₁ᵏ || xⁱ - xʲ ||₂²
-function objective(x::FrankWolfe.BlockVector)
+function convex_feasibility_objective(x::FrankWolfe.BlockVector)
     
     sum_dist = 0.0
     k = length(x.block_sizes)
@@ -17,7 +17,7 @@ function objective(x::FrankWolfe.BlockVector)
 end
 
 # Gradient computation for tuple of vectors
-function gradient!(storage::FrankWolfe.BlockVector, x::FrankWolfe.BlockVector)
+function convex_feasibility_gradient!(storage::FrankWolfe.BlockVector, x::FrankWolfe.BlockVector)
     
     k = length(x.block_sizes)
     n = Int(x.tot_size / k)

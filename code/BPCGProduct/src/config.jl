@@ -176,7 +176,7 @@ function print_config(config::Config)
     println("  Seed for reproducibility (seed): ", config.seed)
     println("  Use FW's ConvexHullOracle LMOs or MathOptLMO (cvxhflag): ", config.cvxhflag)
     println("  Intersect polytopes close to first polytope's analytic center (true) or vertex (anc_flag): ", config.anc_flag)
-    println("  stepsize strategy: `0` is line search; `1` uses short-step with given L (specified in `product_algorithms.jl`); `2` uses short-step with L=1: ", config.stepsize_strategy)
+    println("  Stepsize strategy (`0` is line search; `1` uses short-step with given L specified in `product_algorithms.jl`; `2` uses short-step with L=1): ", config.stepsize_strategy)
     println()
 end
 

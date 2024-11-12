@@ -1,4 +1,5 @@
 # `product_algorithms.jl`
+using FrankWolfe
 
 function compute_L(config::Config)
     return (config.k - 1) * sqrt(2 * config.k)
@@ -8,25 +9,28 @@ end
 mutable struct AwayStep <: FrankWolfe.UpdateStep
     lazy::Bool
     active_set::Union{FrankWolfe.AbstractActiveSet, Nothing}
+    renorm_interval::Int
     lazy_tolerance::Float64
     # used to decide if moving towards FW vertex or away vertex in the lazy case
     phi::Float64
 end
 
-# Constructors
-AwayStep() = AwayStep(false, nothing, 2.0)
-AwayStep(lazy::Bool) = AwayStep(lazy, nothing, 2.0)
-
 # Copy an AwayStep object with active set if it exists
 function Base.copy(obj::AwayStep)
     if obj.active_set === nothing
-        return AwayStep(nothing, obj.renorm_interval)
+        return AwayStep(obj.lazy, nothing, obj.renorm_interval, obj.lazy_tolerance, obj.phi)
     else
-        return AwayStep(copy(obj.active_set), obj.renorm_interval)
+        return AwayStep(obj.lazy, copy(obj.active_set), obj.renorm_interval, obj.lazy_tolerance, obj.phi)
     end
 end
+
+# Constructors
+AwayStep() = AwayStep(false, nothing, 1000, 2.0, Inf)
+AwayStep(lazy::Bool) = AwayStep(lazy, nothing, 1000, 2.0, Inf)
+
+
 # Update iterate function for AwayStep
-function update_iterate(
+function FrankWolfe.update_iterate(
     s::AwayStep,
     x,
     lmo,
@@ -38,7 +42,7 @@ function update_iterate(
     line_search,
     linesearch_workspace,
     memory_mode,
-    epsilon,
+    epsilon
     )
 
     d = similar(x) # initialize direction vector
@@ -79,26 +83,8 @@ function update_iterate(
                 index = a_loc
             # FW step (resort to calling the LMO)
             else
-                
-                # DEBUG: DA QUI...
-                # optionally: try vertex storage
-                if use_extra_vertex_storage
-                    lazy_threshold = grad_dot_x - s.phi / s.lazy_tolerance
-                    (found_better_vertex, new_forward_vertex) =
-                        FrankWolfe.storage_find_argmin_vertex(extra_vertex_storage, gradient, lazy_threshold)
-                    if found_better_vertex
-                        @debug("Found acceptable lazy vertex in storage")
-                        v = new_forward_vertex
-                        step_type = ST_LAZYSTORAGE
-                    else
-                        v = FrankWolfe.compute_extreme_point(lmo, gradient)
-                        step_type = ST_REGULAR
-                    end
-                else
-                    v = FrankWolfe.compute_extreme_point(lmo, gradient)
-                    step_type = ST_REGULAR
-                end
-                # DEBUG: ...A QUI
+                v = FrankWolfe.compute_extreme_point(lmo, gradient)
+                step_type = ST_REGULAR
 
                 # Real dual gap promises enough progress
                 grad_dot_fw_vertex = fast_dot(v, gradient)
@@ -180,13 +166,11 @@ function update_iterate(
         gamma = min(gamma_max, gamma) # decide stepsize
         step_type = gamma ≈ gamma_max ? ST_DROP : step_type
 
-        # DEBUG: DA QUI...
         # Update active set
-        # every tot iterations: remove atoms w/small weight from active set, then renormalize weights to sum up to 1
+        # Every `renorm_interval` iterations: remove atoms w/small weight from active set, then renormalize weights to sum up to 1
         renorm = mod(t, s.renorm_interval) == 0
         if away_step_taken # active set update when away step
             # `renorm` always true when `away_step_take` == true
-            # `add_dropped_vertices` decides if vertices dropped from active set are saved somewhere else
             FrankWolfe.active_set_update!(s.active_set, -gamma, vertex_taken, true, index) # `vertex_taken` is `a`
         else # active set update when FW step
             FrankWolfe.active_set_update!(s.active_set, gamma, vertex, renorm, index) # `vertex_taken` is `v`
@@ -195,7 +179,6 @@ function update_iterate(
     
     if mod(t, s.renorm_interval) == 0
         FrankWolfe.active_set_renormalize!(s.active_set)
-        x = FrankWolfe.compute_active_set_iterate!(s.active_set)
     end
 
     x = FrankWolfe.muladd_memory_mode(memory_mode, x, gamma, d)
@@ -219,17 +202,33 @@ function run_BlockCoordinateFW(
     L =  compute_L(config)
 
     x0 = find_starting_point(config, prod_lmo)
+    
+    # DEBUG: the following lines will have to be erased if pushed to FrankWolfe.jl...
+    if update_step isa FrankWolfe.UpdateStep
+        update_step = [copy(update_step) for _ in 1:config.k]
+    end
+    line_search = get_stepsize_strategy(config.stepsize_strategy, L)
+    if line_search isa FrankWolfe.LineSearchMethod
+        line_search = [line_search for _ in 1:config.k]
+    end
+    # DEBUG: ...till here
 
+    for (i, s) in enumerate(update_step)
+        if s.active_set == nothing
+            s.active_set = FrankWolfe.ActiveSet([(1.0, copy(x0.blocks[i]))])
+        end
+    end
+    
     x, v, primal, fw_gap, trajectory_data = FrankWolfe.block_coordinate_frank_wolfe(
-        objective,
-        gradient!,
+        convex_feasibility_objective,
+        convex_feasibility_gradient!,
         prod_lmo,
         x0,
         update_order=order,
         update_step=update_step,
         epsilon=config.target_tolerance,
         max_iteration=config.max_iterations,
-        line_search=get_stepsize_strategy(config.stepsize_strategy, L),
+        line_search=line_search,
         print_iter=config.max_print_iterations,
         memory_mode=FrankWolfe.InplaceEmphasis(),
         verbose=true,
@@ -250,8 +249,8 @@ function run_FullBlendedPairwiseFW(
     x0 = find_starting_point(config, prod_lmo)
 
     x, v, primal, fw_gap, trajectory_data = FrankWolfe.blended_pairwise_conditional_gradient(
-        objective,
-        gradient!,
+        convex_feasibility_objective,
+        convex_feasibility_gradient!,
         prod_lmo,
         x0,
         epsilon=config.target_tolerance,

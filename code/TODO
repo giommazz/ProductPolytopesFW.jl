@@ -9,9 +9,11 @@ QUESTIONS FOR JANNIS
 HIGH PRIORITY (ABOUT HOW TO IMPLEMENT THE BC AWAY STEP)
 - how to handle: add_dropped_vertices, use_extra_vertex_storage, vertex_storage, extra_vertex_storage. For BPCG one simply deletes the stuff that
     is dependent on those parameters, can we look together at my code (how i call functions w/o using those parameters) vs the original afw.jl
+
 - the third else in afw_step is when the algorithm should terminate, right? 
     because "fw_step_taken==away_step_taken==false"...but then why is "step_type = ST_AWAY"??
     what is the equivalent for the lazy version?
+
 - line 406 of blended_pairwise.jl: "x = compute_active_set_iterate!(active_set)". However, there is no equivalent in the block-coordinate one
         right after line 447 of block_coordinate_algorithms.jl. I am asking because this happens in my code too, at line 198.
 

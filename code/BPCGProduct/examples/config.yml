@@ -13,9 +13,9 @@ target_tolerance: 1e-05
 # epsilon-optimality threshold for finding optimal solution
 target_tolerance_opt: 1e-8
 # Number of FW iterations
-max_iterations: 10000
+max_iterations: 1000
 # Number of FW iterations to compute optimal solution
-max_iterations_opt: 50000
+max_iterations_opt: 1000  
 # How often FW iteration log is printed to screen
 max_print_iterations: 1000
 # Set the seed for reproducibility
