@@ -43,12 +43,6 @@ git-tree-sha1 = "0691e34b3bb8be9307330f88d1a3c3f25466c24d"
 uuid = "d1d4a3ce-64b1-5f1a-9ba4-7e7e69966f35"
 version = "0.1.9"
 
-[[deps.BlockDiagonals]]
-deps = ["ChainRulesCore", "FillArrays", "FiniteDifferences", "LinearAlgebra"]
-git-tree-sha1 = "920d3775e35c519a2aced9e7bbe9ac61218eeead"
-uuid = "0a1fb500-61f7-11e9-3c65-f5ef3456f9f0"
-version = "0.1.42"
-
 [[deps.Bzip2_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
 git-tree-sha1 = "8873e196c2eb87962a2048b3b8e08946535864a1"
@@ -299,9 +293,9 @@ version = "4.4.4+1"
 
 [[deps.FileIO]]
 deps = ["Pkg", "Requires", "UUIDs"]
-git-tree-sha1 = "62ca0547a14c57e98154423419d8a342dca75ca9"
+git-tree-sha1 = "91e0e5c68d02bcdaae76d3c8ceb4361e8f28d2e9"
 uuid = "5789e2e9-d7fb-5bc7-8068-2c6fae9b9549"
-version = "1.16.4"
+version = "1.16.5"
 
 [[deps.FilePathsBase]]
 deps = ["Compat", "Dates"]
@@ -316,12 +310,6 @@ weakdeps = ["Mmap", "Test"]
 
 [[deps.FileWatching]]
 uuid = "7b1f6079-737a-58dc-b8bc-7a2ca5c1b5ee"
-
-[[deps.FillArrays]]
-deps = ["LinearAlgebra", "Random", "SparseArrays", "Statistics"]
-git-tree-sha1 = "7072f1e3e5a8be51d525d64f63d3ec1287ff2790"
-uuid = "1a297f60-69ca-5386-bcde-b61e274b549b"
-version = "0.13.11"
 
 [[deps.FiniteDifferences]]
 deps = ["ChainRulesCore", "LinearAlgebra", "Printf", "Random", "Richardson", "SparseArrays", "StaticArrays"]
@@ -357,12 +345,12 @@ weakdeps = ["StaticArrays"]
     ForwardDiffStaticArraysExt = "StaticArrays"
 
 [[deps.FrankWolfe]]
-deps = ["Arpack", "GenericSchur", "Hungarian", "LinearAlgebra", "MathOptInterface", "MathOptSetDistances", "Printf", "ProgressMeter", "Random", "Setfield", "SparseArrays", "TimerOutputs"]
-git-tree-sha1 = "0322e687500ccff80bf223f91a9dd43685839e3b"
+deps = ["Arpack", "GenericSchur", "Hungarian", "LinearAlgebra", "MathOptInterface", "Printf", "ProgressMeter", "Random", "Setfield", "SparseArrays", "TimerOutputs"]
+git-tree-sha1 = "682b15915032b76a05955122569a45fdb55ca886"
 repo-rev = "master"
 repo-url = "https://github.com/ZIB-IOL/FrankWolfe.jl.git"
 uuid = "f55ce6ea-fdc5-4628-88c5-0087fe54bd30"
-version = "0.4.3"
+version = "0.4.4"
 
 [[deps.FreeType2_jll]]
 deps = ["Artifacts", "Bzip2_jll", "JLLWrappers", "Libdl", "Zlib_jll"]
@@ -481,15 +469,15 @@ version = "8.3.1+0"
 
 [[deps.HiGHS]]
 deps = ["HiGHS_jll", "MathOptInterface", "PrecompileTools", "SparseArrays"]
-git-tree-sha1 = "d5e7cdcf171243e68f9214abdc0457d702be9a63"
+git-tree-sha1 = "02fad6652a24cd1356c5dc000c3cca297e13482a"
 uuid = "87dc4568-4c63-4d18-b0c0-bb2238e4078b"
-version = "1.12.0"
+version = "1.12.1"
 
 [[deps.HiGHS_jll]]
 deps = ["Artifacts", "CompilerSupportLibraries_jll", "JLLWrappers", "Libdl", "Zlib_jll"]
-git-tree-sha1 = "c12314e192631fc302078e27a06da5ab51770e3b"
+git-tree-sha1 = "cc963ae42b15ccd2536fb7a6254c0328b404347c"
 uuid = "8fd58aa0-07eb-5a78-9b36-339c94fd15ea"
-version = "1.8.0+0"
+version = "1.8.1+0"
 
 [[deps.Hungarian]]
 deps = ["LinearAlgebra", "SparseArrays"]
@@ -760,12 +748,6 @@ git-tree-sha1 = "e065ca5234f53fd6f920efaee4940627ad991fb4"
 uuid = "b8f27783-ece8-5eb3-8dc8-9495eed66fee"
 version = "1.34.0"
 
-[[deps.MathOptSetDistances]]
-deps = ["BlockDiagonals", "ChainRulesCore", "FillArrays", "LinearAlgebra", "MathOptInterface", "StaticArrays"]
-git-tree-sha1 = "81a74284bf0f906cd9b725be002436b0d41dfdb6"
-uuid = "3b969827-a86c-476c-9527-bb6f1a8fbad5"
-version = "0.2.8"
-
 [[deps.MbedTLS]]
 deps = ["Dates", "MbedTLS_jll", "MozillaCACerts_jll", "NetworkOptions", "Random", "Sockets"]
 git-tree-sha1 = "c067a280ddc25f196b5e7df3877c6b226d390aaf"
@@ -915,9 +897,9 @@ version = "1.4.3"
 
 [[deps.Plots]]
 deps = ["Base64", "Contour", "Dates", "Downloads", "FFMPEG", "FixedPointNumbers", "GR", "JLFzf", "JSON", "LaTeXStrings", "Latexify", "LinearAlgebra", "Measures", "NaNMath", "Pkg", "PlotThemes", "PlotUtils", "PrecompileTools", "Printf", "REPL", "Random", "RecipesBase", "RecipesPipeline", "Reexport", "RelocatableFolders", "Requires", "Scratch", "Showoff", "SparseArrays", "Statistics", "StatsBase", "TOML", "UUIDs", "UnicodeFun", "UnitfulLatexify", "Unzip"]
-git-tree-sha1 = "45470145863035bb124ca51b320ed35d071cc6c2"
+git-tree-sha1 = "dae01f8c2e069a683d3a6e17bbae5070ab94786f"
 uuid = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
-version = "1.40.8"
+version = "1.40.9"
 
     [deps.Plots.extensions]
     FileIOExt = "FileIO"
