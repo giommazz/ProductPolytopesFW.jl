@@ -7,6 +7,8 @@ function main(config::Config, vertices, shifted_vertices, primal, labels, basena
     # Retrieve nonintersecting and intersecting LMOs from previously generated instances
     lmo_list = create_lmos(config, [vertices, shifted_vertices])
 
+
+
     # Will contain data about diafferent FW runs, for non-intersecting and intersecting polytopes
     trajectories_ni, trajectories_i = [], []
 
@@ -28,11 +30,11 @@ function main(config::Config, vertices, shifted_vertices, primal, labels, basena
         # _, _, _, _, td_cyc_bc_bpcd = run_BlockCoordinateFW(config, FrankWolfe.CyclicUpdate(), FrankWolfe.BPCGStep(), prod_lmo)
         # push_to_trajectories!(ni_flag, td_cyc_bc_bpcg, trajectories_ni, trajectories_i, primal)
 
-        println("\n\n\n ----------> Full Block-coordinate BPFW (ours)")
+        println("\n\n\n ----------> Full Block-coordinate Blended Pairwise FW (ours)")
         _, _, _, _, td_full_bc_bpcg = run_BlockCoordinateFW(config, FrankWolfe.FullUpdate(), FrankWolfe.BPCGStep(), prod_lmo)  
         push_to_trajectories!(ni_flag, td_full_bc_bpcg, trajectories_ni, trajectories_i, primal)
 
-        println("\n\n\n ----------> Full Block-coordinate AFW (ours)")
+        println("\n\n\n ----------> Full Block-coordinate Away FW (ours)")
         _, _, _, _, td_full_bc_acg = run_BlockCoordinateFW(config, FrankWolfe.FullUpdate(), AwayStep(), prod_lmo)  
         push_to_trajectories!(ni_flag, td_full_bc_acg, trajectories_ni, trajectories_i, primal)
 

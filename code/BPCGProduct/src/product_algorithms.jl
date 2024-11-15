@@ -200,16 +200,18 @@ function run_BlockCoordinateFW(
 
     # L-smoothness constant
     L =  compute_L(config)
-
+    # DEBUG: notice that I couldn't use config.k because I sometimes call the function on two sets only
     x0 = find_starting_point(config, prod_lmo)
+    n_blocks = length(prod_lmo.lmos) 
+
     line_search = get_stepsize_strategy(config.stepsize_strategy, L)
     
     # DEBUG: for some reason I had to actually convert the stuff below into a Tuple...which doesn't seem to be necessary in the block_coordinate_algorithms.jl in the package...
     if update_step isa FrankWolfe.UpdateStep
-        update_step = Tuple(copy(update_step) for _ in 1:config.k)
+        update_step = Tuple(copy(update_step) for _ in 1:n_blocks)
     end
     if line_search isa FrankWolfe.LineSearchMethod
-        line_search = Tuple(line_search for _ in 1:config.k)
+        line_search = Tuple(line_search for _ in 1:n_blocks)
     end
 
     for (i, s) in enumerate(update_step)
@@ -218,7 +220,6 @@ function run_BlockCoordinateFW(
             s.active_set = FrankWolfe.ActiveSet([(1.0, copy(x0.blocks[i]))])
         end
     end
-    
     
     x, v, primal, fw_gap, trajectory_data = FrankWolfe.block_coordinate_frank_wolfe(
         convex_feasibility_objective,
