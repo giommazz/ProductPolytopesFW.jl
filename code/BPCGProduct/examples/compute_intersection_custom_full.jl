@@ -38,9 +38,9 @@ function main(config::Config, vertices, shifted_vertices, primal, labels, basena
         _, _, _, _, td_full_bc_acg = run_BlockCoordinateFW(config, FrankWolfe.FullUpdate(), AwayStep(), prod_lmo)  
         push_to_trajectories!(ni_flag, td_full_bc_acg, trajectories_ni, trajectories_i, primal)
 
-        # println("\n\n\n ----------> Full BPFW")
-        # _, _, _, _, td_full_bpcg = run_FullBlendedPairwiseFW(config, prod_lmo)    
-        # push_to_trajectories!(ni_flag, td_full_bpcg, trajectories_ni, trajectories_i, primal)
+        println("\n\n\n ----------> Full BPFW")
+        _, _, _, _, td_full_bpcg = run_FullBlendedPairwiseFW(config, prod_lmo)    
+        push_to_trajectories!(ni_flag, td_full_bpcg, trajectories_ni, trajectories_i, primal)
         
         # println("\n\n\n ----------> AP")
         # _, _, _, _, td_ap = run_AlternatingProjections(config, prod_lmo, true)    
@@ -49,7 +49,6 @@ function main(config::Config, vertices, shifted_vertices, primal, labels, basena
 
         # Save trajectories
         # save_trajectories("examples/traj_$basename.jld2", trajectories_ni, trajectories_i)
-
     end
 
     log_data(trajectories_i, labels, "examples/"*results_directory*"/times_i_"*basename)
@@ -77,7 +76,7 @@ primal = primal - 1     # Numerical reasons
 basename = generate_filename(config)
 
 # Labels for the plots
-labels = ["C-BC-FW", "F-BC-BPFW", "F-BC-AFW"] # ["C-BC-FW", "C-BC-BPFW", "F-BC-BPFW", "F-BC-AFW", "F-BPFW", "AP"]
+labels = ["C-BC-FW", "F-BC-BPFW", "F-BC-AFW", "F-BPFW"] # ["C-BC-FW", "C-BC-BPFW", "F-BC-BPFW", "F-BC-AFW", "F-BPFW", "AP"]
 
 # execute main
 println("\n\n********************************************************")
