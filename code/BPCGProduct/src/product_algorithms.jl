@@ -50,8 +50,8 @@ function FrankWolfe.update_iterate(
     # ********************
     # Step 0: compute away vertex, "local" FW vertex and related info (`lambda`, `loc`: active set weight and index)
     _, local_v, local_v_loc, _, a_lambda, a, a_loc, _, _ = FrankWolfe.active_set_argminmax(s.active_set, gradient) # away and "local" FW vertices
-    grad_dot_x = fast_dot(gradient, x) # <∇f(xₜ), xₜ>
-    grad_dot_a = fast_dot(gradient, a) # <∇f(xₜ), aₜ>
+    grad_dot_x = FrankWolfe.fast_dot(gradient, x) # <∇f(xₜ), xₜ>
+    grad_dot_a = FrankWolfe.fast_dot(gradient, a) # <∇f(xₜ), aₜ>
     away_gap = grad_dot_a - grad_dot_x # <∇f(xₜ), aₜ - xₜ>
 
     # Lazy version
@@ -59,12 +59,12 @@ function FrankWolfe.update_iterate(
 
         # ********************
         # Step 1: compute step info (away vertex, local FW vertex, FW vertex)
+        grad_dot_local_v = FrankWolfe.fast_dot(gradient, local_v) # <∇f(xₜ), local_vₜ>
         local_gap = grad_dot_x - grad_dot_local_v
-        grad_dot_local_v = fast_dot(gradient, local_v) # <∇f(xₜ), local_vₜ>
         
         # lazy FW step
         if local_gap >= away_gap && local_gap >= s.phi / s.lazy_tolerance && local_gap >= epsilon    
-            step_type = ST_LAZY
+            step_type = FrankWolfe.ST_LAZY
             gamma_max = one(a_lambda)
             d = FrankWolfe.muladd_memory_mode(memory_mode, d, x, local_v)
             vertex_taken = local_v
@@ -74,7 +74,7 @@ function FrankWolfe.update_iterate(
         else
             # lazy away step
             if away_gap > local_gap && away_gap >= s.phi / s.lazy_tolerance
-                step_type = ST_AWAY
+                step_type = FrankWolfe.ST_AWAY
                 gamma_max = a_lambda / (1 - a_lambda)
                 d = FrankWolfe.muladd_memory_mode(memory_mode, d, a, x)
                 vertex_taken = a
@@ -84,10 +84,10 @@ function FrankWolfe.update_iterate(
             # FW step (resort to calling the LMO)
             else
                 v = FrankWolfe.compute_extreme_point(lmo, gradient)
-                step_type = ST_REGULAR
+                step_type = FrankWolfe.ST_REGULAR
 
                 # Real dual gap promises enough progress
-                grad_dot_fw_vertex = fast_dot(v, gradient)
+                grad_dot_fw_vertex = FrankWolfe.fast_dot(v, gradient)
                 dual_gap = grad_dot_x - grad_dot_fw_vertex
                 if dual_gap >= s.phi / s.lazy_tolerance
                     gamma_max = one(a_lambda)
@@ -95,7 +95,7 @@ function FrankWolfe.update_iterate(
                     fw_step_taken = true
                 # Lower expectation for progress
                 else
-                    step_type = ST_DUALSTEP
+                    step_type = FrankWolfe.ST_DUALSTEP
                     s.phi = min(dual_gap, s.phi / 2.0)
                     gamma_max = zero(a_lambda)
                     fw_step_taken = false
@@ -111,11 +111,11 @@ function FrankWolfe.update_iterate(
         # ********************
         # Step 1: compute step info (away vertex, FW vertex)
         v = FrankWolfe.compute_extreme_point(lmo, gradient) # FW vertex
-        dual_gap = grad_dot_x - fast_dot(gradient, v) # <∇f(xₜ), xₜ - vₜ>
+        dual_gap = grad_dot_x - FrankWolfe.fast_dot(gradient, v) # <∇f(xₜ), xₜ - vₜ>
 
         # FW step
         if dual_gap >= away_gap && dual_gap >= epsilon
-            step_type = ST_REGULAR # memory-saving settings
+            step_type = FrankWolfe.ST_REGULAR # memory-saving settings
             d = FrankWolfe.muladd_memory_mode(memory_mode, d, x, v)
             gamma_max = one(a_lambda)
             vertex_taken = v
@@ -125,7 +125,7 @@ function FrankWolfe.update_iterate(
         
         # away step
         elseif away_gap >= epsilon
-            step_type = ST_AWAY
+            step_type = FrankWolfe.ST_AWAY
             d =  FrankWolfe.muladd_memory_mode(memory_mode, d, a, x)
             gamma_max = a_lambda / (1 - a_lambda)
             vertex_taken = a
@@ -135,7 +135,7 @@ function FrankWolfe.update_iterate(
         
         # no step, algorithm termination
         else
-            step_type = ST_AWAY
+            step_type = FrankWolfe.ST_AWAY
             gamma_max = zero(a_lambda)
             vertex_taken = a
             away_step_taken = false
@@ -164,7 +164,7 @@ function FrankWolfe.update_iterate(
                 memory_mode,
             )
         gamma = min(gamma_max, gamma) # decide stepsize
-        step_type = gamma ≈ gamma_max ? ST_DROP : step_type
+        step_type = gamma ≈ gamma_max ? FrankWolfe.ST_DROP : step_type
 
         # Update active set
         # Every `renorm_interval` iterations: remove atoms w/small weight from active set, then renormalize weights to sum up to 1
@@ -173,7 +173,7 @@ function FrankWolfe.update_iterate(
             # `renorm` always true when `away_step_take` == true
             FrankWolfe.active_set_update!(s.active_set, -gamma, vertex_taken, true, index) # `vertex_taken` is `a`
         else # active set update when FW step
-            FrankWolfe.active_set_update!(s.active_set, gamma, vertex, renorm, index) # `vertex_taken` is `v`
+            FrankWolfe.active_set_update!(s.active_set, gamma, vertex_taken, renorm, index) # `vertex_taken` is `v`
         end
     end
     
@@ -202,22 +202,23 @@ function run_BlockCoordinateFW(
     L =  compute_L(config)
 
     x0 = find_starting_point(config, prod_lmo)
-    
-    # DEBUG: the following lines will have to be erased if pushed to FrankWolfe.jl...
-    if update_step isa FrankWolfe.UpdateStep
-        update_step = [copy(update_step) for _ in 1:config.k]
-    end
     line_search = get_stepsize_strategy(config.stepsize_strategy, L)
-    if line_search isa FrankWolfe.LineSearchMethod
-        line_search = [line_search for _ in 1:config.k]
+    
+    # DEBUG: for some reason I had to actually convert the stuff below into a Tuple...which doesn't seem to be necessary in the block_coordinate_algorithms.jl in the package...
+    if update_step isa FrankWolfe.UpdateStep
+        update_step = Tuple(copy(update_step) for _ in 1:config.k)
     end
-    # DEBUG: ...till here
+    if line_search isa FrankWolfe.LineSearchMethod
+        line_search = Tuple(line_search for _ in 1:config.k)
+    end
 
     for (i, s) in enumerate(update_step)
-        if s.active_set == nothing
+        # DEBUG: here I used `!(s isa FrankWolfeStep)` bc I am sure that vanillaFW doesn't use an active set. But I don't know which other updatesteps DON'T use an active set..
+        if !(s isa FrankWolfe.FrankWolfeStep) && s.active_set === nothing
             s.active_set = FrankWolfe.ActiveSet([(1.0, copy(x0.blocks[i]))])
         end
     end
+    
     
     x, v, primal, fw_gap, trajectory_data = FrankWolfe.block_coordinate_frank_wolfe(
         convex_feasibility_objective,

@@ -26,4 +26,4 @@ cvxhflag: true
 # Works well (true) if you only have two polytopes
 anc_flag: true
 # stepsize strategy: `0` is line search; `1` uses short-step with given L (specified in `product_algorithms.jl`); `2` uses short-step with L=1
-stepsize_strategy: 0
+stepsize_strategy: 2

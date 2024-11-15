@@ -54,7 +54,7 @@ function approxequal(a, b; tol=1e-04) return all(abs.(a .- b) .≤ tol) end
 function log_data(traj_data::Vector{Any}, labels::Vector{String}, basename::String)
     
     if length(labels) ≠ length(traj_data)
-        error("There are $(length(labels)) labels but only $(length(traj_data)) FW algorithms were executed")
+        error("The number of labels ($(length(labels))) does not correspond to the number of FW algorithms run ($(length(traj_data))).\nPlease fix this in your code.")
     end
 
     # Store results in DataFrame object

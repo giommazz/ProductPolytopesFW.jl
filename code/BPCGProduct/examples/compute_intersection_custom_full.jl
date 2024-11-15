@@ -20,17 +20,17 @@ function main(config::Config, vertices, shifted_vertices, primal, labels, basena
         
         # Run Frank-Wolfe algorithms and alternating projections, then record trajectory data
         
-        # println("\n\n\n ----------> Cyclic Block-coordinate vanilla FW")
-        # _, _, _, _, td_cyc_bc_fw = run_BlockCoordinateFW(config, FrankWolfe.CyclicUpdate(), FrankWolfe.FrankWolfeStep(), prod_lmo)
-        # push_to_trajectories!(ni_flag, td_cyc_bc_fw, trajectories_ni, trajectories_i, primal)
+        println("\n\n\n ----------> Cyclic Block-coordinate vanilla FW")
+        _, _, _, _, td_cyc_bc_fw = run_BlockCoordinateFW(config, FrankWolfe.CyclicUpdate(), FrankWolfe.FrankWolfeStep(), prod_lmo)
+        push_to_trajectories!(ni_flag, td_cyc_bc_fw, trajectories_ni, trajectories_i, primal)
 
         # println("\n\n\n ----------> Cyclic Block-coordinate BPFW")
         # _, _, _, _, td_cyc_bc_bpcd = run_BlockCoordinateFW(config, FrankWolfe.CyclicUpdate(), FrankWolfe.BPCGStep(), prod_lmo)
         # push_to_trajectories!(ni_flag, td_cyc_bc_bpcg, trajectories_ni, trajectories_i, primal)
 
-        # println("\n\n\n ----------> Full Block-coordinate BPFW (ours)")
-        # _, _, _, _, td_full_bc_bpcg = run_BlockCoordinateFW(config, FrankWolfe.FullUpdate(), FrankWolfe.BPCGStep(), prod_lmo)  
-        # push_to_trajectories!(ni_flag, td_full_bc_bpcg, trajectories_ni, trajectories_i, primal)
+        println("\n\n\n ----------> Full Block-coordinate BPFW (ours)")
+        _, _, _, _, td_full_bc_bpcg = run_BlockCoordinateFW(config, FrankWolfe.FullUpdate(), FrankWolfe.BPCGStep(), prod_lmo)  
+        push_to_trajectories!(ni_flag, td_full_bc_bpcg, trajectories_ni, trajectories_i, primal)
 
         println("\n\n\n ----------> Full Block-coordinate AFW (ours)")
         _, _, _, _, td_full_bc_acg = run_BlockCoordinateFW(config, FrankWolfe.FullUpdate(), AwayStep(), prod_lmo)  
@@ -49,7 +49,7 @@ function main(config::Config, vertices, shifted_vertices, primal, labels, basena
         # save_trajectories("examples/traj_$basename.jld2", trajectories_ni, trajectories_i)
 
     end
-    
+
     log_data(trajectories_i, labels, "examples/"*results_directory*"/times_i_"*basename)
     log_data(trajectories_ni, labels, "examples/"*results_directory*"/times_ni_"*basename)
 
@@ -75,7 +75,7 @@ primal = primal - 1     # Numerical reasons
 basename = generate_filename(config)
 
 # Labels for the plots
-labels = ["F-BC-AFW"] # ["C-BC-FW", "C-BC-BPFW", "F-BC-BPFW", "F-BC-AFW", "F-BPFW", "AP"]
+labels = ["C-BC-FW", "F-BC-BPFW", "F-BC-AFW"] # ["C-BC-FW", "C-BC-BPFW", "F-BC-BPFW", "F-BC-AFW", "F-BPFW", "AP"]
 
 # execute main
 println("\n\n********************************************************")
