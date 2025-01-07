@@ -1,10 +1,6 @@
 # `product_algorithms.jl`
 using FrankWolfe
 
-function compute_L(config::Config)
-    return (config.k - 1) * sqrt(2 * config.k)
-end
-
 # Implementation Away-Step for block-coordinate setting
 mutable struct AwayStep <: FrankWolfe.UpdateStep
     lazy::Bool
@@ -199,7 +195,7 @@ function run_BlockCoordinateFW(
     )
 
     # L-smoothness constant
-    L =  compute_L(config)
+    L = 2
     # DEBUG: notice that I couldn't use config.k because I sometimes call the function on two sets only
     x0 = find_starting_point(config, prod_lmo)
     n_blocks = length(prod_lmo.lmos) 
@@ -246,7 +242,7 @@ function run_FullBlendedPairwiseFW(
     )
 
     # L-smoothness constant
-    L =  compute_L(config)
+    L = 2
 
     x0 = find_starting_point(config, prod_lmo)
 
