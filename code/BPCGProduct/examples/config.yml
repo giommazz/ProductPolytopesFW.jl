@@ -2,7 +2,7 @@
 #   User parameters
 # ***************************
 # Number of polytopes
-k: 3 #2, 3, 4, 5, 10 
+k: 2 #2, 3, 4, 5, 10 
 # Dimension of the subspace in which each polytope lies
 n: 1000 # 100, 500, 1000, 2000
 # list of `k` integers, each indicating the n. of points to be used to generate `k` polytopes
@@ -17,7 +17,7 @@ max_iterations: 1000
 # Number of FW iterations to compute optimal solution
 max_iterations_opt: 10000
 # How often FW iteration log is printed to screen
-max_print_iterations: 1000
+max_print_iterations: 100
 # Set the seed for reproducibility
 seed: 42
 # Use FrankWolfe.ConvexHullOracle LMOs (true) or FrankWolfe.MathOptLMO LMOs (false)
@@ -25,5 +25,5 @@ cvxhflag: true
 # Intersect polytopes close to the first polytope's analytic center (true) or a vertex
 # Works well (true) if you only have two polytopes
 anc_flag: true
-# stepsize strategy: `0` is line search; `1` uses short-step with given L (specified in `product_algorithms.jl`); `2` uses short-step with L=1
+# stepsize strategy: `0` is line search; `1` uses short-step with given L (specified in `product_algorithms.jl`); `2` uses short-step with L=2
 stepsize_strategy: 0

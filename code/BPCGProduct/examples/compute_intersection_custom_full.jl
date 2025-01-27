@@ -22,25 +22,47 @@ function main(config::Config, vertices, shifted_vertices, primal, labels, basena
         
         # Run Frank-Wolfe algorithms and alternating projections, then record trajectory data
         
+        # ***************************************
+        # Cyclic block-coordinate methods
         println("\n\n\n ----------> Cyclic Block-coordinate vanilla FW")
         _, _, _, _, td_cyc_bc_fw = run_BlockCoordinateFW(config, FrankWolfe.CyclicUpdate(), FrankWolfe.FrankWolfeStep(), prod_lmo)
         push_to_trajectories!(ni_flag, td_cyc_bc_fw, trajectories_ni, trajectories_i, primal)
-
+        
+        # println("\n\n\n ----------> Cyclic Block-coordinate AFW")
+        # _, _, _, _, td_cyc_bc_afw = run_BlockCoordinateFW(config, FrankWolfe.CyclicUpdate(), AwayStep(), prod_lmo)
+        # push_to_trajectories!(ni_flag, td_cyc_bc_afw, trajectories_ni, trajectories_i, primal)
+        
         # println("\n\n\n ----------> Cyclic Block-coordinate BPFW")
-        # _, _, _, _, td_cyc_bc_bpcd = run_BlockCoordinateFW(config, FrankWolfe.CyclicUpdate(), FrankWolfe.BPCGStep(), prod_lmo)
-        # push_to_trajectories!(ni_flag, td_cyc_bc_bpcg, trajectories_ni, trajectories_i, primal)
+        # _, _, _, _, td_cyc_bc_bpfw = run_BlockCoordinateFW(config, FrankWolfe.CyclicUpdate(), FrankWolfe.BPCGStep(), prod_lmo)
+        # push_to_trajectories!(ni_flag, td_cyc_bc_bpfw, trajectories_ni, trajectories_i, primal)
 
-        println("\n\n\n ----------> Full Block-coordinate Blended Pairwise FW (ours)")
-        _, _, _, _, td_full_bc_bpcg = run_BlockCoordinateFW(config, FrankWolfe.FullUpdate(), FrankWolfe.BPCGStep(), prod_lmo)  
-        push_to_trajectories!(ni_flag, td_full_bc_bpcg, trajectories_ni, trajectories_i, primal)
+        # ***************************************
+        # Full block-coordinate methods
+        println("\n\n\n ----------> Full Block-coordinate vanilla FW (Ours)")
+        _, _, _, _, td_full_bc_fw = run_BlockCoordinateFW(config, FrankWolfe.FullUpdate(), FrankWolfe.FrankWolfeStep(), prod_lmo)
+        push_to_trajectories!(ni_flag, td_full_bc_fw, trajectories_ni, trajectories_i, primal)
 
         println("\n\n\n ----------> Full Block-coordinate Away FW (ours)")
-        _, _, _, _, td_full_bc_acg = run_BlockCoordinateFW(config, FrankWolfe.FullUpdate(), AwayStep(), prod_lmo)  
-        push_to_trajectories!(ni_flag, td_full_bc_acg, trajectories_ni, trajectories_i, primal)
+        _, _, _, _, td_full_bc_afw = run_BlockCoordinateFW(config, FrankWolfe.FullUpdate(), AwayStep(), prod_lmo)  
+        push_to_trajectories!(ni_flag, td_full_bc_afw, trajectories_ni, trajectories_i, primal)
 
-        println("\n\n\n ----------> Full BPFW")
-        _, _, _, _, td_full_bpcg = run_FullBlendedPairwiseFW(config, prod_lmo)    
-        push_to_trajectories!(ni_flag, td_full_bpcg, trajectories_ni, trajectories_i, primal)
+        # println("\n\n\n ----------> Full Block-coordinate Blended Pairwise FW (ours)")
+        # _, _, _, _, td_full_bc_bpfw = run_BlockCoordinateFW(config, FrankWolfe.FullUpdate(), FrankWolfe.BPCGStep(), prod_lmo)  
+        # push_to_trajectories!(ni_flag, td_full_bc_bpfw, trajectories_ni, trajectories_i, primal)
+
+        # ***************************************
+        # Full methods
+        println("\n\n\n ----------> Full FW")
+        _, _, _, _, td_full_fw = run_FullFW(config, FrankWolfe.frank_wolfe, prod_lmo)    
+        push_to_trajectories!(ni_flag, td_full_fw, trajectories_ni, trajectories_i, primal)
+
+        println("\n\n\n ----------> Full AFW")
+        _, _, _, _, td_full_afw = run_FullFW(config, FrankWolfe.away_frank_wolfe, prod_lmo)    
+        push_to_trajectories!(ni_flag, td_full_afw, trajectories_ni, trajectories_i, primal)
+
+        # println("\n\n\n ----------> Full BPFW")
+        # _, _, _, _, td_full_bpfw = run_FullFW(config, FrankWolfe.blended_pairwise_conditional_gradient, prod_lmo)    
+        # push_to_trajectories!(ni_flag, td_full_bpfw, trajectories_ni, trajectories_i, primal)
         
         # println("\n\n\n ----------> AP")
         # _, _, _, _, td_ap = run_AlternatingProjections(config, prod_lmo, true)    
@@ -63,7 +85,7 @@ end
 config = Config("examples/config.yml")
 print_config(config)
 
-results_directory = "results_linesearch_acg" # "results_shortstep", 
+results_directory = "results_linesearch_afw" # "results_shortstep", 
 
 # Generate instances 
 println("********************************************************")
@@ -76,7 +98,7 @@ primal = primal - 1     # Numerical reasons
 basename = generate_filename(config)
 
 # Labels for the plots
-labels = ["C-BC-FW", "F-BC-BPFW", "F-BC-AFW", "F-BPFW"] # ["C-BC-FW", "C-BC-BPFW", "F-BC-BPFW", "F-BC-AFW", "F-BPFW", "AP"]
+labels = ["F-BC-FW", "F-BC-AFW", "F-FW", "F-AFW"] # ["C-BC-FW", "C-BC-AFW", "C-BC-BPFW", "F-BC-FW", "F-BC-AFW", "F-BC-BPFW", "F-FW", "F-AFW", "F-BPFW", "AP"]
 
 # execute main
 println("\n\n********************************************************")

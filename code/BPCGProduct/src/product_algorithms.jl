@@ -236,8 +236,9 @@ function run_BlockCoordinateFW(
     return x, v, primal, fw_gap, trajectory_data
 end
 # (Multiple dispatch) Run BPCG over full product LMO
-function run_FullBlendedPairwiseFW(
+function run_FullFW(
     config::Config,
+    FW_algorithm::Function,
     prod_lmo::FrankWolfe.ProductLMO
     )
 
@@ -246,7 +247,7 @@ function run_FullBlendedPairwiseFW(
 
     x0 = find_starting_point(config, prod_lmo)
 
-    x, v, primal, fw_gap, trajectory_data = FrankWolfe.blended_pairwise_conditional_gradient(
+    x, v, primal, fw_gap, trajectory_data = FW_algorithm(
         convex_feasibility_objective,
         convex_feasibility_gradient!,
         prod_lmo,
