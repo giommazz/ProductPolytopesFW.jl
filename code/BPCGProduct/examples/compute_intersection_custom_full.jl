@@ -106,7 +106,15 @@ println("Running FW on the instances")
 println("********************************************************")
 trajectories_ni, trajectories_i = main(config,vertices, shifted_vertices, primal, labels, basename)
 
-
 # Plot trajectories
-plot_trajectories(trajectories_ni, labels, yscalelog=true, xscalelog=true, filename="examples/"*results_directory*"/plot_ni_$basename.png")
-plot_trajectories(trajectories_i, labels, yscalelog=true, xscalelog=true, filename="examples/"*results_directory*"/plot_i_$basename.png")
+fig_ni_filename = "examples/"*results_directory*"/plot_ni_$basename"
+fig_i_filename = "examples/"*results_directory*"/plot_i_$basename"
+# Generate plots but do not pass `filename` argument (so .png is not automatically saved)
+fig_ni = plot_trajectories(trajectories_ni, labels, yscalelog=true, xscalelog=true)
+fig_i = plot_trajectories(trajectories_i, labels, yscalelog=true, xscalelog=true)
+
+# Manually save only the PDF versions
+#Plots.plot!(fig_ni, size=(1200, 800))  # Larger figure size
+#Plots.plot!(fig_i, size=(1200, 800))  # Larger figure size
+Plots.savefig(fig_ni, fig_ni_filename*".pdf")  
+Plots.savefig(fig_i, fig_i_filename*".pdf")

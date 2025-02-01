@@ -17,7 +17,7 @@ function generate_filename(config::Config)
     
     oracle = config.cvxhflag ? "cvxho" : "lmo"
     anc = config.anc_flag ? "anc" : "vert"
-    return "n$(config.n)_k$(config.k)_$(oracle)_$(anc)_t$timestamp"
+    return "k$(config.k)_n$(config.n)_$(oracle)_$(anc)_t$timestamp"
 end
 
 # Function to extract `n`, `k`, and `max_iterations` from the filename
