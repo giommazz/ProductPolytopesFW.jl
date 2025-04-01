@@ -4,7 +4,7 @@
 # Number of polytopes
 k: 5 #2, 3, 4, 5, 10 
 # Dimension of the subspace in which each polytope lies
-n: 1000 # 100, 500, 1000, 2000
+n: 1001 # 100, 500, 1000, 2000
 # list of `k` integers, each indicating the n. of points to be used to generate `k` polytopes
 # if `0` is given, n_points is generated randomly
 n_points: 0
@@ -24,6 +24,6 @@ seed: 42
 cvxhflag: true
 # Intersect polytopes close to the first polytope's analytic center (true) or a vertex
 # Works well (true) if you only have two polytopes
-anc_flag: true
+anc_flag: false
 # stepsize strategy: `0` is line search; `1` uses short-step with given L (specified in `product_algorithms.jl`); `2` uses short-step with L=2
 stepsize_strategy: 0

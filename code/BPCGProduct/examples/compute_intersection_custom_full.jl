@@ -28,9 +28,17 @@ function main(config::Config, vertices, shifted_vertices, primal, labels, basena
         _, _, _, _, td_cyc_bc_fw = run_BlockCoordinateFW(config, FrankWolfe.CyclicUpdate(), FrankWolfe.FrankWolfeStep(), prod_lmo)
         push_to_trajectories!(ni_flag, td_cyc_bc_fw, trajectories_ni, trajectories_i, primal)
         
-        # println("\n\n\n ----------> Cyclic Block-coordinate AFW")
-        # _, _, _, _, td_cyc_bc_afw = run_BlockCoordinateFW(config, FrankWolfe.CyclicUpdate(), AwayStep(), prod_lmo)
-        # push_to_trajectories!(ni_flag, td_cyc_bc_afw, trajectories_ni, trajectories_i, primal)
+        println("\n\n\n ----------> Cyclic Block-coordinate AFW")
+        _, _, _, _, td_cyc_bc_afw = run_BlockCoordinateFW(config, FrankWolfe.CyclicUpdate(), AwayStep(), prod_lmo)
+        push_to_trajectories!(ni_flag, td_cyc_bc_afw, trajectories_ni, trajectories_i, primal)
+
+        println("\n\n\n ----------> Stochastic Block-coordinate vanilla FW")
+        _, _, _, _, td_stoc_bc_fw = run_BlockCoordinateFW(config, FrankWolfe.StochasticUpdate(), FrankWolfe.FrankWolfeStep(), prod_lmo)
+        push_to_trajectories!(ni_flag, td_stoc_bc_fw, trajectories_ni, trajectories_i, primal)
+        
+        println("\n\n\n ----------> Stochastic Block-coordinate AFW")
+        _, _, _, _, td_stoc_bc_afw = run_BlockCoordinateFW(config, FrankWolfe.StochasticUpdate(), AwayStep(), prod_lmo)
+        push_to_trajectories!(ni_flag, td_stoc_bc_afw, trajectories_ni, trajectories_i, primal)
         
         # println("\n\n\n ----------> Cyclic Block-coordinate BPFW")
         # _, _, _, _, td_cyc_bc_bpfw = run_BlockCoordinateFW(config, FrankWolfe.CyclicUpdate(), FrankWolfe.BPCGStep(), prod_lmo)
@@ -98,7 +106,7 @@ primal = primal - 1     # Numerical reasons
 basename = generate_filename(config)
 
 # Labels for the plots
-labels = ["C-BC-FW", "F-BC-FW", "F-BC-AFW", "F-FW", "F-AFW"] # ["C-BC-FW", "C-BC-AFW", "C-BC-BPFW", "F-BC-FW", "F-BC-AFW", "F-BC-BPFW", "F-FW", "F-AFW", "F-BPFW", "AP"]
+labels = ["C-BC-FW", "C-BC-AFW", "S-BC-FW", "S-BC-AFW", "F-BC-FW", "F-BC-AFW", "F-FW", "F-AFW"] # ["C-BC-FW", "C-BC-AFW", "C-BC-BPFW", "F-BC-FW", "F-BC-AFW", "F-BC-BPFW", "F-FW", "F-AFW", "F-BPFW", "AP"]
 
 # execute main
 println("\n\n********************************************************")
