@@ -46,7 +46,7 @@ function main(config::Config, vertices, shifted_vertices, primal, labels, basena
 
         # ***************************************
         # Full block-coordinate methods
-        println("\n\n\n ----------> Full Block-coordinate vanilla FW (Ours)")
+        println("\n\n\n ----------> Full Block-coordinate vanilla FW")
         _, _, _, _, td_full_bc_fw = run_BlockCoordinateFW(config, FrankWolfe.FullUpdate(), FrankWolfe.FrankWolfeStep(), prod_lmo)
         push_to_trajectories!(ni_flag, td_full_bc_fw, trajectories_ni, trajectories_i, primal)
 

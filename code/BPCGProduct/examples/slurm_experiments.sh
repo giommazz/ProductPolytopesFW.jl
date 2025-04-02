@@ -16,50 +16,55 @@
 #SBATCH --exclude=htc-cmp[101-148,501-532] # exclude nodes. Your job will run on nodes not in the list.
 
 # *************************
-# Check if the correct number of arguments is passed
+# Check if the correct number of arguments is passed: the user must specify a directory to save the results
 if [ "$#" -lt 2 ]; then
-    echo "Usage: $0 path/to/instance/dir path/to/yaml/configs/dir"
+    echo "Usage: $0 path/to/warmup/script path/to/script path/to/results/dir path/to/config/file"
     exit 1
 fi
 
-instances_dir="$1" # Directory of instances
-yaml_configs_dir="$2" # Directory of config files
+warmup_script="$1" # Warm-up script to be run
+script="$2" # Script to be run
+results_dir="$3" # Directory containing the results
+config="$4" # YAML config file containing params for running experiments
 
-# Check if the instances directory is valid
-if [ ! -d "$instances_dir" ]; then
-    echo "Error: The specified instances directory '$instances_dir' does not exist or is not a directory."
+# Preeliminary controls
+if [ ! -f "$warmup_script" ]; then
+    echo "Error: The specified script '$warmup_script' does not exist."
     exit 1
 fi
-
-# Check if the config files directory is valid
-if [ ! -d "$yaml_configs_dir" ]; then
-    echo "Error: The specified config files directory '$yaml_configs_dir' does not exist or is not a directory."
+if [ ! -f "$script" ]; then
+    echo "Error: The specified script '$script' does not exist."
+    exit 1
+fi
+if [ ! -d "$results_dir" ]; then
+    echo "Error: The specified path '$results_dir' does not exist or is not a directory."
+    exit 1
+fi
+if [ ! -f "$config" ]; then
+    echo "Error: The specified file '$config' does not exist."
+    exit 1
+fi
+if [[ "$config" != *.yaml && "$config" != *.yml ]]; then
+    echo "Error: The specified file '$config' is not a YAML file."
     exit 1
 fi
 
 # Create logs directory if it doesn't already exists (`-p` option)
-logs_dir="test/logs"
+logs_dir="examples/logs"
 mkdir -p $logs_dir
-solomon_instance_script = "test/solomon_instance.jl"
 
 echo $SLURM_NODELIST    # print node on slurm
 git branch              # print git branch on which you are
 git rev-parse HEAD      # print pointer to current branch
 
-# Iterate over all XML files in the instances directory
-for instance_file in "$instances_dir"/*.xml; do
-    # Extract the instance name (part before .xml)
-    instance_name=$(basename "$instance_file" .xml)
+# Warm-up the JIT compilation (==precompile) on a small instance
+srun ~/sw/julia-1.9.4/bin/julia --project=. $warmup_script > warmup_log.log
+rm warmup_log.log
 
-    # Iterate over all config files in the config files directory
-    for config_file in "$yaml_configs_dir"*.yml; do
-        echo "Running instance: $instance_name with config $config_file"
-        
-        # Extract parameters from config file name and create log file name
-        config_basename=$(basename "$config_file" .yml)
-        log_file="$logs_dir/${config_basename}_log.txt"
+echo "Running $script with config $config"
+# Extract parameters from config file name and create log file name
+config_basename=$(basename "$config" .yml)
+log_file="$logs_dir/${config_basename}_log.txt"
 
-        # Run the Julia script with the instance name and config file as parameters and redirect output to log file
-        srun ~/sw/julia-1.9.4/bin/julia --project=. $solomon_instance_script $instance_name $config_file > $log_file
-    done
-done
+# Run the Julia script with the instance name and config file as parameters and redirect output to log file
+srun ~/sw/julia-1.9.4/bin/julia --project=. $script > $log_file
