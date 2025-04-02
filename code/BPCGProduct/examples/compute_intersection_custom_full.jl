@@ -1,6 +1,9 @@
 # `compute_intersection_custom_instances.jl`
+# Run either within the Julia REPL as include("/examples/compute_intersection_custom_full.jl")
+# or from linux terminal with: `julia --project=. examples/compute_intersection_custom_full.jl > test.log 2>&1`
 using BPCGProduct
 using FrankWolfe
+using Plots
 
 function main(config::Config, vertices, shifted_vertices, primal, labels, basename)
 

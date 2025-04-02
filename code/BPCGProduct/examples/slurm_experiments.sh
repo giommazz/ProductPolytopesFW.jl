@@ -2,9 +2,9 @@
 # How to run this:
 # 1) make sure to tailor the 'SBATCH' parameters below to your directories
 # 2) run the following commands
-#       cd /examples
+#       cd /BPCGProduct
 #       chmod +x slurm_experiments.sh
-#       ./slurm_experiments.sh compute_intersection_warmup.jl compute_intersection_custom_full.jl results_linesearch_afw/ config.yml
+#       ./examples/slurm_experiments.sh examples/compute_intersection_warmup.jl examples/compute_intersection_custom_full.jl examples/results_linesearch_afw/ examples/config.yml
 
 
 
@@ -17,7 +17,7 @@
 #SBATCH --cpus-per-task=1
 #SBATCH --mem=24G
 #SBATCH --nodelist=htc-cmp019
-#SBATCH --chdir=/home/htc/giommazz/bpcg-product/code/BPCGProduct/  # Navigate to dir where script you want to run is
+#SBATCH --chdir=/home/htc/giommazz/bpcg-product/code/BPCGProduct/examples  # Navigate to dir where script you want to run is
 #SBATCH --output=/home/htc/giommazz/SCRATCH/log/%x_%A.out # logfiles ---> %x=job name, %A=job ID
 #SBATCH --partition=big  # Specify the desired partition on cluster (default: small)
 #SBATCH --exclude=htc-cmp[101-148,501-532] # exclude nodes. Your job will run on nodes not in the list.
@@ -65,7 +65,7 @@ git branch              # print git branch on which you are
 git rev-parse HEAD      # print pointer to current branch
 
 # Warm-up the JIT compilation (==precompile) on a small instance
-run ~/sw/julia-1.9.4/bin/julia --project=. $warmup_script > warmup_log.log
+srun ~/sw/julia-1.9.4/bin/julia --project=. $warmup_script > warmup_log.log
 rm warmup_log.log
 
 echo "Running $script with config $config"
@@ -74,4 +74,4 @@ config_basename=$(basename "$config" .yml)
 log_file="$logs_dir/${config_basename}_log.txt"
 
 # Run the Julia script with the instance name and config file as parameters and redirect output to log file
-#srun ~/sw/julia-1.9.4/bin/julia --project=. $script > $log_file
+srun ~/sw/julia-1.9.4/bin/julia --project=. $script > $log_file

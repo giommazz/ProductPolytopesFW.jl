@@ -31,7 +31,8 @@ end
 
 # ---------------------------------------------------------------------------------
 # Use parameters from YAML file
-config = Config("examples/config_warmup.yml")
+config = Config("examples/config.yml")
+config = modify_config(config, k=2, n=15)
 
 # Generate instances 
 println("********************************************************")
