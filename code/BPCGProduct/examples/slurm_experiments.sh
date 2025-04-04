@@ -25,20 +25,15 @@
 # *************************
 # Check if the correct number of arguments is passed: the user must specify a directory to save the results
 if [ "$#" -lt 2 ]; then
-    echo "Usage: $0     path/to/warmup/script     path/to/script     path/to/results/dir     path/to/config/file"
+    echo "Usage: $0     path/to/script     path/to/results/dir     path/to/config/file"
     exit 1
 fi
 
-warmup_script="$1" # Warm-up script to be run
-script="$2" # Script to be run
-results_dir="$3" # Directory containing the results
-config="$4" # YAML config file containing params for running experiments
+script="$1" # Script to be run
+results_dir="$2" # Directory containing the results
+config="$3" # YAML config file containing params for running experiments
 
 # Preeliminary controls
-if [ ! -f "$warmup_script" ]; then
-    echo "Error: The specified script '$warmup_script' does not exist."
-    exit 1
-fi
 if [ ! -f "$script" ]; then
     echo "Error: The specified script '$script' does not exist."
     exit 1
@@ -63,10 +58,6 @@ mkdir -p $logs_dir
 echo $SLURM_NODELIST    # print node on slurm
 git branch              # print git branch on which you are
 git rev-parse HEAD      # print pointer to current branch
-
-# Warm-up the JIT compilation (==precompile) on a small instance
-srun ~/sw/julia-1.9.4/bin/julia --project=. $warmup_script > warmup_log.log
-rm warmup_log.log
 
 echo "Running $script with config $config"
 # Extract parameters from config file name and create log file name
