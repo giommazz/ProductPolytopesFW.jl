@@ -337,7 +337,7 @@ end
 function compute_distance(config::Config, lmo_list::Vector{FrankWolfe.LinearMinimizationOracle})
 
     # Redefine `config.max_iterations`
-    config_opt = Config("examples/config.yml"; max_iterations=config.max_iterations_opt)
+    config_opt = modify_config(config, max_iterations=config.max_iterations_opt)
 
     # Create FrankWolfe.ProductLMO from list of LMOs
     prod_lmo = create_product_lmo(lmo_list)
@@ -351,8 +351,8 @@ end
 function compute_distance(config::Config, lmo_list::Vector{FrankWolfe.ConvexHullOracle})
 
     # Redefine `config.max_iterations`
-    config_opt = Config("examples/config.yml"; max_iterations=config.max_iterations_opt)
-    
+    config_opt = modify_config(config, max_iterations=config.max_iterations_opt)
+
     # Create FrankWolfe.ProductLMO from list of LMOs
     prod_lmo = create_product_lmo(lmo_list)
     
@@ -365,7 +365,7 @@ end
 function compute_distance(config::Config, lmo_list::Vector{FrankWolfe.MathOptLMO})
 
     # Redefine `config.max_iterations`
-    config_opt = Config("examples/config.yml"; max_iterations=config.max_iterations_opt)
+    config_opt = modify_config(config, max_iterations=config.max_iterations_opt)
 
     # Create FrankWolfe.ProductLMO from list of LMOs
     prod_lmo = create_product_lmo(lmo_list)
