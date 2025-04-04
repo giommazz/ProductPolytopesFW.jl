@@ -1,26 +1,24 @@
+#!/bin/bash
+
 # Run experiments on slurm servers
 # How to run this:
 # 1) make sure to tailor the 'SBATCH' parameters below to your directories
 # 2) run the following commands
 #       cd /BPCGProduct
 #       chmod +x slurm_experiments.sh
-#       ./examples/slurm_experiments.sh examples/compute_intersection_warmup.jl examples/compute_intersection_custom_full.jl examples/results_linesearch_afw/ examples/config.yml
-
-
-
-#!/bin/bash
+#       sbatch examples/slurm_experiments.sh examples/compute_intersection_custom_full_warmup_slurm.jl examples/results_linesearch_afw/ examples/config.yml
 
 # *************************
 # Directives for the SLURM scheduler
 #SBATCH --job-name=convexfeas_polytopes_afw   # job name
-#SBATCH --time=07-00:00:00  # timelimit (format is jj-hh:mm:ss). Use `sinfo` to see node time limits
+#SBATCH --time=14-00:00:00  # timelimit (format is jj-hh:mm:ss). Use `sinfo` to see node time limits
 #SBATCH --cpus-per-task=1
 #SBATCH --mem=24G
-#SBATCH --nodelist=htc-cmp019
-#SBATCH --chdir=/home/htc/giommazz/bpcg-product/code/BPCGProduct/examples  # Navigate to dir where script you want to run is
-#SBATCH --output=/home/htc/giommazz/SCRATCH/log/%x_%A.out # logfiles ---> %x=job name, %A=job ID
+#SBATCH --nodelist=htc-cmp502
+#SBATCH --chdir=/home/htc/giommazz/bpcg-product/code/BPCGProduct/  # Navigate to dir where script you want to run is
+#SBATCH --output=/home/htc/giommazz/bpcg-product/code/BPCGProduct/examples/logs/%x_%A.out # logfiles ---> %x=job name, %A=job ID
 #SBATCH --partition=big  # Specify the desired partition on cluster (default: small)
-#SBATCH --exclude=htc-cmp[101-148,501-532] # exclude nodes. Your job will run on nodes not in the list.
+##SBATCH --exclude=htc-cmp[101-148,501-532] # exclude nodes. Your job will run on nodes not in the list.
 
 # *************************
 # Check if the correct number of arguments is passed: the user must specify a directory to save the results
@@ -61,7 +59,7 @@ git rev-parse HEAD      # print pointer to current branch
 
 echo "Running $script with config $config"
 # Extract parameters from config file name and create log file name
-config_basename=$(basename "$config" .yml)
+config_basename=$(julia --project=. -e 'using YAML, Dates; config = YAML.load_file(ARGS[1]); timestamp = Dates.format(now(), "yyyymmddHHMMSS"); oracle = config["cvxhflag"] ? "cvxho" : "lmo"; anc = config["anc_flag"] ? "anc" : "vert"; print("k", config["k"], "_n", config["n"], "_", oracle, "_", anc, "_t", timestamp)' "$config")
 log_file="$logs_dir/${config_basename}_log.txt"
 
 # Run the Julia script with the instance name and config file as parameters and redirect output to log file
