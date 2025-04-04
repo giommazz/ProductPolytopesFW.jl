@@ -49,7 +49,7 @@ function repl_warmup(config::Config, vertices, shifted_vertices, primal, labels,
 end
 
 
-function main(config::Config, vertices, shifted_vertices, primal, labels, basename)
+function main(config::Config, path_to_results, vertices, shifted_vertices, primal, labels, basename)
 
     # Retrieve nonintersecting and intersecting LMOs from previously generated instances
     lmo_list = create_lmos(config, [vertices, shifted_vertices])
@@ -126,8 +126,8 @@ function main(config::Config, vertices, shifted_vertices, primal, labels, basena
         # save_trajectories("examples/traj_$basename.jld2", trajectories_ni, trajectories_i)
     end
 
-    log_data(trajectories_i, labels, "examples/"*results_directory*"/times_i_"*basename)
-    log_data(trajectories_ni, labels, "examples/"*results_directory*"/times_ni_"*basename)
+    log_data(trajectories_i, labels, path_to_results*"/times_i_"*basename)
+    log_data(trajectories_ni, labels, path_to_results*"/times_ni_"*basename)
 
     return trajectories_ni, trajectories_i
 end
@@ -145,14 +145,14 @@ println("********************************************************")
 vertices, shifted_vertices, primal, fw_gap = generate_polytopes(config_warmup)
 # Optimal solution
 primal = primal - 1     # Numerical reasons
-basename = generate_filename(config)
+basename = generate_filename(config_warmup)
 # Labels for the plots
 labels = ["F-BC-AFW"]
 # execute main
 println("\n\n********************************************************")
 println("Running FW on the instances")
 println("********************************************************")
-trajectories_ni, trajectories_i = main(config_warmup, vertices, shifted_vertices, primal, labels, basename)
+trajectories_ni, trajectories_i = repl_warmup(config_warmup, vertices, shifted_vertices, primal, labels, basename)
 
 
 
@@ -160,7 +160,8 @@ trajectories_ni, trajectories_i = main(config_warmup, vertices, shifted_vertices
 
 # ---------------------------------------------------------------------------------
 # MAIN SCRIPT
-results_directory = "results_linesearch_afw" # "results_shortstep", 
+results_directory = "examples/results_linesearch_afw" # "results_shortstep", 
+
 # Generate instances 
 println("********************************************************")
 println("Generating instances and solving them to optimum")
@@ -169,6 +170,7 @@ vertices, shifted_vertices, primal, fw_gap = generate_polytopes(config)
 # Optimal solution
 primal = primal - 1     # Numerical reasons
 basename = generate_filename(config)
+
 # Labels for the plots
 labels = ["C-BC-FW", "C-BC-AFW", "S-BC-FW", "S-BC-AFW", "F-BC-FW", "F-BC-AFW", "F-FW", "F-AFW"] # ["C-BC-FW", "C-BC-AFW", "C-BC-BPFW", "F-BC-FW", "F-BC-AFW", "F-BC-BPFW", "F-FW", "F-AFW", "F-BPFW", "AP"]
 
@@ -176,11 +178,11 @@ labels = ["C-BC-FW", "C-BC-AFW", "S-BC-FW", "S-BC-AFW", "F-BC-FW", "F-BC-AFW", "
 println("\n\n********************************************************")
 println("Running FW on the instances")
 println("********************************************************")
-trajectories_ni, trajectories_i = main(config,vertices, shifted_vertices, primal, labels, basename)
+trajectories_ni, trajectories_i = main(config, results_directory, vertices, shifted_vertices, primal, labels, basename)
 
 # Plot trajectories
-fig_ni_filename = "examples/"*results_directory*"/plot_ni_$basename"
-fig_i_filename = "examples/"*results_directory*"/plot_i_$basename"
+fig_ni_filename = results_directory*"/plot_ni_$basename"
+fig_i_filename = results_directory*"/plot_i_$basename"
 # Generate plots but do not pass `filename` argument (so .png is not automatically saved)
 fig_ni = plot_trajectories(trajectories_ni, labels, yscalelog=true, xscalelog=true)
 fig_i = plot_trajectories(trajectories_i, labels, yscalelog=true, xscalelog=true)
