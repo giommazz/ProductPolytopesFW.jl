@@ -175,7 +175,7 @@ function print_config(config::Config)
     println("  How often FW iteration log is printed to screen (max_print_iterations): ", config.max_print_iterations)
     println("  Seed for reproducibility (seed): ", config.seed)
     println("  Use FW's ConvexHullOracle LMOs or MathOptLMO (cvxhflag): ", config.cvxhflag)
-    println("  Intersect polytopes close to first polytope's analytic center (true) or vertex (anc_flag): ", config.anc_flag)
+    println("  Intersect polytopes close to first polytope's analytic center (true) or vertex (false): ", config.anc_flag)
     println("  Stepsize strategy (`0` is line search; `1` uses short-step with L=2 specified in `product_algorithms.jl`): ", config.stepsize_strategy)
     println()
 end

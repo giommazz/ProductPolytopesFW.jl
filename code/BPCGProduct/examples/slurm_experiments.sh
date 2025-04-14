@@ -13,12 +13,17 @@
 #SBATCH --job-name=convexfeas_polytopes_afw   # job name
 #SBATCH --time=14-00:00:00  # timelimit (format is jj-hh:mm:ss). Use `sinfo` to see node time limits
 #SBATCH --cpus-per-task=1
-#SBATCH --mem=24G
+#SBATCH --mem=100G
 #SBATCH --nodelist=htc-cmp502
 #SBATCH --chdir=/home/htc/giommazz/bpcg-product/code/BPCGProduct/  # Navigate to dir where script you want to run is
 #SBATCH --output=/home/htc/giommazz/bpcg-product/code/BPCGProduct/examples/logs/%x_%A.out # logfiles ---> %x=job name, %A=job ID
 #SBATCH --partition=big  # Specify the desired partition on cluster (default: small)
 ##SBATCH --exclude=htc-cmp[101-148,501-532] # exclude nodes. Your job will run on nodes not in the list.
+
+# Some useful commands to analyze partitions on SLURM
+# sinfo -l: general info on cluster partitions and nodes
+# sinfo -N -o "%N %P": partition that each cluster node is assigned to 
+# sinfo -N -o "%N %m": memory allocated to each cluster node
 
 # *************************
 # Check if the correct number of arguments is passed: the user must specify a directory to save the results

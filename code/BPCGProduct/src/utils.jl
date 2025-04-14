@@ -17,7 +17,8 @@ function generate_filename(config::Config)
     
     oracle = config.cvxhflag ? "cvxho" : "lmo"
     anc = config.anc_flag ? "anc" : "vert"
-    return "k$(config.k)_n$(config.n)_$(oracle)_$(anc)_t$timestamp"
+    seed = config.seed
+    return "k$(config.k)_n$(config.n)_s$(seed)_$(oracle)_$(anc)_t$timestamp"
 end
 
 # Function to extract `n`, `k`, and `max_iterations` from the filename
@@ -71,4 +72,17 @@ function log_data(traj_data::Vector{Any}, labels::Vector{String}, basename::Stri
         push!(times, (label, iters, tot_time, avg_time))    
     end
     CSV.write(basename*".csv", times)
+end
+
+# `pad_log_data` takes `trajectories` (array)
+# Input:    `trajectories` contains as many Vectors as the n. of FW variants that have been run
+#           each Vector, corresponding to one FW variant run, contains as many 5-entry Tuples as the n. iterations in that run
+function pad_log_data(trajectories::Vector{Vector{Tuple{T, T}}}) where T<:Number
+    # Find max number of rows among all trajectories
+    max_length = maximum(length.(trajectories))
+    min_length = minimum(length.(trajectories))
+    # For each trajectory, if shorter than `max_length`: append (pad) its last row until length == `max_length`
+    padded_data = [length(traj) == max_length ? traj : vcat(traj, fill(traj[end], max_length - length(traj))) for traj in trajectories]
+    
+    return padded_data, max_length, min_length
 end
