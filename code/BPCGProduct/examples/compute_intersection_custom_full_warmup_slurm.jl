@@ -189,6 +189,9 @@ trajectories_ni, trajectories_i = main(config, vertices, shifted_vertices, prima
 # pad data so that all FW runs have the same number of iterations/lines
 padded_trajectories_ni, min_length_ni, max_length_ni = pad_log_data(trajectories_ni)
 padded_trajectories_i, min_length_i, max_length_i = pad_log_data(trajectories_i)
+
+save_padded_logdata_to_csv(padded_trajectories_ni, max_length, labels, logs_dir, basename)
+save_padded_logdata_to_csv(padded_trajectories_i, max_length, labels, logs_dir, basename)
 readline()
 
 # Save time data in `.csv` format
