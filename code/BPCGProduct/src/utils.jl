@@ -89,7 +89,7 @@ end
 
 # Aggregate padded trajectories from multiple FW variants into a DataFrame and write it into a CSV file
 function save_padded_logdata_to_csv(
-    padded_trajectories::Vector{Vector{NTuple{5, T}}},
+    padded_trajectories::Vector{Vector{NTuple{T, T}}},
     max_length::Int64,
     labels::Vector{String},
     logs_dir::String,
@@ -157,4 +157,20 @@ function save_padded_logdata_to_csv(
 
     # Write DataFrame to a CSV file.
     CSV.write(joinpath(logs_dir, basename * ".csv"), df)
+end
+
+# Input: each Vector in `trajectories` is a vector of 5-tuples: (iter, pgap, dual, dgap, time)
+# Computed: `cutoff_time` = min of the final times among all runs
+# The function returns new trajectories, truncated so that every run only contains entries where `time` ≤ `cutoff_time`
+function cutoff_log_shortest_time(trajectories::Vector{Vector{Tuple{T, T, T, T, T}}}) where T
+    
+    # Decide `cutoff_time`: ∀ Vectors in `trajectories`, extract 5th element (time) of the last tuple, then compute min among all these times
+    cutoff_time = minimum([last(traj)[5] for traj in trajectories])
+    
+    # Create `cutoff_trajectories`, truncated to earliest finish point: ∀ Vectors in `trajectories`, cut out tuples where `time` ≥ `cutoff_time`
+    cutoff_trajectories = [
+        filter(tuple -> tuple[5] < cutoff_time, traj) for traj in trajectories
+    ]
+    
+    return cutoff_trajectories
 end

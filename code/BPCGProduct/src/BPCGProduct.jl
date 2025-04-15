@@ -34,7 +34,7 @@ module BPCGProduct
     export run_BlockCoordinateFW, run_FullFW, run_AlternatingProjections, AwayStep
     export push_to_trajectories!, save_trajectories, load_trajectories
     # From `utils.jl`
-    export unique_combinations, generate_rand_float_vector, extract_n_k_from_filename, base_name, approxequal, log_data, pad_log_data, save_padded_logdata_to_csv
+    export unique_combinations, generate_rand_float_vector, extract_n_k_from_filename, base_name, approxequal, log_data, pad_log_data, save_padded_logdata_to_csv, cutoff_log_shortest_time
     # From `polytopes.jl`
     export generate_polytopes, compute_distance, save_polytopes, load_polytopes, generate_filename
     # From `plot_utils.jl`

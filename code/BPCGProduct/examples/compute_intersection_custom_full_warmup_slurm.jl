@@ -13,17 +13,6 @@ using Plots
 
 
 # ---------------------------------------------------------------------------------
-# YAML PARAMETERS
-config = Config("examples/config.yml")
-print_config(config)
-config_warmup = modify_config(config, k=2, n=15)
-print_config(config_warmup)
-
-
-
-
-
-# ---------------------------------------------------------------------------------
 # MAIN FUNCTIONS
 # Solve small instance (using `config_warmup`) to "warm-up" the REPL: this compiles `BPCGProduct`, so that no compilation needed upon running `main`
 function repl_warmup(config::Config, vertices, shifted_vertices, primal, labels, basename)
@@ -47,7 +36,6 @@ function repl_warmup(config::Config, vertices, shifted_vertices, primal, labels,
 
     return trajectories_ni, trajectories_i
 end
-
 
 function main(config::Config, vertices, shifted_vertices, primal, labels, basename)
 
@@ -132,11 +120,17 @@ end
 
 
 
-println()
-println()
+# ---------------------------------------------------------------------------------
+# YAML PARAMETERS
+config = Config("examples/config.yml")
+print_config(config)
+config_warmup = modify_config(config, k=2, n=15)
+print_config(config_warmup)
 # ---------------------------------------------------------------------------------
 # WARM-UP SCRIPT
 # Generate instances 
+println()
+println()
 println("********************************************************")
 println("WARMUP: Generating instances and solving them to optimum")
 println("********************************************************")
@@ -155,19 +149,24 @@ _, _ = repl_warmup(config_warmup, vertices, shifted_vertices, primal, labels, ba
 
 
 
+
+# ---------------------------------------------------------------------------------
+# MAIN SCRIPT
+# ---------------------------------------------------------------------------------
 println()
 println()
 println()
 # ---------------------------------------------------------------------------------
-# MAIN SCRIPT
+# PARAMETERS
 results_dir = "examples/results_linesearch_afw" # "results_shortstep", 
 times_dir = results_dir*"/times"
 logs_dir = results_dir*"/logs"
 plots_dir = results_dir*"/plots"
+# Labels for the plots
+labels = ["C-BC-FW", "F-BC-FW", "F-BC-AFW", "F-FW", "F-AFW"] # ["C-BC-FW", "C-BC-AFW", "C-BC-BPFW", "F-BC-FW", "F-BC-AFW", "F-BC-BPFW", "F-FW", "F-AFW", "F-BPFW", "AP"]
 
-
-
-# Generate instances 
+# ---------------------------------------------------------------------------------
+# GENERATE INSTANCES
 println("********************************************************")
 println("MAIN: Generating instances and solving them to optimum")
 println("********************************************************")
@@ -176,31 +175,42 @@ vertices, shifted_vertices, primal, fw_gap = generate_polytopes(config)
 primal = primal - 1     # Numerical reasons
 basename = generate_filename(config)
 
-# Labels for the plots
-labels = ["C-BC-FW", "F-BC-FW", "F-BC-AFW", "F-FW", "F-AFW"] # ["C-BC-FW", "C-BC-AFW", "C-BC-BPFW", "F-BC-FW", "F-BC-AFW", "F-BC-BPFW", "F-FW", "F-AFW", "F-BPFW", "AP"]
-
-# execute main
+# ---------------------------------------------------------------------------------
+# RUN MAIN
 println("\n\n********************************************************")
 println("MAIN: Running FW on the instances")
 println("********************************************************")
 trajectories_ni, trajectories_i = main(config, vertices, shifted_vertices, primal, labels, basename)
 
+# ---------------------------------------------------------------------------------
+# PROCESS AND SAVE LOGS
 # Save log data in `.csv` format
 # pad data so that all FW runs have the same number of iterations/lines
 padded_trajectories_ni, min_length_ni, max_length_ni = pad_log_data(trajectories_ni)
 padded_trajectories_i, min_length_i, max_length_i = pad_log_data(trajectories_i)
 
+# log padded data
 save_padded_logdata_to_csv(padded_trajectories_ni, max_length, labels, logs_dir, basename)
 save_padded_logdata_to_csv(padded_trajectories_i, max_length, labels, logs_dir, basename)
 readline()
 
-# Save time data in `.csv` format
-log_data(trajectories_i, labels, times_dir*"/times_i_"*basename)
-log_data(trajectories_ni, labels, times_dir*"/times_ni_"*basename)
+# ---------------------------------------------------------------------------------
+# CREATE AND SAVE PLOTS
+# cutoff trajectories for plotting
+cutoff_trajectories_ni = cutoff_log_shortest_time(padded_trajectories_ni)
+cutoff_trajectories_i = cutoff_log_shortest_time(padded_trajectories_i)
 
-# Save plot trajectories in `.pdf` format
+# Decide plot filename for later saving in `.pdf` format
 fig_ni_filename = plots_dir*"/plot_ni_$basename"
 fig_i_filename = plots_dir*"/plot_i_$basename"
+
+"""
+todo: 
+1) understand if you can only plot time and not iterations of cutoff_trajectories
+2) understand if you can decide on a custom color palette
+3) write a function that takes a .csv wth the trajectories as saved in "save_padded_logdata_to_csv" and tranmsforms it into a vector{vector{Tuple{T}}}
+"""
+
 # Generate plots (do not pass `filename` argument, so .png is not automatically saved)
 fig_ni = plot_trajectories(trajectories_ni, labels, yscalelog=true, xscalelog=true)
 fig_i = plot_trajectories(trajectories_i, labels, yscalelog=true, xscalelog=true)
@@ -209,6 +219,13 @@ fig_i = plot_trajectories(trajectories_i, labels, yscalelog=true, xscalelog=true
 #Plots.plot!(fig_i, size=(1200, 800))  # Larger figure size
 Plots.savefig(fig_ni, fig_ni_filename*".pdf")  
 Plots.savefig(fig_i, fig_i_filename*".pdf")
+
+# ---------------------------------------------------------------------------------
+# SAVE TIMES
+# Save time data in `.csv` format
+log_data(trajectories_i, labels, times_dir*"/times_i_"*basename)
+log_data(trajectories_ni, labels, times_dir*"/times_ni_"*basename)
+
 
 println()
 for fw_variant_i in 1:length(trajectories_ni)
