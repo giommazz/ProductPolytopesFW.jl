@@ -30,7 +30,7 @@ Arguments:
 Return: Plot object with two subplots
 """
 function plot_time_only(
-    trajectories::Vector{Any},
+    trajectories::Vector{Vector{Any}},
     labels::Vector{String};
     xscalelog::Bool = true,   # Default to true for log scale on x-axis
     yscalelog::Bool = true,   # Default to true for log scale on y-axis
@@ -41,8 +41,8 @@ function plot_time_only(
     offset = 2,
     size::Tuple{Int, Int} = (1200, 400)
 )
-    # Custom colorblind palette
-    okabe_ito = [
+    # Custom colorblind palette from https://www.color-hex.com/color-palette/49436
+    colorblind_palette = [
         "#E69F00",  # Orange
         "#CC79A7",  # Pink
         "#0072B2",  # Blue
@@ -94,9 +94,9 @@ function plot_time_only(
         gap_vals = [trajectory[j][4] for j in offset:length(trajectory)]
         
         # Choose a color (cycle through the palette if more series than colors are present)
-        color_choice = (length(trajectories) <= length(okabe_ito)) ?
-                          okabe_ito[i] :
-                          okabe_ito[mod1(i, length(okabe_ito))]
+        color_choice = (length(trajectories) <= length(colorblind_palette)) ?
+                          colorblind_palette[i] :
+                          colorblind_palette[mod1(i, length(colorblind_palette))]
         
         # Plot the current series on both subplots.
         plot!(plt_primal, times, primal_vals, label = labels[i],
@@ -117,11 +117,10 @@ function cutoff_log_shortest_time(trajectories::Vector{Vector{Any}})
     
     # Decide `cutoff_time`: ∀ Vectors in `trajectories`, extract 5th element (time) of the last tuple, then compute min among all these times
     cutoff_time = minimum([last(traj)[5] for traj in trajectories])
-    
     # Create `cutoff_trajectories`, truncated to earliest finish point: ∀ Vectors in `trajectories`, cut out tuples where `time` ≥ `cutoff_time`
     cutoff_trajectories = [
-        filter(tuple -> tuple[5] < cutoff_time, traj) for traj in trajectories
+        filter(tuple -> tuple[5] ≤ cutoff_time, traj) for traj in trajectories
     ]
     
-    return cutoff_trajectories
+    return cutoff_trajectories, cutoff_time
 end

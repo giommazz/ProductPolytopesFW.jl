@@ -180,26 +180,28 @@ basename = generate_filename(config)
 println("\n\n********************************************************")
 println("MAIN: Running FW on the instances")
 println("********************************************************")
-trajectories_ni, trajectories_i = main(config, vertices, shifted_vertices, primal, labels, basename)
+trajectories_ni, trajectories_i = main(config, vertices, shifted_vertices, primal, labels, "ni_"*basename)
+
+# ---------------------------------------------------------------------------------
+# PROCESS AND SAVE LOGS
+# Save log data in `.csv` format
+# pad data so that all FW runs have the same number of iterations/lines
+padded_trajectories_ni, min_length_ni, max_length_ni = pad_log_data(trajectories_ni)
+padded_trajectories_i, min_length_i, max_length_i = pad_log_data(trajectories_i)
+# log padded data
+save_logdata_to_csv(padded_trajectories_ni, max_length_ni, labels, logs_dir, "ni_"*basename)
+save_logdata_to_csv(padded_trajectories_i, max_length_i, labels, logs_dir, "i_"*basename)
+
+# ---------------------------------------------------------------------------------
+# CREATE AND SAVE PLOTS
+# cutoff trajectories for plotting
+cutoff_trajectories_ni, cutoff_time_ni = cutoff_log_shortest_time(padded_trajectories_ni)
+cutoff_trajectories_i, cutoff_time_i = cutoff_log_shortest_time(padded_trajectories_i)
 
 
-"""
-Given a vector of trajectories (each being a vector of 5‑tuples), extract time-based info and plot two subplots:
-    - left: pgap (tuple field 2) over time (tuple field 5)
-    - right: dgap (FW gap) (tuple field 4) over time
 
-Arguments:
-- `trajectories`: contains data to be plotted
-- `labels`: as many as `length(trajectories)`
-- `xscalelog`, `yscalelog`: axis scaling
-- `primal_offset`: vertical offset for primal subplot (if needed).
-- `offset`: starting index in each trajectory (default 2, as in the FrankWolfe.jl package)
-
-Return: Plot object with two subplots
-"""
-
-function plot_time_only(
-    trajectories::Vector{Any},
+function plot_time_only_(
+    trajectories::Vector{Vector{Any}},
     labels::Vector{String};
     xscalelog::Bool = true,   # Default to true for log scale on x-axis
     yscalelog::Bool = true,   # Default to true for log scale on y-axis
@@ -210,8 +212,8 @@ function plot_time_only(
     offset = 2,
     size::Tuple{Int, Int} = (1200, 400)
 )
-    # Custom colorblind palette (Okabe–Ito)
-    okabe_ito = [
+    # Custom colorblind palette from https://www.color-hex.com/color-palette/49436
+    colorblind_palette = [
         "#E69F00",  # Orange
         "#CC79A7",  # Pink
         "#0072B2",  # Blue
@@ -263,9 +265,9 @@ function plot_time_only(
         gap_vals = [trajectory[j][4] for j in offset:length(trajectory)]
         
         # Choose a color (cycle through the palette if more series than colors are present)
-        color_choice = (length(trajectories) <= length(okabe_ito)) ?
-                          okabe_ito[i] :
-                          okabe_ito[mod1(i, length(okabe_ito))]
+        color_choice = (length(trajectories) <= length(colorblind_palette)) ?
+                          colorblind_palette[i] :
+                          colorblind_palette[mod1(i, length(colorblind_palette))]
         
         # Plot the current series on both subplots.
         plot!(plt_primal, times, primal_vals, label = labels[i],
@@ -279,11 +281,16 @@ function plot_time_only(
     return final_plot
 end
 
+
+
+
+# ---------------------------------------------------------------------------------
+# PLOTS
 # Generate plots (do not pass `filename` argument, so .png is not automatically saved)
-fig_ni = plot_trajectories(trajectories_ni, labels, yscalelog=true, xscalelog=true)
-fig_i = plot_trajectories(trajectories_i, labels, yscalelog=true, xscalelog=true)
-# fig_ni = plot_time_only(trajectories_ni, labels, yscalelog=true, xscalelog=true)
-# fig_i  = plot_time_only(trajectories_i, labels, yscalelog=true, xscalelog=true)
+# fig_ni = plot_trajectories(trajectories_ni, labels, yscalelog=true, xscalelog=true) # plotting function from FrankWolfe.jl package
+# fig_i = plot_trajectories(trajectories_i, labels, yscalelog=true, xscalelog=true) # plotting function from FrankWolfe.jl package
+fig_ni = plot_time_only(cutoff_trajectories_ni, labels, yscalelog=true, xscalelog=true) # plotting function that only prints time and is customized
+fig_i  = plot_time_only(cutoff_trajectories_i, labels, yscalelog=true, xscalelog=true) # plotting function that only prints time and is customized
 
 # Decide filename
 fig_ni_filename = plots_dir*"/plot_ni_$basename"
@@ -295,11 +302,12 @@ fig_i_filename = plots_dir*"/plot_i_$basename"
 Plots.savefig(fig_ni, fig_ni_filename*".pdf")  
 Plots.savefig(fig_i, fig_i_filename*".pdf")
 
+
 # ---------------------------------------------------------------------------------
 # SAVE TIMES
 # Save time data in `.csv` format
-# log_data(trajectories_i, labels, times_dir*"/times_i_"*basename)
-# log_data(trajectories_ni, labels, times_dir*"/times_ni_"*basename)
+# log_times(trajectories_i, labels, times_dir*"/times_i_"*basename)
+# log_times(trajectories_ni, labels, times_dir*"/times_ni_"*basename)
 
 
 # println()
