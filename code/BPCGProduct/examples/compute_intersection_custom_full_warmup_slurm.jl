@@ -182,37 +182,6 @@ println("MAIN: Running FW on the instances")
 println("********************************************************")
 trajectories_ni, trajectories_i = main(config, vertices, shifted_vertices, primal, labels, basename)
 
-"""
-# ---------------------------------------------------------------------------------
-# PROCESS AND SAVE LOGS
-# Save log data in `.csv` format
-# pad data so that all FW runs have the same number of iterations/lines
-padded_trajectories_ni, min_length_ni, max_length_ni = pad_log_data(trajectories_ni)
-padded_trajectories_i, min_length_i, max_length_i = pad_log_data(trajectories_i)
-
-# log padded data
-save_padded_logdata_to_csv(padded_trajectories_ni, max_length, labels, logs_dir, basename)
-save_padded_logdata_to_csv(padded_trajectories_i, max_length, labels, logs_dir, basename)
-readline()
-
-# ---------------------------------------------------------------------------------
-# CREATE AND SAVE PLOTS
-# cutoff trajectories for plotting
-cutoff_trajectories_ni = cutoff_log_shortest_time(padded_trajectories_ni)
-cutoff_trajectories_i = cutoff_log_shortest_time(padded_trajectories_i)
-
-# Decide plot filename for later saving in `.pdf` format
-fig_ni_filename = plots_dir*"/plot_ni_$basename"
-fig_i_filename = plots_dir*"/plot_i_$basename"
-
-"""
-"""
-todo: 
-1) understand if you can only plot time and not iterations of cutoff_trajectories
-2) understand if you can decide on a custom color palette
-3) write a function that takes a .csv wth the trajectories as saved in "save_padded_logdata_to_csv" and tranmsforms it into a vector{vector{Tuple{T}}}
-"""
-
 
 """
 Given a vector of trajectories (each being a vector of 5‑tuples), extract time-based info and plot two subplots:
@@ -228,95 +197,112 @@ Arguments:
 
 Return: Plot object with two subplots
 """
+
 function plot_time_only(
-    trajectories::Vector{Vector{Tuple{T, T, T, T, T}}},
+    trajectories::Vector{Any},
     labels::Vector{String};
-    xscalelog::Bool = false,
-    yscalelog::Bool = true,
+    xscalelog::Bool = true,   # Default to true for log scale on x-axis
+    yscalelog::Bool = true,   # Default to true for log scale on y-axis
     legend_position = :topright,
     lstyle = fill(:solid, length(trajectories)),
     line_width = 1.3,
     primal_offset = 1e-8,
-    offset = 2
-    ) where T<:Number
-
-    # custom colorblind palette (Okabe–Ito)
+    offset = 2,
+    size::Tuple{Int, Int} = (1200, 400)
+)
+    # Custom colorblind palette (Okabe–Ito)
     okabe_ito = [
         "#E69F00",  # Orange
-        "#56B4E9",  # Light Blue
-        "#009E73",  # Teal
-        "#F0E442",  # Yellow
+        "#CC79A7",  # Pink
         "#0072B2",  # Blue
-        "#D55E00",  # Red
-        "#CC79A7"   # Pink
+        "#009E73",  # Teal
+        "#F0E442"   # Yellow
     ]
 
-    # Create empty plot for pgap over time
-    plt_primal = plot(xaxis = xscalelog ? :log : :identity,
-                      yaxis = yscalelog ? :log : :identity,
-                      xlabel = "Time (s)",
-                      ylabel = "Primal",
-                      legend = legend_position,
-                      lw = line_width)
-    # Create empty plot for dgap (the FW gap) over time
-    plt_gap = plot(xaxis = xscalelog ? :log : :identity,
-                   yaxis = yscalelog ? :log : :identity,
-                   xlabel = "Time (s)",
-                   ylabel = "FW gap",
-                   legend = legend_position,
-                   lw = line_width)
+    # Create empty plot for the "primal gap" (pgap) over time.
+    # We let Plots choose tick positions automatically (instead of hardcoding them)
+    plt_primal = plot(
+        xaxis = xscalelog ? :log10 : :identity,
+        yaxis = yscalelog ? :log10 : :identity,
+        xlabel = "Time (s)",
+        ylabel = "Primal",
+        legend = legend_position,
+        lw = line_width,
+        size = size,
+        xguidefontsize = 12,
+        yguidefontsize = 12,
+    )
 
-    # Loop through each trajectory (each series) and add its data
+    # Create empty plot for the "dual gap" (FW gap) over time.
+    plt_gap = plot(
+        xaxis = xscalelog ? :log10 : :identity,
+        yaxis = yscalelog ? :log10 : :identity,
+        xlabel = "Time (s)",
+        ylabel = "FW gap",
+        legend = legend_position,
+        lw = line_width,
+        size = size
+    )
+
+    # Loop through each trajectory and add its data.
+    # We check for sufficient length so that we don't pass an empty vector to the plotting routines.
     for (i, trajectory) in enumerate(trajectories)
-        # For each trajectory, each tuple entry (iteration) is such that:
-        #  - field 2 is pgap
-        #  - field 4 is dgap
-        #  - field 5 is time
-        # Use an offset (default=2) to skip warm-up or header entries (as in the package)
+        if length(trajectory) < offset
+            continue  # Skip this trajectory if it does not contain enough points.
+        end
+
+        # Extract the data from the tuple assuming:
+        # - Field 2 is the primal gap (pgap)
+        # - Field 4 is the FW gap (dual gap)
+        # - Field 5 is time.
         times = [trajectory[j][5] for j in offset:length(trajectory)]
+        if isempty(times)
+            continue  # Skip if no valid time points have been extracted.
+        end
         primal_vals = [trajectory[j][2] + primal_offset for j in offset:length(trajectory)]
         gap_vals = [trajectory[j][4] for j in offset:length(trajectory)]
-
-        # Determine color for current series: if ∃ fewer trajectories than available colors,
-        # use corresponding color; otherwise, cycle through the palette.
-        color_choice = (length(trajectories) <= length(okabe_ito)) ? okabe_ito[i] : okabe_ito[mod1(i, length(okabe_ito))]
         
-        # Add series to corresponding plot
-        plot!(plt_primal, times, primal_vals, label=labels[i],
-            linestyle=lstyle[i], lw=line_width, color=color_choice)
-        plot!(plt_gap, times, gap_vals, label=labels[i],
-            linestyle=lstyle[i], lw=line_width, color=color_choice)
+        # Choose a color (cycle through the palette if more series than colors are present)
+        color_choice = (length(trajectories) <= length(okabe_ito)) ?
+                          okabe_ito[i] :
+                          okabe_ito[mod1(i, length(okabe_ito))]
+        
+        # Plot the current series on both subplots.
+        plot!(plt_primal, times, primal_vals, label = labels[i],
+              linestyle = lstyle[i], lw = line_width, color = color_choice)
+        plot!(plt_gap, times, gap_vals, label = labels[i],
+              linestyle = lstyle[i], lw = line_width, color = color_choice)
     end
 
-    # Combine the two plots into one figure with a 1×2 layout.
-    final_plot = plot(plt_primal, plt_gap, layout=(1, 2))
+    # Combine the two subplots side-by-side with a wide format
+    final_plot = plot(plt_primal, plt_gap; layout = (1, 2), size = (1200, 400), bottom_margin = 8Plots.mm)
     return final_plot
 end
 
-fig_ni = plot_time_only(trajectories_ni, labels, yscalelog=true, xscalelog=true)
-fig_i  = plot_time_only(trajectories_i, labels, yscalelog=true, xscalelog=true)
-
-readline() 
-
-
 # Generate plots (do not pass `filename` argument, so .png is not automatically saved)
-# fig_ni = plot_trajectories(trajectories_ni, labels, yscalelog=true, xscalelog=true)
-# fig_i = plot_trajectories(trajectories_i, labels, yscalelog=true, xscalelog=true)
+fig_ni = plot_trajectories(trajectories_ni, labels, yscalelog=true, xscalelog=true)
+fig_i = plot_trajectories(trajectories_i, labels, yscalelog=true, xscalelog=true)
+# fig_ni = plot_time_only(trajectories_ni, labels, yscalelog=true, xscalelog=true)
+# fig_i  = plot_time_only(trajectories_i, labels, yscalelog=true, xscalelog=true)
+
+# Decide filename
+fig_ni_filename = plots_dir*"/plot_ni_$basename"
+fig_i_filename = plots_dir*"/plot_i_$basename"
+# Plot trajectories
+# Plots.plot!(fig_ni, size=(1200, 800))  # Larger figure size
+# Plots.plot!(fig_i, size=(1200, 800))  # Larger figure size
 # Manually save only the PDF versions
-#Plots.plot!(fig_ni, size=(1200, 800))  # Larger figure size
-#Plots.plot!(fig_i, size=(1200, 800))  # Larger figure size
 Plots.savefig(fig_ni, fig_ni_filename*".pdf")  
 Plots.savefig(fig_i, fig_i_filename*".pdf")
 
 # ---------------------------------------------------------------------------------
 # SAVE TIMES
 # Save time data in `.csv` format
-log_data(trajectories_i, labels, times_dir*"/times_i_"*basename)
-log_data(trajectories_ni, labels, times_dir*"/times_ni_"*basename)
+# log_data(trajectories_i, labels, times_dir*"/times_i_"*basename)
+# log_data(trajectories_ni, labels, times_dir*"/times_ni_"*basename)
 
 
-println()
-for fw_variant_i in 1:length(trajectories_ni)
-    println("\t", trajectories_ni[fw_variant_i][1])
-end
-readline()
+# println()
+# for fw_variant_i in 1:length(trajectories_ni)
+#     println("\t", trajectories_ni[fw_variant_i][1])
+# end
