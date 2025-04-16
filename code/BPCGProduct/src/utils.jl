@@ -52,7 +52,7 @@ function approxequal(a, b; tol=1e-04) return all(abs.(a .- b) .≤ tol) end
 
 # Compute avg iteration time and tot time of FW algo execution
 # Call as     `log_data(trajectories_i, ["C-BC-FW", "F-BC-BPCG"], "filename")`
-function log_data(traj_data::Vector{Any}, labels::Vector{String}, basename::String)
+function log_times(traj_data::Vector{Any}, labels::Vector{String}, basename::String)
     
     if length(labels) ≠ length(traj_data)
         error("The number of labels ($(length(labels))) does not correspond to the number of FW algorithms run ($(length(traj_data))).\nPlease fix this in your code.")
@@ -77,7 +77,7 @@ end
 # `pad_log_data` takes `trajectories` (array)
 # Input:    `trajectories` contains as many Vectors as the n. of FW variants that have been run
 #           each Vector, corresponding to one FW variant run, contains as many 5-entry Tuples as the n. iterations in that run
-function pad_log_data(trajectories::Vector{Vector{Tuple{T, T}}}) where T<:Number
+function pad_log_data(trajectories::Vector{Any})
     # Find max number of rows among all trajectories
     max_length = maximum(length.(trajectories))
     min_length = minimum(length.(trajectories))
@@ -88,13 +88,13 @@ function pad_log_data(trajectories::Vector{Vector{Tuple{T, T}}}) where T<:Number
 end
 
 # Aggregate padded trajectories from multiple FW variants into a DataFrame and write it into a CSV file
-function save_padded_logdata_to_csv(
-    padded_trajectories::Vector{Vector{NTuple{T, T}}},
+function save_logdata_to_csv(
+    padded_trajectories::Vector{Vector{Any}},
     max_length::Int64,
     labels::Vector{String},
     logs_dir::String,
     basename::String
-    ) where T <: Number
+    )
 
     # Check that the number of labels matches the number of trajectories
     if length(labels) ≠ length(padded_trajectories)
@@ -118,10 +118,10 @@ function save_padded_logdata_to_csv(
     for l in labels_logs
         # `Symbol(l * "_pgap")` concatenates `l` with "_pgap" and converts the result into a Symbol, which is then used as column name
         # `Vector{T}()` initializes an empty vector with element type T for that column
-        df[!, Symbol(l * "_pgap")] = Vector{T}()
-        df[!, Symbol(l * "_dual")] = Vector{T}()
-        df[!, Symbol(l * "_dgap")] = Vector{T}()
-        df[!, Symbol(l * "_time")] = Vector{T}()
+        df[!, Symbol(l * "_pgap")] = Vector{Float64}()
+        df[!, Symbol(l * "_dual")] = Vector{Float64}()
+        df[!, Symbol(l * "_dgap")] = Vector{Float64}()
+        df[!, Symbol(l * "_time")] = Vector{Float64}()
     end
 
     # Build DataFrame rows, each corresponding to one iteration
@@ -157,20 +157,4 @@ function save_padded_logdata_to_csv(
 
     # Write DataFrame to a CSV file.
     CSV.write(joinpath(logs_dir, basename * ".csv"), df)
-end
-
-# Input: each Vector in `trajectories` is a vector of 5-tuples: (iter, pgap, dual, dgap, time)
-# Computed: `cutoff_time` = min of the final times among all runs
-# The function returns new trajectories, truncated so that every run only contains entries where `time` ≤ `cutoff_time`
-function cutoff_log_shortest_time(trajectories::Vector{Vector{Tuple{T, T, T, T, T}}}) where T
-    
-    # Decide `cutoff_time`: ∀ Vectors in `trajectories`, extract 5th element (time) of the last tuple, then compute min among all these times
-    cutoff_time = minimum([last(traj)[5] for traj in trajectories])
-    
-    # Create `cutoff_trajectories`, truncated to earliest finish point: ∀ Vectors in `trajectories`, cut out tuples where `time` ≥ `cutoff_time`
-    cutoff_trajectories = [
-        filter(tuple -> tuple[5] < cutoff_time, traj) for traj in trajectories
-    ]
-    
-    return cutoff_trajectories
 end
