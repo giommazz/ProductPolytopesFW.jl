@@ -8,10 +8,6 @@ using BPCGProduct
 using FrankWolfe
 using Plots
 
-
-
-
-
 # ---------------------------------------------------------------------------------
 # MAIN FUNCTIONS
 # Solve small instance (using `config_warmup`) to "warm-up" the REPL: this compiles `BPCGProduct`, so that no compilation needed upon running `main`
@@ -180,7 +176,11 @@ basename = generate_filename(config)
 println("\n\n********************************************************")
 println("MAIN: Running FW on the instances")
 println("********************************************************")
+t_start = time()
 trajectories_ni, trajectories_i = main(config, vertices, shifted_vertices, primal, labels, "ni_"*basename)
+t_end = time()
+println("\n\n\t\tElapsed time: ", t_end - t_start, " seconds\n\n")
+
 
 # ---------------------------------------------------------------------------------
 # PROCESS AND SAVE LOGS
@@ -216,6 +216,12 @@ fig_i_filename = plots_dir*"/plot_i_$basename"
 Plots.savefig(fig_ni, fig_ni_filename*".pdf")  
 Plots.savefig(fig_i, fig_i_filename*".pdf")
 
+trajis_ni, variant_labels = load_fw_trajectories("examples/results_linesearch_afw/logs/ni_k3_n101_s15672_cvxho_anc_t20250421100120.csv")
+cutoff_trajectories_ni, cutoff_time_ni = cutoff_log_shortest_time(trajis_ni)
+fig_ni = plot_time_only(cutoff_trajectories_ni, variant_labels, yscalelog=true, xscalelog=true)
+fig_ni_filename = "examples/results_linesearch_afw/plots/plot_ni_$basename"*"___"
+# Plot trajectories
+Plots.savefig(fig_ni, fig_ni_filename*".pdf")
 
 # ---------------------------------------------------------------------------------
 # SAVE TIMES
