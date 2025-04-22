@@ -2,9 +2,9 @@
 
 """
 Function to compute form 1 of the objective function
-f(x)  =     1/(2k) ∑_{1 ≤ i < j ≤ k} ||xⁱ - xʲ||₂²           [form 1]
-      =     1/(2k) [ (k-1) ∑ᵢ₌₁ᵏ||xⁱ||²  -  2 ∑_{1 ≤ i < j ≤ k} ⟨xⁱ, xʲ⟩ ]       [form 2.a]
-      =     1/(2k) k∑ᵢ₌₁ᵏ||xⁱ||² - ||∑_{1 ≤ i < j ≤ k} xⁱ||²                    [form 2.b]
+f(x)  =     1/(2k) ∑_{1 ≤ i < j ≤ k} ‖xⁱ - xʲ‖           [form 1]
+      =     1/(2k) [ (k-1) ∑ᵢ₌₁ᵏ‖xⁱ‖²  -  2 ∑_{1 ≤ i < j ≤ k} ⟨xⁱ, xʲ⟩ ]       [form 2.a]
+      =     1/(2k) k∑ᵢ₌₁ᵏ‖xⁱ‖² - ‖∑_{1 ≤ i < j ≤ k} xⁱ‖²                    [form 2.b]
       =     1/(2k)<x, Mₖ x>, where Mₖ = kI - 𝟏𝟏ᵀ, i.e., a (kn X kn) matrix with (k-1) on the diagonal and -1 elsewhere           [form 3]
 
 
@@ -49,20 +49,29 @@ function convex_feasibility_objective_v2b(x::FrankWolfe.BlockVector)
     k = length(x.block_sizes)
     # dimension of each block
     n = length(x.blocks[1])
-    # accumulator for Σ‖xᵢ‖²
+    # will contain Σ‖xᵢ‖²
     s_norm = 0.0
-    # Σ xᵢ
+    # Allocate uninitialised vector in ℝⁿ to hold ∑xᵢ: `undef` is faster than `zeros` as it skips the default fill
+    # basically: asks the Garbage Collector for n slots of *raw* memory and obtains them w/o touching the bytes
+    # ⟹ no time spent overwriting whatever random bits were already in that RAM. So: allocation is light-fast
     s_vec = Vector{eltype(x)}(undef, n)
-    # zero‑initialise once
+    # zero-initialize
     fill!(s_vec, 0)
 
     # fast, bounds‑check‑free loop
+    # `@inbounds` (bounds check): every time Julia accesses v[i], it checks 1 ≤ i ≤ length(v) for segfaults
+    #   `@inbounds` tells the compiler "I swear indices are safe, omit those checks"
+    #   ⟹ machine code is shorter (no extra check) and may vectorize better
+    # `@simd`: tells LLVM that no cross-iteration dependency exists ⟺ every iter can run independently
     @inbounds @simd for blk in x.blocks
-        # BLAS level‑1
+        # add ‖⋅‖² of the current block to `s_norm`. 
+        # `dot` is a BLAS Level‑1 call ⟺ highly optimised and parallel code on vector-vector operations
         s_norm += dot(blk, blk)
-        # s_vec += blk   (BLAS)
+        # Performs the AXPY operation s_vec += 1.0⋅blk.
+        # `axpy!` is another BLAS Level‑1 call ⟺ avoids temp allocations (≡ no GC overhead) and updates `s_vec` in-place
         LinearAlgebra.BLAS.axpy!(1.0, blk, s_vec)
     end
+    # computes k⋅Σ‖xᵢ‖² - ‖∑xᵢ‖²
     return 0.5/k * (k*s_norm - dot(s_vec, s_vec))
 end
 
@@ -84,7 +93,7 @@ function convex_feasibility_gradient!(storage::FrankWolfe.BlockVector, x::FrankW
     end
 end
 
-# TODO: THIS FUNCTION IS JUST USED TO TEST THE OBJECTIVE FUNCTIONS. DELETE WHEN DONE
+# function used to generate a random FrankWolfe.BlockVector, to test convex_feasibility_objective variants
 function random_blockvector(k::Integer, n::Integer; rng = Random.default_rng())
     blocks = [randn(rng, n) for _ in 1:k]     # k independent N(0,1) vectors
     return FrankWolfe.BlockVector(blocks)     # stack them as one block vector

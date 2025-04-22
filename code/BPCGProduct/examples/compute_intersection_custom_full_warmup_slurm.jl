@@ -216,6 +216,9 @@ fig_i_filename = plots_dir*"/plot_i_$basename"
 Plots.savefig(fig_ni, fig_ni_filename*".pdf")  
 Plots.savefig(fig_i, fig_i_filename*".pdf")
 
+
+
+# TEST
 trajis_ni, variant_labels = load_fw_trajectories("examples/results_linesearch_afw/logs/ni_k3_n101_s15672_cvxho_anc_t20250421100120.csv")
 cutoff_trajectories_ni, cutoff_time_ni = cutoff_log_shortest_time(trajis_ni)
 fig_ni = plot_time_only(cutoff_trajectories_ni, variant_labels, yscalelog=true, xscalelog=true)
