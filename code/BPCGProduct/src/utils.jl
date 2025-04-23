@@ -166,7 +166,6 @@ end
 Input: .csv log at `path` of the form "iter,FW1_pgap,FW1_dual,FW1_dgap,FW1_time,FW2_pgap, ..."
 Output: Vector{Vector{NTuple{5, T}}} of trajectories such that each NTuple is (iter, pgap, dual, dgap, time).
 """
-
 function load_fw_trajectories(path::String)
     
     # `splitext` returns (root, extension)

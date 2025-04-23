@@ -218,8 +218,8 @@ function run_BlockCoordinateFW(
     end
     
     x, v, primal, fw_gap, trajectory_data = FrankWolfe.block_coordinate_frank_wolfe(
-        convex_feasibility_objective_v1,
-        convex_feasibility_gradient_v1!,
+        convex_feasibility_objective_v2b,
+        convex_feasibility_gradient_v2!,
         prod_lmo,
         x0,
         update_order=order,
@@ -248,8 +248,8 @@ function run_FullFW(
     x0 = find_starting_point(config, prod_lmo)
 
     x, v, primal, fw_gap, trajectory_data = FW_algorithm(
-        convex_feasibility_objective_v1,
-        convex_feasibility_gradient_v1!,
+        convex_feasibility_objective_v2b,
+        convex_feasibility_gradient_v2!,
         prod_lmo,
         x0,
         epsilon=config.target_tolerance,
