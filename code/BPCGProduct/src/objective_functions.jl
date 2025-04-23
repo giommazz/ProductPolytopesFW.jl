@@ -1,5 +1,9 @@
 # `objective_functions.jl`
 
+
+# ------------------------------------------------------
+# OBJECTIVE FUNCTION IMPLEMENTATIONS
+# ------------------------------------------------------
 """
 Function to compute form 1 of the objective function
 f(x)  =     1/(2k) ∑_{1 ≤ i < j ≤ k} ‖xⁱ - xʲ‖           [form 1]
@@ -16,12 +20,12 @@ ASYMPTOTIC COMPLEXITY OF THE FORMS
 - form 3 also has complexity O(kn) when we don't explicitly materialize the whole matrix. This can be achieved considering that
         Mₖx = kx - (𝟏ᵀx)𝟏 so we only need a linear number of calls
 
-
 MEMORY OF THE FORMS (EXTRA RAM NEEDED BEYOND THE k BLOCKS)
 - form 1: none
 - form 2.b: one extra vector in ℝⁿ for the running sum
 - form 3: same as 2.b if you apply Mₖ on the fly; huge (kn)² array if you store it
 """
+# asymptotic complexity O(k²n), no extra memory complexity 
 function convex_feasibility_objective_v1(x::FrankWolfe.BlockVector)
     
     sum_dist = 0.0
@@ -43,6 +47,7 @@ Compute form 2
       f(x) = (1/(2k)) * [ k*Σ‖xᵢ‖²  -  ‖Σ xᵢ‖² ]
 with a single pass through the `k` blocks.
 """
+# asymptotic complexity O(kn), extra memory complexity O(n)
 function convex_feasibility_objective_v2b(x::FrankWolfe.BlockVector)
     
     # number of blocks
@@ -76,9 +81,16 @@ function convex_feasibility_objective_v2b(x::FrankWolfe.BlockVector)
 end
 
 
-# Gradient computation for tuple of vectors
+# ------------------------------------------------------
+# GRADIENT FUNCTION IMPLEMENTATIONS
+# ------------------------------------------------------
+
+
+# Compute the gradient (v1)
 # ∇ⁱf(x) = 1/k [ (k-1)xⁱ - ∑_{j ≠ i}xʲ ]
-function convex_feasibility_gradient!(storage::FrankWolfe.BlockVector, x::FrankWolfe.BlockVector)
+# `storage` must be a FrankWolfe.BlockVector of the same shape as `x`
+# asymptotic complexity O(k²n), extra memory complexity O(n)
+function convex_feasibility_gradient_v1!(storage::FrankWolfe.BlockVector, x::FrankWolfe.BlockVector)
     
     k = length(x.block_sizes)
     n = Int(x.tot_size / k)
@@ -93,8 +105,45 @@ function convex_feasibility_gradient!(storage::FrankWolfe.BlockVector, x::FrankW
     end
 end
 
+
+
+# Compute the gradient (v2). Idea: compute s = ∑ᵏⱼ₌₁xʲ only once, because
+# ∇ⁱf(x)    =   1/k [ (k-1)xⁱ - ∑_{j ≠ i}xʲ ]
+#           =   1/k [ kxⁱ - xⁱ - ∑_{j ≠ i}xʲ ]
+#           =   1/k [ kxⁱ - ∑ⱼ₌₁ᵏxʲ ]
+#           =   1/k [ kxⁱ - s ]
+# asymptotic complexity O(kn), extra memory complexity O(n)
+function convex_feasibility_gradient_v2!(storage::FrankWolfe.BlockVector, x::FrankWolfe.BlockVector)
+    k = length(x.block_sizes)
+    n = length(x.blocks[1])
+    # will contain ∑ⱼ₌₁ᵏ: one extra vector in ℝⁿ
+    sum_vec = zeros(eltype(x), n)
+
+    # build `sum_vec`
+    @inbounds for blk in x.blocks
+        # efficient implementation of sum_vec += blk
+        BLAS.axpy!(one(eltype(x)), blk, sum_vec)
+    end
+
+    # reciprocal of k, i.e., 1/k
+    scale = inv(k)
+    # over blocks
+    @inbounds @simd for i in eachindex(x.blocks)
+        # over coordinates
+        for j in 1:n
+            storage.blocks[i][j] = scale * (k * x.blocks[i][j] - sum_vec[j])
+        end
+    end
+end
+
+
 # function used to generate a random FrankWolfe.BlockVector, to test convex_feasibility_objective variants
 function random_blockvector(k::Integer, n::Integer; rng = Random.default_rng())
     blocks = [randn(rng, n) for _ in 1:k]     # k independent N(0,1) vectors
     return FrankWolfe.BlockVector(blocks)     # stack them as one block vector
+end
+
+# 1) brand-new zero-filled buffer
+function zeros_blockvector(k::Integer, n::Integer; T=Float64)
+    FrankWolfe.BlockVector([zeros(T, n) for _ in 1:k])
 end
