@@ -235,7 +235,8 @@ function run_BlockCoordinateFW(
 
     return x, v, primal, fw_gap, trajectory_data
 end
-# (Multiple dispatch) Run BPCG over full product LMO
+
+# Run BPCG over full product LMO
 function run_FullFW(
     config::Config,
     FW_algorithm::Function,
