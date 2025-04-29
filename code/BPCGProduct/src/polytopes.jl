@@ -341,9 +341,10 @@ function compute_distance(config::Config, lmo_list::Vector{FrankWolfe.LinearMini
 
     # Create FrankWolfe.ProductLMO from list of LMOs
     prod_lmo = create_product_lmo(lmo_list)
-    
+
     # Run Block-coordinate BPCG with CyclicUpdate
-    last_iterate, last_lmo_vertex, primal, fw_gap, _ = run_BlockCoordinateFW(config_opt, FrankWolfe.CyclicUpdate(), FrankWolfe.BPCGStep(), prod_lmo)
+    # last_iterate, last_lmo_vertex, primal, fw_gap, _ = run_BlockCoordinateFW(config_opt, FrankWolfe.CyclicUpdate(), FrankWolfe.BPCGStep(), prod_lmo)
+    last_iterate, last_lmo_vertex, primal, fw_gap, _ = run_BlockCoordinateFW(config_opt, FrankWolfe.CyclicUpdate(), AwayStep(), prod_lmo)
     
     return last_iterate, last_lmo_vertex, primal, fw_gap
 end
@@ -355,10 +356,12 @@ function compute_distance(config::Config, lmo_list::Vector{FrankWolfe.ConvexHull
 
     # Create FrankWolfe.ProductLMO from list of LMOs
     prod_lmo = create_product_lmo(lmo_list)
-    
+
     # Run Block-coordinate BPCG with CyclicUpdate
-    last_iterate, last_lmo_vertex, primal, fw_gap, _ = run_BlockCoordinateFW(config_opt, FrankWolfe.CyclicUpdate(), FrankWolfe.BPCGStep(), prod_lmo)
-    
+    # last_iterate, last_lmo_vertex, primal, fw_gap, _ = run_BlockCoordinateFW(config_opt, FrankWolfe.CyclicUpdate(), FrankWolfe.BPCGStep(), prod_lmo)
+    last_iterate, last_lmo_vertex, primal, fw_gap, _ = run_BlockCoordinateFW(config_opt, FrankWolfe.CyclicUpdate(), AwayStep(), prod_lmo)
+
+
     return last_iterate, last_lmo_vertex, primal, fw_gap
 end
 # (Multiple dispatch) Compute distance between k polytopes, by running the FW algorithm
@@ -369,10 +372,11 @@ function compute_distance(config::Config, lmo_list::Vector{FrankWolfe.MathOptLMO
 
     # Create FrankWolfe.ProductLMO from list of LMOs
     prod_lmo = create_product_lmo(lmo_list)
-    
+
     # Run Block-coordinate BPCG with CyclicUpdate
-    last_iterate, last_lmo_vertex, primal, fw_gap, _ = run_BlockCoordinateFW(config_opt, FrankWolfe.CyclicUpdate(), FrankWolfe.BPCGStep(), prod_lmo)
-    
+    # last_iterate, last_lmo_vertex, primal, fw_gap, _ = run_BlockCoordinateFW(config_opt, FrankWolfe.CyclicUpdate(), FrankWolfe.BPCGStep(), prod_lmo)
+    last_iterate, last_lmo_vertex, primal, fw_gap, _ = run_BlockCoordinateFW(config_opt, FrankWolfe.CyclicUpdate(), AwayStep(), prod_lmo)
+
     return last_iterate, last_lmo_vertex, primal, fw_gap
 end
 

@@ -116,14 +116,22 @@ end
 
 
 
+
 # ---------------------------------------------------------------------------------
 # YAML PARAMETERS
+# ---------------------------------------------------------------------------------
 config = Config("examples/config.yml")
 print_config(config)
 config_warmup = modify_config(config, k=2, n=15)
 print_config(config_warmup)
+
+
+
+
+
 # ---------------------------------------------------------------------------------
 # WARM-UP SCRIPT
+# ---------------------------------------------------------------------------------
 # Generate instances 
 println()
 println()
@@ -180,7 +188,6 @@ t_start = time()
 trajectories_ni, trajectories_i = main(config, vertices, shifted_vertices, primal, labels, "ni_"*basename)
 t_end = time()
 println("\n\n\t\tElapsed time: ", t_end - t_start, " seconds\n\n")
-
 
 # ---------------------------------------------------------------------------------
 # PROCESS AND SAVE LOGS

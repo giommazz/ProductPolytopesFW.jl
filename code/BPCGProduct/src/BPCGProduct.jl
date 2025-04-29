@@ -15,7 +15,6 @@ module BPCGProduct
     using CSV, DataFrames
     using LinearAlgebra          # brings dot and BLAS.axpy!
 
-
     # Plotting utilities needed to run FrankWolfe/plot_utils.jl
     include(joinpath(dirname(pathof(FrankWolfe)), "../examples/plot_utils.jl"))
     include("config.jl")
