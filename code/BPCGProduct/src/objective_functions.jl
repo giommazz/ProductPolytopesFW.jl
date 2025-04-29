@@ -105,8 +105,6 @@ function convex_feasibility_gradient_v1!(storage::FrankWolfe.BlockVector, x::Fra
     end
 end
 
-
-
 # Compute the gradient (v2). Idea: compute s = ∑ᵏⱼ₌₁xʲ only once, because
 # ∇ⁱf(x)    =   1/k [ (k-1)xⁱ - ∑_{j ≠ i}xʲ ]
 #           =   1/k [ kxⁱ - xⁱ - ∑_{j ≠ i}xʲ ]
@@ -143,7 +141,7 @@ function random_blockvector(k::Integer, n::Integer; rng = Random.default_rng())
     return FrankWolfe.BlockVector(blocks)     # stack them as one block vector
 end
 
-# 1) brand-new zero-filled buffer
+# function used to generate a zero FrankWolfe.BlockVector, to test convex_feasibility_gradient variants
 function zeros_blockvector(k::Integer, n::Integer; T=Float64)
     FrankWolfe.BlockVector([zeros(T, n) for _ in 1:k])
 end

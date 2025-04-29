@@ -3,7 +3,7 @@ struct Config
     
     # Number of polytopes
     k::Int
-    # Dimension of the subspace in which each polytope lies
+    # Polytope dimension
     n::Int
     # Either 0 or a list of `k` integers, each indicating the number of points to be used to generate intersecting polytopes
     n_points::Union{Int, Vector{Int}}
@@ -166,7 +166,7 @@ function print_config(config::Config)
     println()
     println("Configuration Parameters:")
     println("  Number of polytopes (k): ", config.k)
-    println("  Dimension of the subspace (n): ", config.n)
+    println("  Polytope dimension (n): ", config.n)
     println("  Number of points (n_points): ", config.n_points)
     println("  Epsilon-optimality threshold (target_tolerance): ", config.target_tolerance)
     println("  Epsilon-optimality threshold to compute optimal sols (target_tolerance_opt): ", config.target_tolerance_opt)
