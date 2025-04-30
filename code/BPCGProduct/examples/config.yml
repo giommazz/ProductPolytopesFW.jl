@@ -2,7 +2,7 @@
 #   User parameters
 # ***************************
 # Number of polytopes
-k: 5 #2, 3, 4, 5, 10 
+k: 4 #2, 3, 4, 5, 10 
 # Dimension of the subspace in which each polytope lies
 n: 501 # 100, 500, 1000, 2000
 # list of `k` integers, each indicating the n. of points to be used to generate `k` polytopes

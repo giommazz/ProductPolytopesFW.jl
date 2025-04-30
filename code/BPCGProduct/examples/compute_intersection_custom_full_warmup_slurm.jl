@@ -175,8 +175,9 @@ println("********************************************************")
 println("MAIN: Generating instances and solving them to optimum")
 println("********************************************************")
 vertices, shifted_vertices, primal, fw_gap = generate_polytopes(config)
-# Optimal solution
-primal = primal - 1     # Numerical reasons
+# Process optimal solution: for numerical reasons (otherwise Plots.jl complains), subtract something 
+#       a bit larger than optimal epsilon tolerance 
+primal = primal - 1e-07
 basename = generate_filename(config)
 
 # ---------------------------------------------------------------------------------
