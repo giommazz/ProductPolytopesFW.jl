@@ -62,6 +62,9 @@ echo $SLURM_NODELIST    # print node on slurm
 git branch              # print git branch on which you are
 git rev-parse HEAD      # print pointer to current branch
 
+# set number of threads used by Julia
+export JULIA_NUM_THREADS=10
+
 echo "Running $script with config $config"
 # Extract parameters from config file name and create log file name
 config_basename=$(julia --project=. -e 'using YAML, Dates; config = YAML.load_file(ARGS[1]); timestamp = Dates.format(now(), "yyyymmddHHMMSS"); oracle = config["cvxhflag"] ? "cvxho" : "lmo"; anc = config["anc_flag"] ? "anc" : "vert"; print("k", config["k"], "_n", config["n"], "_", oracle, "_", anc, "_t", timestamp)' "$config")

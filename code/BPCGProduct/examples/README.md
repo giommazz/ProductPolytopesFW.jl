@@ -13,10 +13,28 @@ Notice that `Plots` is not installed in the `BPCGProduct` package because it is 
 For some scripts in `/examples` to run, you should have `Plots` installed in your base `Julia` environment, so that the command `using Plots` at the top of, say, `examples/compute_intersection_custom_full.jl`, won't fail
 
 # Workflows
-Make sure you have Plots installed in your generic Julia environment. It is not installed upon instantiating the package, because it is very heavy and we do not want to ship it with the package
 
+## Generate instances, save them as `.jld` files and run FW on them
+Deprecated: example scripts might be outdated
+0. Decide experimental parameters in `examples/config.yml`
 1. `1.1_generate_polytopes.jl` script: generate instances, find optimal solutions, then save instances to `.jld2` files
 2. `1.2_compute_intersection_custom_instances.jl` script: test several FW variants on those instances
 
-As an alternative:
-1. `compute_intersection_custom_full.jl` (custom instances, with parameters decided in `config.yml`) or `compute_intersection_legacy_lmos.jl` (instances defined through their `FrankWolfe.jl`'s legacy LMOs). These scripts do not save the instances to `.jld2` files
+## Recommended workflow
+0. Decide experimental parameters in `examples/config.yml`
+1. Run either `compute_intersection_custom_full.jl` (custom instances, with parameters decided in `config.yml`) or `compute_intersection_legacy_lmos.jl` (instances defined through their `FrankWolfe.jl`'s legacy LMOs). These scripts do not save the instances to `.jld2` files
+
+## Run on SLURM
+0. Decide experimental parameters in `examples/config.yml`
+1. make sure to set the 'SBATCH' parameters in the SLURM script in compliance with your SLURM server constraints
+2. run the following commands
+    ```
+    cd /BPCGProduct
+    chmod +x slurm_experiments.sh
+    sbatch examples/slurm_experiments.sh examples/compute_intersection_custom_full_warmup_slurm.jl examples/results_linesearch_afw/ examples/config.yml
+    ```
+### Useful commands in SLURM
+- `sacct -j <job_id>`: info status of one job
+- `sinfo -l`: info about partitions 
+- `sinfo -N -o "%N %P"`: cores and assigned partition
+- `sinfo -N -o "%N %m"`: cores and assigned RAM
