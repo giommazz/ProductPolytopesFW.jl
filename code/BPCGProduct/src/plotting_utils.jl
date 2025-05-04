@@ -34,13 +34,13 @@ function plot_time_only(
     labels::Vector{String};
     xscalelog::Bool = true,   # Default to true for log scale on x-axis
     yscalelog::Bool = true,   # Default to true for log scale on y-axis
-    legend_position = :topright,
+    legend_position = :bottomleft,
     lstyle = fill(:solid, length(trajectories)),
     line_width = 1.3,
     primal_offset = 1e-8,
     offset = 2,
     size::Tuple{Int, Int} = (1200, 400)
-)
+    )
     # Custom colorblind palette from https://www.color-hex.com/color-palette/49436
     colorblind_palette = [
         "#E69F00",  # Orange
@@ -48,7 +48,7 @@ function plot_time_only(
         "#0072B2",  # Blue
         "#009E73",  # Teal
         "#F0E442"   # Yellow
-    ]
+        ]
 
     # Create empty plot for the "primal gap" (pgap) over time.
     # We let Plots choose tick positions automatically (instead of hardcoding them)
@@ -62,7 +62,8 @@ function plot_time_only(
         size = size,
         xguidefontsize = 12,
         yguidefontsize = 12,
-    )
+        left_margin = 10Plots.mm        # extra space to visualize the "Primal" label
+        )
 
     # Create empty plot for the "dual gap" (FW gap) over time.
     plt_gap = plot(
@@ -73,7 +74,7 @@ function plot_time_only(
         legend = legend_position,
         lw = line_width,
         size = size
-    )
+        )
 
     # Loop through each trajectory and add its data.
     # We check for sufficient length so that we don't pass an empty vector to the plotting routines.
@@ -106,7 +107,14 @@ function plot_time_only(
     end
 
     # Combine the two subplots side-by-side with a wide format
-    final_plot = plot(plt_primal, plt_gap; layout = (1, 2), size = (1200, 400), bottom_margin = 8Plots.mm)
+    final_plot = plot(
+        plt_primal,
+        plt_gap;
+        layout = (1, 2),
+        size = (1200, 400),
+        left_margin = 10Plots.mm,
+        bottom_margin = 8Plots.mm
+        )
     return final_plot
 end
 

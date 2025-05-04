@@ -12,9 +12,9 @@
 # Directives for the SLURM scheduler
 #SBATCH --job-name=convexfeas_polytopes_afw   # job name
 #SBATCH --time=14-00:00:00  # timelimit (format is jj-hh:mm:ss). Use `sinfo` to see node time limits
-#SBATCH --cpus-per-task=1
-#SBATCH --mem=100G
-#SBATCH --nodelist=htc-cmp502
+#SBATCH --cpus-per-task=2   # reserve a certain amount of cores for this job
+#SBATCH --mem=240G
+#SBATCH --nodelist=htc-cmp502       # htc-cmp501, htc-cmp502, htc-cmp503, ...
 #SBATCH --chdir=/home/htc/giommazz/bpcg-product/code/BPCGProduct/  # Navigate to dir where script you want to run is
 #SBATCH --output=/home/htc/giommazz/bpcg-product/code/BPCGProduct/examples/logs/%x_%A.out # logfiles ---> %x=job name, %A=job ID
 #SBATCH --partition=big  # Specify the desired partition on cluster (default: small)
@@ -63,7 +63,8 @@ git branch              # print git branch on which you are
 git rev-parse HEAD      # print pointer to current branch
 
 # set number of threads used by Julia
-export JULIA_NUM_THREADS=10
+export JULIA_NUM_THREADS=$SLURM_CPUS_PER_TASK
+export OPENBLAS_NUM_THREADS=1   # force BLAS to single‑threaded mode
 
 echo "Running $script with config $config"
 # Extract parameters from config file name and create log file name

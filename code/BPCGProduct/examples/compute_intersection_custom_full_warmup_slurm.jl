@@ -117,6 +117,12 @@ end
 
 
 
+t_start_tot = time()
+
+
+
+
+
 # ---------------------------------------------------------------------------------
 # YAML PARAMETERS
 # ---------------------------------------------------------------------------------
@@ -177,7 +183,7 @@ println("********************************************************")
 vertices, shifted_vertices, primal, fw_gap = generate_polytopes(config)
 # Process optimal solution: for numerical reasons (otherwise Plots.jl complains), subtract something 
 #       a bit larger than optimal epsilon tolerance 
-primal = primal - 1e-07
+primal = primal - 1e-06
 basename = generate_filename(config)
 
 # ---------------------------------------------------------------------------------
@@ -185,10 +191,10 @@ basename = generate_filename(config)
 println("\n\n********************************************************")
 println("MAIN: Running FW on the instances")
 println("********************************************************")
-t_start = time()
+t_start_main = time()
 trajectories_ni, trajectories_i = main(config, vertices, shifted_vertices, primal, labels, "ni_"*basename)
-t_end = time()
-println("\n\n\t\tElapsed time: ", t_end - t_start, " seconds\n\n")
+t_end_main = time()
+println("\n\n\t\tElapsed time main: ", t_end_main - t_start_main, " seconds\n\n")
 
 # ---------------------------------------------------------------------------------
 # PROCESS AND SAVE LOGS
@@ -224,9 +230,15 @@ fig_i_filename = plots_dir*"/plot_i_$basename"
 Plots.savefig(fig_ni, fig_ni_filename*".pdf")  
 Plots.savefig(fig_i, fig_i_filename*".pdf")
 
-
 # ---------------------------------------------------------------------------------
 # SAVE TIMES
 # Save time data in `.csv` format
 log_times(trajectories_i, labels, times_dir*"/times_i_"*basename)
 log_times(trajectories_ni, labels, times_dir*"/times_ni_"*basename)
+
+
+
+
+
+t_end_tot = time()
+println("\n\n\t\tElapsed time tot: ", t_end_tot - t_start_tot, " seconds\n\n")
