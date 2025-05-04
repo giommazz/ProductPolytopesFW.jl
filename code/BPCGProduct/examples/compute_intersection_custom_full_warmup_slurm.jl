@@ -25,9 +25,11 @@ function repl_warmup(config::Config, vertices, shifted_vertices, primal, labels,
         println()
         if ni_flag println("\nNon intersecting") else println("\nIntersecting") end
         prod_lmo = create_product_lmo(lmos)
-        println("\n\n\n ----------> Full Block-coordinate Away FW (ours)")
-        _, _, _, _, td_full_bc_afw = run_BlockCoordinateFW(config, FrankWolfe.FullUpdate(), AwayStep(), prod_lmo)
-        push_to_trajectories!(ni_flag, td_full_bc_afw, trajectories_ni, trajectories_i, primal)
+        _, _, _, _, _ = run_BlockCoordinateFW(config, FrankWolfe.CyclicUpdate(), FrankWolfe.FrankWolfeStep(), prod_lmo)
+        _, _, _, _, _ = run_BlockCoordinateFW(config, FrankWolfe.FullUpdate(), FrankWolfe.FrankWolfeStep(), prod_lmo)
+        _, _, _, _, _ = run_BlockCoordinateFW(config, FrankWolfe.FullUpdate(), AwayStep(), prod_lmo)  
+        _, _, _, _, _ = run_FullFW(config, FrankWolfe.frank_wolfe, prod_lmo)    
+        _, _, _, _, _ = run_FullFW(config, FrankWolfe.away_frank_wolfe, prod_lmo)    
     end
 
     return trajectories_ni, trajectories_i
