@@ -30,6 +30,7 @@ Arguments:
 Return: Plot object with two subplots
 """
 function plot_time_only(
+    config::Config,
     trajectories::Vector{Vector{Any}},
     labels::Vector{String};
     xscalelog::Bool = true,   # Default to true for log scale on x-axis
@@ -50,6 +51,8 @@ function plot_time_only(
         "#F0E442"   # Yellow
         ]
 
+    legend_lbl = "k=$(config.k), n=$(config.n)"   # text that should appear once
+    
     # Create empty plot for the "primal gap" (pgap) over time.
     # We let Plots choose tick positions automatically (instead of hardcoding them)
     plt_primal = plot(
@@ -58,6 +61,7 @@ function plot_time_only(
         xlabel = "Time (s)",
         ylabel = "Primal",
         legend = legend_position,
+        legendtitle = legend_lbl,
         lw = line_width,
         size = size,
         xguidefontsize = 12,
@@ -72,10 +76,11 @@ function plot_time_only(
         xlabel = "Time (s)",
         ylabel = "FW gap",
         legend = legend_position,
+        legendtitle = legend_lbl,
         lw = line_width,
         size = size
         )
-
+        
     # Loop through each trajectory and add its data.
     # We check for sufficient length so that we don't pass an empty vector to the plotting routines.
     for (i, trajectory) in enumerate(trajectories)
@@ -100,21 +105,19 @@ function plot_time_only(
                           colorblind_palette[mod1(i, length(colorblind_palette))]
         
         # Plot the current series on both subplots.
-        plot!(plt_primal, times, primal_vals, label = labels[i],
-              linestyle = lstyle[i], lw = line_width, color = color_choice)
-        plot!(plt_gap, times, gap_vals, label = labels[i],
-              linestyle = lstyle[i], lw = line_width, color = color_choice)
+        plot!(plt_primal, times, primal_vals, label = labels[i], linestyle = lstyle[i], lw = line_width, color = color_choice)
+        plot!(plt_gap, times, gap_vals, label = labels[i], linestyle = lstyle[i], lw = line_width, color = color_choice)
     end
 
-    # Combine the two subplots side-by-side with a wide format
     final_plot = plot(
-        plt_primal,
-        plt_gap;
-        layout = (1, 2),
-        size = (1200, 400),
-        left_margin = 10Plots.mm,
-        bottom_margin = 8Plots.mm
-        )
+        plt_primal, plt_gap;
+        layout        = (1, 2),
+        size          = (1200, 400),
+        left_margin   = 10Plots.mm,
+        bottom_margin = 15Plots.mm,
+        legend        = :bottomleft,       # one legend for both
+    )
+
     return final_plot
 end
 

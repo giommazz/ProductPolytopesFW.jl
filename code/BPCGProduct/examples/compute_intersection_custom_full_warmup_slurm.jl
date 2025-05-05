@@ -219,8 +219,8 @@ cutoff_trajectories_i, cutoff_time_i = cutoff_log_shortest_time(padded_trajector
 # Generate plots (do not pass `filename` argument, so .png is not automatically saved)
 # fig_ni = plot_trajectories(trajectories_ni, labels, yscalelog=true, xscalelog=true) # plotting function from FrankWolfe.jl package
 # fig_i = plot_trajectories(trajectories_i, labels, yscalelog=true, xscalelog=true) # plotting function from FrankWolfe.jl package
-fig_ni = plot_time_only(cutoff_trajectories_ni, labels, yscalelog=true, xscalelog=true) # plotting function that only prints time and is customized
-fig_i  = plot_time_only(cutoff_trajectories_i, labels, yscalelog=true, xscalelog=true) # plotting function that only prints time and is customized
+fig_ni = plot_time_only(config, cutoff_trajectories_ni, labels, yscalelog=true, xscalelog=true) # plotting function that only prints time and is customized
+fig_i  = plot_time_only(config, cutoff_trajectories_i, labels, yscalelog=true, xscalelog=true) # plotting function that only prints time and is customized
 
 # Decide filename
 fig_ni_filename = plots_dir*"/plot_ni_$basename"
