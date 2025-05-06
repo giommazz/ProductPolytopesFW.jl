@@ -182,7 +182,7 @@ println("********************************************************")
 println("MAIN: Generating instances and solving them to optimum")
 println("********************************************************")
 vertices, shifted_vertices, primal, fw_gap = generate_polytopes(config)
-# To mask up numerical instabilities of GoldenRatio, subtract something from primal
+# To mask up numerical instabilities of Plots when computing the primal gap, subtract something from primal
 primal = primal - 1e-06
 basename = generate_filename(config)
 
