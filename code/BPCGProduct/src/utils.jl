@@ -13,12 +13,12 @@ function generate_rand_float_vector(config::Config; lb=0, ub=100, seed=42::Int)
 end
 
 function generate_filename(config::Config)
-    timestamp = Dates.format(now(), "yyyymmddHHMMSS")
+    timestamp = Dates.format(now(), "yyyymmdd_HHMMSS")
     
     oracle = config.cvxhflag ? "cvxho" : "lmo"
     anc = config.anc_flag ? "anc" : "vert"
     seed = config.seed
-    return "k$(config.k)_n$(config.n)_s$(seed)_$(oracle)_$(anc)_t$timestamp"
+    return "k$(config.k)_n$(config.n)_i$(config.max_iterations)_s$(seed)_$(oracle)_$(anc)_t$timestamp"
 end
 
 # Function to extract `n`, `k`, and `max_iterations` from the filename

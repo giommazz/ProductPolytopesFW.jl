@@ -11,7 +11,7 @@ using Plots
 # ---------------------------------------------------------------------------------
 # MAIN FUNCTIONS
 # Solve small instance (using `config_warmup`) to "warm-up" the REPL: this compiles `BPCGProduct`, so that no compilation needed upon running `main`
-function repl_warmup(config::Config, vertices, shifted_vertices, primal, labels, basename)
+function repl_warmup(config::Config, vertices, shifted_vertices, labels, basename)
 
     # Retrieve nonintersecting and intersecting LMOs from previously generated instances
     lmo_list = create_lmos(config, [vertices, shifted_vertices])
@@ -128,7 +128,7 @@ t_start_tot = time()
 # ---------------------------------------------------------------------------------
 # YAML PARAMETERS
 # ---------------------------------------------------------------------------------
-config = Config("examples/config.yml")
+config = Config("examples/config02.yml")
 print_config(config)
 config_warmup = modify_config(config, k=2, n=15)
 print_config(config_warmup)
@@ -146,9 +146,8 @@ println()
 println("********************************************************")
 println("WARMUP: Generating instances and solving them to optimum")
 println("********************************************************")
-vertices, shifted_vertices, primal, fw_gap = generate_polytopes(config_warmup)
+vertices, shifted_vertices, _, fw_gap = generate_polytopes(config_warmup)
 # Optimal solution
-primal = primal - 1     # Numerical reasons
 basename = generate_filename(config_warmup)
 # Labels for the plots
 labels = ["F-BC-AFW"]
@@ -156,7 +155,7 @@ labels = ["F-BC-AFW"]
 println("********************************************************")
 println("WARMUP: Running FW on the instances")
 println("********************************************************")
-_, _ = repl_warmup(config_warmup, vertices, shifted_vertices, primal, labels, basename)
+_, _ = repl_warmup(config_warmup, vertices, shifted_vertices, labels, basename)
 
 
 
@@ -183,8 +182,7 @@ println("********************************************************")
 println("MAIN: Generating instances and solving them to optimum")
 println("********************************************************")
 vertices, shifted_vertices, primal, fw_gap = generate_polytopes(config)
-# Process optimal solution: for numerical reasons (otherwise Plots.jl complains), subtract something 
-#       a bit larger than optimal epsilon tolerance 
+# To mask up numerical instabilities of GoldenRatio, subtract something from primal
 primal = primal - 1e-06
 basename = generate_filename(config)
 

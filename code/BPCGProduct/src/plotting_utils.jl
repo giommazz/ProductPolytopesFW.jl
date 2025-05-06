@@ -1,5 +1,6 @@
 # `plotting_utils.jl`
 
+
 function compute_primal_gap(trajectories_curr::Vector{Any}, opt::Float64)
     trajectories_curr_pg = deepcopy(trajectories_curr)
     # Iterate over each tuple within the current block
@@ -11,6 +12,11 @@ function compute_primal_gap(trajectories_curr::Vector{Any}, opt::Float64)
         pgap = primal - opt
         # Replace current tuple with a new one including the primal gap instead of the primal value
         trajectories_curr_pg[i] = (iter, pgap, dual, dgap, time)
+    end
+    neg_idx = findall(<(0.0), [t[2] for t in trajectories_curr])
+    lni = length(neg_idx)
+    if lni > 0
+        error("There are $(lni) negative values when computing the primal gap. Check `plotting_utils.jl`")
     end
     return trajectories_curr_pg
 end
@@ -115,7 +121,7 @@ function plot_time_only(
         size          = (1200, 400),
         left_margin   = 10Plots.mm,
         bottom_margin = 15Plots.mm,
-        legend        = :bottomleft,       # one legend for both
+        legend        = legend_position,       # one legend for both
     )
 
     return final_plot
