@@ -12,9 +12,9 @@
 # Directives for the SLURM scheduler
 #SBATCH --job-name=convexfeas_polytopes_afw   # job name
 #SBATCH --time=14-00:00:00  # timelimit (format is jj-hh:mm:ss). Use `sinfo` to see node time limits
-#SBATCH --cpus-per-task=10   # reserve a certain amount of cores for this job
+#SBATCH --cpus-per-task=2   # reserve a certain amount of cores for this job
 #SBATCH --mem=240G
-#SBATCH --nodelist=htc-cmp506       # htc-cmp501, htc-cmp502, htc-cmp503, ...
+#SBATCH --nodelist=htc-cmp502       # htc-cmp501, htc-cmp502, htc-cmp503, ...
 #SBATCH --chdir=/home/htc/giommazz/bpcg-product/code/BPCGProduct/  # Navigate to dir where script you want to run is
 #SBATCH --output=/home/htc/giommazz/bpcg-product/code/BPCGProduct/examples/logs/%x_%A.out # logfiles ---> %x=job name, %A=job ID
 #SBATCH --partition=big  # Specify the desired partition on cluster (default: small)
@@ -55,7 +55,7 @@ if [[ "$config" != *.yaml && "$config" != *.yml ]]; then
 fi
 
 # Create logs directory if it doesn't already exists (`-p` option)
-logs_dir="examples/logs"
+logs_dir="examples/results_linesearch_afw/logs"
 mkdir -p $logs_dir
 
 echo $SLURM_NODELIST    # print node on slurm
@@ -68,7 +68,7 @@ export OPENBLAS_NUM_THREADS=1   # force BLAS to single‑threaded mode
 
 echo "Running $script with config $config"
 # Extract parameters from config file name and create log file name
-config_basename=$(julia --project=. -e 'using YAML, Dates; config = YAML.load_file(ARGS[1]); timestamp = Dates.format(now(), "yyyymmddHHMMSS"); oracle = config["cvxhflag"] ? "cvxho" : "lmo"; anc = config["anc_flag"] ? "anc" : "vert"; print("k", config["k"], "_n", config["n"], "_", oracle, "_", anc, "_t", timestamp)' "$config")
+config_basename=$(julia --project=. -e 'using YAML, Dates; config = YAML.load_file(ARGS[1]); timestamp = Dates.format(now(), "yyyymmdd_HHMMSS"); oracle = config["cvxhflag"] ? "cvxho" : "lmo"; anc = config["anc_flag"] ? "anc" : "vert"; print("k", config["k"], "_n", config["n"], "_", oracle, "_", anc, "_t", timestamp)' "$config")
 log_file="$logs_dir/${config_basename}_log.txt"
 
 # Run the Julia script with the instance name and config file as parameters and redirect output to log file

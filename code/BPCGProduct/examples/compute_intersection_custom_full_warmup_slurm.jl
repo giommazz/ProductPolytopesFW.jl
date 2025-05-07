@@ -128,7 +128,7 @@ t_start_tot = time()
 # ---------------------------------------------------------------------------------
 # YAML PARAMETERS
 # ---------------------------------------------------------------------------------
-config = Config("examples/config02.yml")
+config = Config("examples/config.yml")
 print_config(config)
 config_warmup = modify_config(config, k=2, n=15)
 print_config(config_warmup)
@@ -171,7 +171,7 @@ println()
 # PARAMETERS
 results_dir = "examples/results_linesearch_afw" # "results_shortstep", 
 times_dir = results_dir*"/times"
-logs_dir = results_dir*"/logs"
+logs_dir = results_dir*"/iter_logs"
 plots_dir = results_dir*"/plots"
 # Labels for the plots
 labels = ["C-BC-FW", "F-BC-FW", "F-BC-AFW", "F-FW", "F-AFW"] # ["C-BC-FW", "C-BC-AFW", "C-BC-BPFW", "F-BC-FW", "F-BC-AFW", "F-BC-BPFW", "F-FW", "F-AFW", "F-BPFW", "AP"]
