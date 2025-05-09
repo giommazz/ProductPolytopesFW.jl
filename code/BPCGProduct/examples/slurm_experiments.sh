@@ -1,5 +1,4 @@
 #!/bin/bash
-
 # Run experiments on slurm servers
 # How to run this:
 # 1) make sure to tailor the 'SBATCH' parameters below to your directories
@@ -20,10 +19,16 @@
 #SBATCH --partition=big  # Specify the desired partition on cluster (default: small)
 ##SBATCH --exclude=htc-cmp[101-148,501-532] # exclude nodes. Your job will run on nodes not in the list.
 
-# Some useful commands to analyze partitions on SLURM
-# sinfo -l: general info on cluster partitions and nodes
-# sinfo -N -o "%N %P": partition that each cluster node is assigned to 
-# sinfo -N -o "%N %m": memory allocated to each cluster node
+# ensures the script halts on any error, so you don't accidentally skip the trap below
+set -euo pipefail
+
+# Print start time
+echo "Job started at: $(date)"
+
+# Ensure we always log an end time (unless the shell is forcibly killed): 
+#       this registers the `echo` command to run when the bash script exits, for any exit path other than untrappable signals 
+#       Even if `srun` returns a nonzero status because the job was OOM-killed, bash still invokes the EXIT trap, printing your end time.
+trap 'echo "Job ended at:   $(date)"' EXIT ERR
 
 # *************************
 # Check if the correct number of arguments is passed: the user must specify a directory to save the results

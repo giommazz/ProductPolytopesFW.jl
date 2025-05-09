@@ -35,7 +35,8 @@ Deprecated: example scripts might be outdated
     ```
 ### Useful commands in SLURM
 - `sacct -j <job_id>`: info status of one job
-- `sinfo -l`: info about partitions 
+- `sacct -u <username>`: info status on all jobs of a user
+- `sinfo -l`: general info about partitions and nodes 
 - `sinfo -N -o "%N %P"`: nodes and assigned partition
 - `sinfo -N -o "%N %m"`: nodes and assigned RAM
 - `sinfo -N -l"`: info about nodes
