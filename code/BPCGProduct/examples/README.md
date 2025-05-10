@@ -15,7 +15,7 @@ For some scripts in `/examples` to run, you should have `Plots` installed in you
 # Workflows
 
 ## Generate instances, save them as `.jld` files and run FW on them
-Deprecated: example scripts might be outdated
+Warning! Example scripts might be outdated
 0. Decide experimental parameters in `examples/config.yml`
 1. `1.1_generate_polytopes.jl` script: generate instances, find optimal solutions, then save instances to `.jld2` files
 2. `1.2_compute_intersection_custom_instances.jl` script: test several FW variants on those instances
@@ -33,6 +33,7 @@ Deprecated: example scripts might be outdated
     chmod +x slurm_experiments.sh
     sbatch examples/slurm_experiments.sh examples/compute_intersection_custom_full_warmup_slurm.jl examples/results_linesearch_afw/ examples/config.yml
     ```
+
 ### Useful commands in SLURM
 - `sacct -j <job_id>`: info status of one job
 - `sacct -u <username>`: info status on all jobs of a user
@@ -41,3 +42,8 @@ Deprecated: example scripts might be outdated
 - `sinfo -N -o "%N %m"`: nodes and assigned RAM
 - `sinfo -N -l"`: info about nodes
 - `scontrol show node=<node_name>`: shows detailed attributes about a single node
+
+## Updates scripts
+- `compute_inteserction_custom_full_warmup_slurm.jl`
+- `compute_inteserction_custom_full.jl`
+- `slurm_experiments.sh`

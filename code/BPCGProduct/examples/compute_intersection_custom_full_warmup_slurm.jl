@@ -181,7 +181,7 @@ vertices, shifted_vertices, opt, fw_gap = generate_polytopes(config)
 basename = generate_filename(config)
 
 # ---------------------------------------------------------------------------------
-# RUN MAIN
+# RUN MAIN TO SOLVE INSTANCES
 println("\n\n********************************************************")
 println("MAIN: Running FW on the instances")
 println("********************************************************")
