@@ -90,6 +90,7 @@ end
 # Aggregate padded trajectories from multiple FW variants into a DataFrame and write it into a CSV file
 function save_logdata_to_csv(
     padded_trajectories::Vector{Vector{Any}},
+    opt::Float64, 
     max_length::Int64,
     labels::Vector{String},
     logs_dir::String,
@@ -108,12 +109,13 @@ function save_logdata_to_csv(
     # Prepare empty DataFrame. Labels: 'iter' + for each FW variant, 4 columns 'FWVar_pgap', 'FWVar_dual', 'FWVar_dgap', 'FWVar_time'
     df = DataFrame()
     
-    # Create or initialize a column named `:iter` in the DataFrame
-    # indexing with `!`, we access the column by reference ("inplace" update) → modify actual column rather than a copy
-    # using `:` before `iter` defines it as a Symbol, ← column names in Julia DataFrames are typically Symbols
-    # `Int64[]` builds the `:iter` column: an empty vector of type Int64
+    # Create or initialize columns named `:iter` and `:opt` in the DataFrame
+    #       indexing with `!`, we access the column by reference ("inplace" update) → modify actual column rather than a copy
+    #       using `:` before `iter` defines it as a Symbol, ← column names in Julia DataFrames are typically Symbols
+    #       `Int64[]` builds the `:iter` column: an empty vector of type Int64
     df[!, :iter] = Int64[]
-    
+    df[!, :opt ] = Float64[] # every row will get the same `opt` value
+
     # For every label in `labels_logs`, create 4 new columns
     for l in labels_logs
         # `Symbol(l * "_pgap")` concatenates `l` with "_pgap" and converts the result into a Symbol, which is then used as column name
@@ -130,6 +132,80 @@ function save_logdata_to_csv(
         # Initialize Dict to temporarily hold data for current row, keys will be Symbols corresponding to DataFrame column names
         row_dict = Dict{Symbol, Any}()
         row_dict[:iter] = iter
+        row_dict[:opt ] = opt     # same optimal value every row
+
+        # For each iteration, extract 4-tuple from each FW variant: ignore 1ˢᵗ element (iter) and retrieve (pgap, dual, dgap, time)
+        for fw_variant_i in 1:n_variants
+            # Retrieve 5-tuple (iter, pgap, dual, dgap, time)
+            tup = padded_trajectories[fw_variant_i][iter]
+            fw_variant_baselabel = labels_logs[fw_variant_i]
+            # Build keys for each of the four columns
+            key_pgap = Symbol(fw_variant_baselabel * "_pgap")
+            key_dual = Symbol(fw_variant_baselabel * "_dual")
+            key_dgap = Symbol(fw_variant_baselabel * "_dgap")
+            key_time = Symbol(fw_variant_baselabel * "_time")
+            
+            # Assign the corresponding tuple elements to the proper keys in the row dictionary.
+            row_dict[key_pgap] = tup[2]
+            row_dict[key_dual] = tup[3]
+            row_dict[key_dgap] = tup[4]
+            row_dict[key_time] = tup[5]
+        end
+        
+        # Push current `row_dict` into DataFrame: add a new row to the DataFrame via `push!`
+        # `;` is used to create a NamedTuple from the `row_dict`
+        #  `...` is the "splat" operator: unpacks the contents of `row_dict` as keyword arguments into the NamedTuple constructor
+        #       → is a concise way to convert a Dict of key=>value pairs into a NamedTuple
+        push!(df, (; row_dict...))
+    end
+
+    # Write DataFrame to a CSV file.
+    CSV.write(joinpath(logs_dir, basename * ".csv"), df)
+end
+# (Multiple dispatch: without `opt`)
+function save_logdata_to_csv(
+    padded_trajectories::Vector{Vector{Any}},
+    max_length::Int64,
+    labels::Vector{String},
+    logs_dir::String,
+    basename::String
+    )
+
+    # Check that the number of labels matches the number of trajectories
+    if length(labels) ≠ length(padded_trajectories)
+        error("The number of labels ($(length(labels))) does not correspond to the number of FW algorithms run ($(length(padded_trajectories))).\nPlease fix this in your code.")
+    end
+
+    # Transform labels by deleting dashes.
+    labels_logs = [replace(l, "-" => "") for l in labels]
+    n_variants = length(padded_trajectories)
+
+    # Prepare empty DataFrame. Labels: 'iter' + for each FW variant, 4 columns 'FWVar_pgap', 'FWVar_dual', 'FWVar_dgap', 'FWVar_time'
+    df = DataFrame()
+    
+    # Create or initialize column named `:iter` in the DataFrame
+    #       indexing with `!`, we access the column by reference ("inplace" update) → modify actual column rather than a copy
+    #       using `:` before `iter` defines it as a Symbol, ← column names in Julia DataFrames are typically Symbols
+    #       `Int64[]` builds the `:iter` column: an empty vector of type Int64
+    df[!, :iter] = Int64[]
+
+    # For every label in `labels_logs`, create 4 new columns
+    for l in labels_logs
+        # `Symbol(l * "_pgap")` concatenates `l` with "_pgap" and converts the result into a Symbol, which is then used as column name
+        # `Vector{T}()` initializes an empty vector with element type T for that column
+        df[!, Symbol(l * "_pgap")] = Vector{Float64}()
+        df[!, Symbol(l * "_dual")] = Vector{Float64}()
+        df[!, Symbol(l * "_dgap")] = Vector{Float64}()
+        df[!, Symbol(l * "_time")] = Vector{Float64}()
+    end
+
+    # Build DataFrame rows, each corresponding to one iteration
+    # ------------------------------
+    for iter in 1:max_length
+        # Initialize Dict to temporarily hold data for current row, keys will be Symbols corresponding to DataFrame column names
+        row_dict = Dict{Symbol, Any}()
+        row_dict[:iter] = iter
+
         # For each iteration, extract 4-tuple from each FW variant: ignore 1ˢᵗ element (iter) and retrieve (pgap, dual, dgap, time)
         for fw_variant_i in 1:n_variants
             # Retrieve 5-tuple (iter, pgap, dual, dgap, time)

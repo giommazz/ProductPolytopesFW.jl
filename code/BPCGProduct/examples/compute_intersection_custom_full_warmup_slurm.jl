@@ -1,4 +1,4 @@
-# `compute_intersection_custom_instances.jl`
+# `compute_intersection_custom_full_warmup_slurm.jl`
 # Run either within the Julia REPL as include("/examples/compute_intersection_custom_full.jl")
 # or from linux terminal with: `julia --project=. examples/compute_intersection_custom_full.jl > test.log 2>&1`
 #
@@ -35,7 +35,7 @@ function repl_warmup(config::Config, vertices, shifted_vertices, labels, basenam
     return trajectories_ni, trajectories_i
 end
 
-function main(config::Config, vertices, shifted_vertices, primal, labels, basename)
+function main(config::Config, vertices, shifted_vertices, opt, labels, basename)
 
     # Retrieve nonintersecting and intersecting LMOs from previously generated instances
     lmo_list = create_lmos(config, [vertices, shifted_vertices])
@@ -57,56 +57,56 @@ function main(config::Config, vertices, shifted_vertices, primal, labels, basena
         # Cyclic block-coordinate methods
         println("\n\n\n ----------> Cyclic Block-coordinate vanilla FW")
         _, _, _, _, td_cyc_bc_fw = run_BlockCoordinateFW(config, FrankWolfe.CyclicUpdate(), FrankWolfe.FrankWolfeStep(), prod_lmo)
-        push_to_trajectories!(ni_flag, td_cyc_bc_fw, trajectories_ni, trajectories_i, primal)
+        push_to_trajectories!(ni_flag, td_cyc_bc_fw, trajectories_ni, trajectories_i, opt)
         
         # println("\n\n\n ----------> Cyclic Block-coordinate AFW")
         # _, _, _, _, td_cyc_bc_afw = run_BlockCoordinateFW(config, FrankWolfe.CyclicUpdate(), AwayStep(), prod_lmo)
-        # push_to_trajectories!(ni_flag, td_cyc_bc_afw, trajectories_ni, trajectories_i, primal)
+        # push_to_trajectories!(ni_flag, td_cyc_bc_afw, trajectories_ni, trajectories_i, opt)
 
         # println("\n\n\n ----------> Stochastic Block-coordinate vanilla FW")
         # _, _, _, _, td_stoc_bc_fw = run_BlockCoordinateFW(config, FrankWolfe.StochasticUpdate(), FrankWolfe.FrankWolfeStep(), prod_lmo)
-        # push_to_trajectories!(ni_flag, td_stoc_bc_fw, trajectories_ni, trajectories_i, primal)
+        # push_to_trajectories!(ni_flag, td_stoc_bc_fw, trajectories_ni, trajectories_i, opt)
         
         # println("\n\n\n ----------> Stochastic Block-coordinate AFW")
         # _, _, _, _, td_stoc_bc_afw = run_BlockCoordinateFW(config, FrankWolfe.StochasticUpdate(), AwayStep(), prod_lmo)
-        # push_to_trajectories!(ni_flag, td_stoc_bc_afw, trajectories_ni, trajectories_i, primal)
+        # push_to_trajectories!(ni_flag, td_stoc_bc_afw, trajectories_ni, trajectories_i, opt)
         
         # println("\n\n\n ----------> Cyclic Block-coordinate BPFW")
         # _, _, _, _, td_cyc_bc_bpfw = run_BlockCoordinateFW(config, FrankWolfe.CyclicUpdate(), FrankWolfe.BPCGStep(), prod_lmo)
-        # push_to_trajectories!(ni_flag, td_cyc_bc_bpfw, trajectories_ni, trajectories_i, primal)
+        # push_to_trajectories!(ni_flag, td_cyc_bc_bpfw, trajectories_ni, trajectories_i, opt)
 
         # ***************************************
         # Full block-coordinate methods
         println("\n\n\n ----------> Full Block-coordinate vanilla FW")
         _, _, _, _, td_full_bc_fw = run_BlockCoordinateFW(config, FrankWolfe.FullUpdate(), FrankWolfe.FrankWolfeStep(), prod_lmo)
-        push_to_trajectories!(ni_flag, td_full_bc_fw, trajectories_ni, trajectories_i, primal)
+        push_to_trajectories!(ni_flag, td_full_bc_fw, trajectories_ni, trajectories_i, opt)
 
         println("\n\n\n ----------> Full Block-coordinate Away FW (ours)")
         _, _, _, _, td_full_bc_afw = run_BlockCoordinateFW(config, FrankWolfe.FullUpdate(), AwayStep(), prod_lmo)  
-        push_to_trajectories!(ni_flag, td_full_bc_afw, trajectories_ni, trajectories_i, primal)
+        push_to_trajectories!(ni_flag, td_full_bc_afw, trajectories_ni, trajectories_i, opt)
 
         # println("\n\n\n ----------> Full Block-coordinate Blended Pairwise FW (ours)")
         # _, _, _, _, td_full_bc_bpfw = run_BlockCoordinateFW(config, FrankWolfe.FullUpdate(), FrankWolfe.BPCGStep(), prod_lmo)  
-        # push_to_trajectories!(ni_flag, td_full_bc_bpfw, trajectories_ni, trajectories_i, primal)
+        # push_to_trajectories!(ni_flag, td_full_bc_bpfw, trajectories_ni, trajectories_i, opt)
 
         # ***************************************
         # Full methods
         println("\n\n\n ----------> Full FW")
         _, _, _, _, td_full_fw = run_FullFW(config, FrankWolfe.frank_wolfe, prod_lmo)    
-        push_to_trajectories!(ni_flag, td_full_fw, trajectories_ni, trajectories_i, primal)
+        push_to_trajectories!(ni_flag, td_full_fw, trajectories_ni, trajectories_i, opt)
 
         println("\n\n\n ----------> Full AFW")
         _, _, _, _, td_full_afw = run_FullFW(config, FrankWolfe.away_frank_wolfe, prod_lmo)    
-        push_to_trajectories!(ni_flag, td_full_afw, trajectories_ni, trajectories_i, primal)
+        push_to_trajectories!(ni_flag, td_full_afw, trajectories_ni, trajectories_i, opt)
 
         # println("\n\n\n ----------> Full BPFW")
         # _, _, _, _, td_full_bpfw = run_FullFW(config, FrankWolfe.blended_pairwise_conditional_gradient, prod_lmo)    
-        # push_to_trajectories!(ni_flag, td_full_bpfw, trajectories_ni, trajectories_i, primal)
+        # push_to_trajectories!(ni_flag, td_full_bpfw, trajectories_ni, trajectories_i, opt)
         
         # println("\n\n\n ----------> AP")
         # _, _, _, _, td_ap = run_AlternatingProjections(config, prod_lmo, true)    
         # # `FrankWolfe.alternating_projections` computes ||x-y|| rather than 1/2 ||x-y||
-        # push_to_trajectories!(ni_flag, td_ap, trajectories_ni, trajectories_i, 2*primal)
+        # push_to_trajectories!(ni_flag, td_ap, trajectories_ni, trajectories_i, 2*opt)
 
         # Save trajectories
         # save_trajectories("examples/traj_$basename.jld2", trajectories_ni, trajectories_i)
@@ -181,9 +181,9 @@ labels = ["C-BC-FW", "F-BC-FW", "F-BC-AFW", "F-FW", "F-AFW"] # ["C-BC-FW", "C-BC
 println("********************************************************")
 println("MAIN: Generating instances and solving them to optimum")
 println("********************************************************")
-vertices, shifted_vertices, primal, fw_gap = generate_polytopes(config)
-# To mask up numerical instabilities of Plots when computing the primal gap, subtract something from primal
-primal = primal - 1e-06
+vertices, shifted_vertices, opt, fw_gap = generate_polytopes(config)
+# To mask up numerical instabilities of Plots when computing the primal gap, subtract something from `opt`
+opt = opt - 1e-06
 basename = generate_filename(config)
 
 # ---------------------------------------------------------------------------------
@@ -192,7 +192,7 @@ println("\n\n********************************************************")
 println("MAIN: Running FW on the instances")
 println("********************************************************")
 t_start_main = time()
-trajectories_ni, trajectories_i = main(config, vertices, shifted_vertices, primal, labels, "ni_"*basename)
+trajectories_ni, trajectories_i = main(config, vertices, shifted_vertices, opt, labels, "ni_"*basename)
 t_end_main = time()
 println("\n\n\t\tElapsed time main: ", t_end_main - t_start_main, " seconds\n\n")
 
@@ -203,23 +203,19 @@ println("\n\n\t\tElapsed time main: ", t_end_main - t_start_main, " seconds\n\n"
 padded_trajectories_ni, min_length_ni, max_length_ni = pad_log_data(trajectories_ni)
 padded_trajectories_i, min_length_i, max_length_i = pad_log_data(trajectories_i)
 # log padded data
-save_logdata_to_csv(padded_trajectories_ni, max_length_ni, labels, logs_dir, "ni_"*basename)
+save_logdata_to_csv(padded_trajectories_ni, opt, max_length_ni, labels, logs_dir, "ni_"*basename)
 save_logdata_to_csv(padded_trajectories_i, max_length_i, labels, logs_dir, "i_"*basename)
 
 # ---------------------------------------------------------------------------------
 # CREATE AND SAVE PLOTS
-# cutoff trajectories for plotting
+# cutoff trajectories at the same iteration (shortest run determines the iteration), for plotting
 cutoff_trajectories_ni, cutoff_time_ni = cutoff_log_shortest_time(padded_trajectories_ni)
 cutoff_trajectories_i, cutoff_time_i = cutoff_log_shortest_time(padded_trajectories_i)
-
-# ---------------------------------------------------------------------------------
-# PLOTS
 # Generate plots (do not pass `filename` argument, so .png is not automatically saved)
 # fig_ni = plot_trajectories(trajectories_ni, labels, yscalelog=true, xscalelog=true) # plotting function from FrankWolfe.jl package
 # fig_i = plot_trajectories(trajectories_i, labels, yscalelog=true, xscalelog=true) # plotting function from FrankWolfe.jl package
 fig_ni = plot_time_only(config, cutoff_trajectories_ni, labels, yscalelog=true, xscalelog=true) # plotting function that only prints time and is customized
 fig_i  = plot_time_only(config, cutoff_trajectories_i, labels, yscalelog=true, xscalelog=true) # plotting function that only prints time and is customized
-
 # Decide filename
 fig_ni_filename = plots_dir*"/plot_ni_$basename"
 fig_i_filename = plots_dir*"/plot_i_$basename"

@@ -41,3 +41,10 @@ Deprecated: example scripts might be outdated
 - `sinfo -N -o "%N %m"`: nodes and assigned RAM
 - `sinfo -N -l"`: info about nodes
 - `scontrol show node=<node_name>`: shows detailed attributes about a single node
+
+
+todo:
+- evita di fare "compute_primal_gap" quando esegui push_to_trajectories
+- logga primal, invece di primal_gap. questo vuol semplicemente che devi cambiare la label "pgap" con "prim" in entrambe le "save_logdata_to_csv"
+- prima di "plot_time_only", fai "compute_primal_gap" function 
+- testa con esempio grosso: k2n5000
