@@ -238,3 +238,99 @@ function load_fw_trajectories(path::String)
 
     return trajectories, variant_labels
 end
+
+
+# Push trajectory data into appropriate vector (intersecting or non-intersecting) based on the flag `ni_flag` 
+function push_to_trajectories!(
+    ni_flag::Bool,
+    trajectory_data_curr::Vector{Any},
+    trajectories_ni::Vector{Any}, # initially empty vector, will be filled with the ni_trajectory data
+    trajectories_i::Vector{Any}, # initially empty vector, will be filled with the i_trajectory data
+    primal::Float64
+    )
+    # `primal` ≠ 0.0: the polytopes don't intersect
+    if ni_flag
+        # Replace "Primal" with "Primal Gap" in the FW log, i.e., replace f(x) with f(x) - `primal` 
+        trajectory_data_pg = compute_primal_gap(trajectory_data_curr, primal)
+        push!(trajectories_ni, trajectory_data_pg)
+
+    # `primal` == 0.0: the polytopes do intersect
+    else    
+        push!(trajectories_i, trajectory_data_curr)
+    end
+end
+# (Multiple dispatch)
+function push_to_trajectories!(
+    ni_flag::Bool,
+    trajectory_data_curr::Vector{Any},
+    trajectories::Vector{Any},
+    primal::Float64
+    )
+
+    # `primal` ≠ 0.0: the polytopes don't intersect
+    if ni_flag
+        # Replace "Primal" with "Primal Gap" in the FW log, i.e., replace f(x) with f(x) - `primal` 
+        trajectory_data_pg = compute_primal_gap(trajectory_data_curr, primal)
+        push!(trajectories, trajectory_data_pg)
+    # `primal` == 0.0: the polytopes do intersect
+    else    
+        push!(trajectories, trajectory_data_curr)
+    end
+end
+
+# Save trajectory data to given .jld2 file
+function save_trajectories(
+    filename::String,
+    trajectories::Vector{Any}
+    )
+    
+    save(filename, Dict("trajectories" => trajectories))
+    println("Saving data to $filename")
+end
+# (Multiple dispatch) handle several trajectory data elements
+function save_trajectories(
+    filename::String,
+    trajectories...
+    )
+    
+    dict = Dict{String, Vector{Any}}()
+    for td in trajectories
+        dict[@var_name(td)] = td
+    end
+    save(filename, dict)
+    println("Saving data to $filename with multiple trajectory data")
+end
+
+# Load data from .jld2 file
+function load_trajectories(filename::String)
+    
+    # Load the file
+    f = load(filename) 
+    # Extract the keys and values from the loaded dictionary
+    trajectory_keys = keys(f)
+    trajectory_values = [f[k] for k in trajectory_keys]
+    
+    println("Loaded data from $filename with keys: $keys")
+    
+    return trajectory_values
+end
+
+function compute_primal_gap(trajectories_curr::Vector{Any}, opt::Float64)
+    trajectories_curr_pg = deepcopy(trajectories_curr)
+    # Iterate over each tuple within the current block
+    for i in 1:length(trajectories_curr_pg)
+        # for FW algorithms:            iter, primal, dual,           dgap, time
+        # for Alternating projections:  iter, infeas, partial infeas, dgap, time
+        iter, primal, dual, dgap, time = trajectories_curr_pg[i]    
+        # Compute primal gap
+        pgap = primal - opt
+        # Replace current tuple with a new one including the primal gap instead of the primal value
+        trajectories_curr_pg[i] = (iter, pgap, dual, dgap, time)
+    end
+    neg_idx = findall(<(0.0), [t[2] for t in trajectories_curr])
+    lni = length(neg_idx)
+    if lni > 0
+        error("There are $(lni) negative values when computing the primal gap. Check `plotting_utils.jl`")
+    end
+    return trajectories_curr_pg
+end

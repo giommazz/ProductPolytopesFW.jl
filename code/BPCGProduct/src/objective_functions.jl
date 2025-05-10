@@ -9,7 +9,7 @@ Function to compute form 1 of the objective function
 f(x)  =     1/(2k) ∑_{1 ≤ i < j ≤ k} ‖xⁱ - xʲ‖           [form 1]
       =     1/(2k) [ (k-1) ∑ᵢ₌₁ᵏ‖xⁱ‖²  -  2 ∑_{1 ≤ i < j ≤ k} ⟨xⁱ, xʲ⟩ ]       [form 2.a]
       =     1/(2k) k∑ᵢ₌₁ᵏ‖xⁱ‖² - ‖∑_{1 ≤ i < j ≤ k} xⁱ‖²                    [form 2.b]
-      =     1/(2k)<x, Mₖ x>, where Mₖ = kI - 𝟏𝟏ᵀ, i.e., a (kn X kn) matrix with (k-1) on the diagonal and -1 elsewhere           [form 3]
+      =     1/(2k)<x, Mₖ x>, where Mₖ = (kI - 𝟏𝟏ᵀ), i.e., a (kn X kn) matrix with (k-1) on the diagonal and -1 elsewhere           [form 3]
 
 
 ASYMPTOTIC COMPLEXITY OF THE FORMS
@@ -133,7 +133,6 @@ function convex_feasibility_gradient_v2!(storage::FrankWolfe.BlockVector, x::Fra
         end
     end
 end
-
 
 # function used to generate a random FrankWolfe.BlockVector, to test convex_feasibility_objective variants
 function random_blockvector(k::Integer, n::Integer; rng = Random.default_rng())
