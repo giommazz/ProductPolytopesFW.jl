@@ -3,6 +3,7 @@
 # or from linux terminal with: `julia --project=. examples/compute_intersection_custom_full.jl > test.log 2>&1`
 using BPCGProduct
 using FrankWolfe
+using Plots
 
 function main(config::Config, path_to_results, vertices, shifted_vertices, primal, labels, basename)
 
