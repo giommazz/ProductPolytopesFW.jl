@@ -20,7 +20,7 @@ function plot_time_only(
     labels::Vector{String};
     xscalelog::Bool = true,   # Default to true for log scale on x-axis
     yscalelog::Bool = true,   # Default to true for log scale on y-axis
-    legend_position = :topright,
+    legend_position = :bottomleft,
     lstyle = fill(:solid, length(trajectories)),
     line_width = 1.3,
     primal_offset = 1e-8,

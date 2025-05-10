@@ -3,14 +3,11 @@
 # or from linux terminal with: `julia --project=. examples/compute_intersection_custom_full.jl > test.log 2>&1`
 using BPCGProduct
 using FrankWolfe
-using Plots
 
 function main(config::Config, path_to_results, vertices, shifted_vertices, primal, labels, basename)
 
     # Retrieve nonintersecting and intersecting LMOs from previously generated instances
     lmo_list = create_lmos(config, [vertices, shifted_vertices])
-
-
 
     # Will contain data about diafferent FW runs, for non-intersecting and intersecting polytopes
     trajectories_ni, trajectories_i = [], []

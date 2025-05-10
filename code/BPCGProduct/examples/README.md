@@ -41,8 +41,3 @@ Deprecated: example scripts might be outdated
 - `sinfo -N -o "%N %m"`: nodes and assigned RAM
 - `sinfo -N -l"`: info about nodes
 - `scontrol show node=<node_name>`: shows detailed attributes about a single node
-
-
-todo:
-- testa compute_intersection_...jl con k2n5000
-- testa load_fw_trajectories

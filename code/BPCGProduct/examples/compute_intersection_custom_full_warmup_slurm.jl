@@ -6,7 +6,6 @@
 #   the package `BPCGProduct` has already been precompiled and the plots obtained by `main` don't show initial arbitrary overhead
 using BPCGProduct
 using FrankWolfe
-using Plots
 
 # ---------------------------------------------------------------------------------
 # MAIN FUNCTIONS

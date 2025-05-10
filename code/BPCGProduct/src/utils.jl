@@ -252,6 +252,8 @@ function load_fw_trajectories(path::String)
 
     # read .csv file
     df = CSV.read(path, DataFrame)
+    # extract column names
+    cols = names(df)
 
     # determine n. of FW variants that were executed (columns are :iter,:opt, then 4×n_variants columns)
     ncols = ncol(df)
@@ -261,15 +263,11 @@ function load_fw_trajectories(path::String)
     # extract the (constant) opt value from the second column of row 1
     opt = Float64(df[1, cols[2]])
 
-
     # pre-allocate the output: one vector per variant
     trajectories = Vector{Vector{Any}}(undef, n_variants)
     for i in 1:n_variants
         trajectories[i] = Vector{Any}(undef, nrow(df))
     end
-
-    # extract column names
-    cols = names(df)
 
     # define allowed tokens
     FW_TOKENS = ["AP", "BPFW", "AFW", "FW", "BC", "C", "F"]
@@ -284,12 +282,17 @@ function load_fw_trajectories(path::String)
     variant_labels = String[]
     # for each FW variant (each group of 4 columns in the .csv logfile)...
     for v in 1:n_variants
-        # a) pick header name for this variant's _prim column,b ) convert to plain string, c) split on "_" to isolate block name (e.g. "CBCFW")
-        base_name = split(String(cols[1 + (v-1)*4 + 1]), "_")[1]  # e.g. "CBCFW"
-        # find all occurrences of tokens in that block name, yielding ["C","BC","FW"]
-        parts = [m.match for m in eachmatch(token_re, base_name)]
-        # join the parts with "-" to get "C-BC-FW", then append to the labels array
-        push!(variant_labels, join(parts, "-")) # e.g. "C-BC-FW"
+        # a) pick header name for this variant's _prim column
+        # b) convert to plain string
+        # c) split on "_" to isolate block name (e.g. "CBCFW")
+        # after iter,opt the first "prim" of current FW variant sits at index = 2 + (v-1)*4 + 1
+        prim_header = String(cols[2 + (v-1)*4 + 1])         # e.g. "CBCFW_prim"
+        block_name  = split(prim_header, "_")[1]    # e.g. "CBCFW"
+
+        # d) find all occurrences of tokens in that block name, yielding ["C","BC","FW"]
+        parts       = [m.match for m in eachmatch(token_re, block_name)]
+        # e) join the parts with "-" to get "C-BC-FW", then append to the labels array
+        push!(variant_labels, join(parts, "-"))     # yields "C-BC-FW", etc.
     end
 
     # row indices
