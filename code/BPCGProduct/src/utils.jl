@@ -1,5 +1,21 @@
 # `utils.jl`
 
+
+"""
+    ensure_dir(path::AbstractString) -> String
+
+Make sure `path` refers to an existing directory.  
+If it already exists, do nothing; otherwise, create it (and any missing parents).
+
+Returns the (possibly newly created) `path`.
+"""
+function ensure_dir(path::AbstractString)
+    # If `path` does not already exist as a directory, create it (and all parents)
+    isdir(path) || mkpath(path)    # mkpath won’t error if it already exists :contentReference[oaicite:0]{index=0}
+    return path
+end
+
+
 # Generate all unique combinations of length k and convert to a list
 function unique_combinations(config::Config, list::Vector{T}) where T
     return collect(combinations(list, config.k))

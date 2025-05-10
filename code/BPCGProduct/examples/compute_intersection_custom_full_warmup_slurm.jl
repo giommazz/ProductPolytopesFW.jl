@@ -166,9 +166,11 @@ println()
 # ---------------------------------------------------------------------------------
 # PARAMETERS
 results_dir = "examples/results_linesearch_afw" # "results_shortstep", 
-times_dir = results_dir*"/times"
-logs_dir = results_dir*"/iter_logs"
-plots_dir = results_dir*"/plots"
+times_dir = ensure_dir(results_dir*"/times")
+logs_dir = ensure_dir(results_dir*"/iter_logs")
+plots_dir = ensure_dir(results_dir*"/plots")
+
+
 # Labels for the plots
 labels = ["C-BC-FW", "F-BC-FW", "F-BC-AFW", "F-FW", "F-AFW"] # ["C-BC-FW", "C-BC-AFW", "C-BC-BPFW", "F-BC-FW", "F-BC-AFW", "F-BC-BPFW", "F-FW", "F-AFW", "F-BPFW", "AP"]
 

@@ -34,7 +34,7 @@ module BPCGProduct
     # From `product_algorithms_algorithms.jl`
     export run_BlockCoordinateFW, run_FullFW, run_AlternatingProjections, AwayStep
     # From `utils.jl`
-    export unique_combinations, generate_rand_float_vector, extract_n_k_from_filename, base_name, 
+    export ensure_dir, unique_combinations, generate_rand_float_vector, extract_n_k_from_filename, base_name, 
         approxequal, log_times, pad_log_data, save_logdata_to_csv, load_fw_trajectories,
         push_to_trajectories!, save_trajectories, load_trajectories, compute_primal_gap
     # From `polytopes.jl`
