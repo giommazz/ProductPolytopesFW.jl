@@ -106,7 +106,7 @@ function save_logdata_to_csv(
     labels_logs = [replace(l, "-" => "") for l in labels]
     n_variants = length(padded_trajectories)
 
-    # Prepare empty DataFrame. Labels: 'iter' + for each FW variant, 4 columns 'FWVar_pgap', 'FWVar_dual', 'FWVar_dgap', 'FWVar_time'
+    # Prepare empty DataFrame. Labels: 'iter' + for each FW variant, 4 columns 'FWVar_prim', 'FWVar_dual', 'FWVar_dgap', 'FWVar_time'
     df = DataFrame()
     
     # Create or initialize columns named `:iter` and `:opt` in the DataFrame
@@ -118,9 +118,9 @@ function save_logdata_to_csv(
 
     # For every label in `labels_logs`, create 4 new columns
     for l in labels_logs
-        # `Symbol(l * "_pgap")` concatenates `l` with "_pgap" and converts the result into a Symbol, which is then used as column name
+        # `Symbol(l * "_prim")` concatenates `l` with "_prim" and converts the result into a Symbol, which is then used as column name
         # `Vector{T}()` initializes an empty vector with element type T for that column
-        df[!, Symbol(l * "_pgap")] = Vector{Float64}()
+        df[!, Symbol(l * "_prim")] = Vector{Float64}()
         df[!, Symbol(l * "_dual")] = Vector{Float64}()
         df[!, Symbol(l * "_dgap")] = Vector{Float64}()
         df[!, Symbol(l * "_time")] = Vector{Float64}()
@@ -134,19 +134,19 @@ function save_logdata_to_csv(
         row_dict[:iter] = iter
         row_dict[:opt ] = opt     # same optimal value every row
 
-        # For each iteration, extract 4-tuple from each FW variant: ignore 1ˢᵗ element (iter) and retrieve (pgap, dual, dgap, time)
+        # For each iteration, extract 4-tuple from each FW variant: ignore 1ˢᵗ element (iter) and retrieve (prim, dual, dgap, time)
         for fw_variant_i in 1:n_variants
-            # Retrieve 5-tuple (iter, pgap, dual, dgap, time)
+            # Retrieve 5-tuple (iter, prim, dual, dgap, time)
             tup = padded_trajectories[fw_variant_i][iter]
             fw_variant_baselabel = labels_logs[fw_variant_i]
             # Build keys for each of the four columns
-            key_pgap = Symbol(fw_variant_baselabel * "_pgap")
+            key_prim = Symbol(fw_variant_baselabel * "_prim")
             key_dual = Symbol(fw_variant_baselabel * "_dual")
             key_dgap = Symbol(fw_variant_baselabel * "_dgap")
             key_time = Symbol(fw_variant_baselabel * "_time")
             
             # Assign the corresponding tuple elements to the proper keys in the row dictionary.
-            row_dict[key_pgap] = tup[2]
+            row_dict[key_prim] = tup[2]
             row_dict[key_dual] = tup[3]
             row_dict[key_dgap] = tup[4]
             row_dict[key_time] = tup[5]
@@ -180,7 +180,7 @@ function save_logdata_to_csv(
     labels_logs = [replace(l, "-" => "") for l in labels]
     n_variants = length(padded_trajectories)
 
-    # Prepare empty DataFrame. Labels: 'iter' + for each FW variant, 4 columns 'FWVar_pgap', 'FWVar_dual', 'FWVar_dgap', 'FWVar_time'
+    # Prepare empty DataFrame. Labels: 'iter' + for each FW variant, 4 columns 'FWVar_prim', 'FWVar_dual', 'FWVar_dgap', 'FWVar_time'
     df = DataFrame()
     
     # Create or initialize column named `:iter` in the DataFrame
@@ -191,9 +191,9 @@ function save_logdata_to_csv(
 
     # For every label in `labels_logs`, create 4 new columns
     for l in labels_logs
-        # `Symbol(l * "_pgap")` concatenates `l` with "_pgap" and converts the result into a Symbol, which is then used as column name
+        # `Symbol(l * "_prim")` concatenates `l` with "_prim" and converts the result into a Symbol, which is then used as column name
         # `Vector{T}()` initializes an empty vector with element type T for that column
-        df[!, Symbol(l * "_pgap")] = Vector{Float64}()
+        df[!, Symbol(l * "_prim")] = Vector{Float64}()
         df[!, Symbol(l * "_dual")] = Vector{Float64}()
         df[!, Symbol(l * "_dgap")] = Vector{Float64}()
         df[!, Symbol(l * "_time")] = Vector{Float64}()
@@ -206,19 +206,19 @@ function save_logdata_to_csv(
         row_dict = Dict{Symbol, Any}()
         row_dict[:iter] = iter
 
-        # For each iteration, extract 4-tuple from each FW variant: ignore 1ˢᵗ element (iter) and retrieve (pgap, dual, dgap, time)
+        # For each iteration, extract 4-tuple from each FW variant: ignore 1ˢᵗ element (iter) and retrieve (prim, dual, dgap, time)
         for fw_variant_i in 1:n_variants
-            # Retrieve 5-tuple (iter, pgap, dual, dgap, time)
+            # Retrieve 5-tuple (iter, prim, dual, dgap, time)
             tup = padded_trajectories[fw_variant_i][iter]
             fw_variant_baselabel = labels_logs[fw_variant_i]
             # Build keys for each of the four columns
-            key_pgap = Symbol(fw_variant_baselabel * "_pgap")
+            key_prim = Symbol(fw_variant_baselabel * "_prim")
             key_dual = Symbol(fw_variant_baselabel * "_dual")
             key_dgap = Symbol(fw_variant_baselabel * "_dgap")
             key_time = Symbol(fw_variant_baselabel * "_time")
             
             # Assign the corresponding tuple elements to the proper keys in the row dictionary.
-            row_dict[key_pgap] = tup[2]
+            row_dict[key_prim] = tup[2]
             row_dict[key_dual] = tup[3]
             row_dict[key_dgap] = tup[4]
             row_dict[key_time] = tup[5]
@@ -239,8 +239,8 @@ end
 """
     load_fw_trajectories(path::String; T=Float64)
 
-Input: .csv log at `path` of the form "iter,FW1_pgap,FW1_dual,FW1_dgap,FW1_time,FW2_pgap, ..."
-Output: Vector{Vector{NTuple{5, T}}} of trajectories such that each NTuple is (iter, pgap, dual, dgap, time).
+Input: .csv log at `path` of the form "iter,FW1_prim,FW1_dual,FW1_dgap,FW1_time,FW2_prim, ..."
+Output: Vector{Vector{NTuple{5, T}}} of trajectories such that each NTuple is (iter, prim, dual, dgap, time).
 """
 function load_fw_trajectories(path::String)
     
@@ -252,11 +252,15 @@ function load_fw_trajectories(path::String)
 
     # read .csv file
     df = CSV.read(path, DataFrame)
-    
-    # determine n. of FW variants that were executed (first column is :iter)
+
+    # determine n. of FW variants that were executed (columns are :iter,:opt, then 4×n_variants columns)
     ncols = ncol(df)
-    @assert ncols ≥ 5 "Expected ≥5 columns (iter + at least one variant's 4 columns)"
-    n_variants = Int((ncols - 1) ÷ 4)
+    @assert ncols ≥ 6 "Expected ≥6 columns (iter, opt, plus at least one variant's 4 columns)"
+    n_variants = Int((ncols - 2) ÷ 4)
+
+    # extract the (constant) opt value from the second column of row 1
+    opt = Float64(df[1, cols[2]])
+
 
     # pre-allocate the output: one vector per variant
     trajectories = Vector{Vector{Any}}(undef, n_variants)
@@ -280,7 +284,7 @@ function load_fw_trajectories(path::String)
     variant_labels = String[]
     # for each FW variant (each group of 4 columns in the .csv logfile)...
     for v in 1:n_variants
-        # a) pick header name for this variant's _pgap column,b ) convert to plain string, c) split on "_" to isolate block name (e.g. "CBCFW")
+        # a) pick header name for this variant's _prim column,b ) convert to plain string, c) split on "_" to isolate block name (e.g. "CBCFW")
         base_name = split(String(cols[1 + (v-1)*4 + 1]), "_")[1]  # e.g. "CBCFW"
         # find all occurrences of tokens in that block name, yielding ["C","BC","FW"]
         parts = [m.match for m in eachmatch(token_re, base_name)]
@@ -290,29 +294,32 @@ function load_fw_trajectories(path::String)
 
     # row indices
     for row_idx in 1:nrow(df)
-        # get only columns ≠ :iter
+        
+        # read iteration number
         iter = Int64(df[row_idx, cols[1]])
+        
         # for each variant, grab its 4 fields
         for FWvar_index in 1:n_variants
-            # column indices: compute "starting column -1" for each each variant...
-            base = 1 + (FWvar_index - 1)*4
+            # skip the first two columns (iter,opt), then block of 4 per FW variant
+            base = 2 + (FWvar_index - 1)*4
+  
             # ...then retrieve tuple indices for each variant and each row
-            pgap_col = cols[base+1]
+            prim_col = cols[base+1]
             dual_col = cols[base+2]
             dgap_col = cols[base+3]
             time_col = cols[base+4]
 
             # now you have row indices and column indices, convert values from String to Number
-            pgap = Float64(df[row_idx, pgap_col])
+            prim = Float64(df[row_idx, prim_col])
             dual = Float64(df[row_idx, dual_col])
             dgap = Float64(df[row_idx, dgap_col])
             time = Float64(df[row_idx, time_col])
 
-            trajectories[FWvar_index][row_idx] = (iter, pgap, dual, dgap, time)
+            trajectories[FWvar_index][row_idx] = (iter, prim, dual, dgap, time)
         end
     end
 
-    return trajectories, variant_labels
+    return trajectories, variant_labels, opt
 end
 
 
@@ -326,10 +333,7 @@ function push_to_trajectories!(
     )
     # `primal` ≠ 0.0: the polytopes don't intersect
     if ni_flag
-        # Replace "Primal" with "Primal Gap" in the FW log, i.e., replace f(x) with f(x) - `primal` 
-        trajectory_data_pg = compute_primal_gap(trajectory_data_curr, primal)
-        push!(trajectories_ni, trajectory_data_pg)
-
+        push!(trajectories_ni, trajectory_data_curr)
     # `primal` == 0.0: the polytopes do intersect
     else    
         push!(trajectories_i, trajectory_data_curr)
@@ -342,11 +346,8 @@ function push_to_trajectories!(
     trajectories::Vector{Any},
     primal::Float64
     )
-
     # `primal` ≠ 0.0: the polytopes don't intersect
     if ni_flag
-        # Replace "Primal" with "Primal Gap" in the FW log, i.e., replace f(x) with f(x) - `primal` 
-        trajectory_data_pg = compute_primal_gap(trajectory_data_curr, primal)
         push!(trajectories, trajectory_data_pg)
     # `primal` == 0.0: the polytopes do intersect
     else    
@@ -400,13 +401,14 @@ function compute_primal_gap(trajectories_curr::Vector{Any}, opt::Float64)
         iter, primal, dual, dgap, time = trajectories_curr_pg[i]    
         # Compute primal gap
         pgap = primal - opt
+        
+        # Since ϵ-accuracy on optimal solution (1e-08) and accuracy on "normal" runs (1e-07) are close, it could be that the pgap is negative
+        #   this is just a numerical problem, so negative gaps are clamped to a small positive value for plotting
+        pgap = pgap > 0 ? pgap : 1e-09   # clamp negatives / zeros
+        
         # Replace current tuple with a new one including the primal gap instead of the primal value
         trajectories_curr_pg[i] = (iter, pgap, dual, dgap, time)
     end
-    neg_idx = findall(<(0.0), [t[2] for t in trajectories_curr])
-    lni = length(neg_idx)
-    if lni > 0
-        error("There are $(lni) negative values when computing the primal gap. Check `plotting_utils.jl`")
-    end
+    
     return trajectories_curr_pg
 end

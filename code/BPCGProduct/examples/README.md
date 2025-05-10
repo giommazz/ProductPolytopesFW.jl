@@ -44,7 +44,5 @@ Deprecated: example scripts might be outdated
 
 
 todo:
-- evita di fare "compute_primal_gap" quando esegui push_to_trajectories
-- logga primal, invece di primal_gap. questo vuol semplicemente che devi cambiare la label "pgap" con "prim" in entrambe le "save_logdata_to_csv"
-- prima di "plot_time_only", fai "compute_primal_gap" function 
-- testa con esempio grosso: k2n5000
+- testa compute_intersection_...jl con k2n5000
+- testa load_fw_trajectories

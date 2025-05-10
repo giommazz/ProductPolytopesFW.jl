@@ -11,7 +11,7 @@ basename = "ni_k3_n101_s15672_cvxho_anc_t20250423170234"
 logname = basename*".csv"
 
 # retrieve logs
-trajis_ni, variant_labels = load_fw_trajectories("examples/results_linesearch_afw/logs/$logname")
+trajis_ni, variant_labels, opt = load_fw_trajectories("examples/results_linesearch_afw/logs/$logname")
 # find `cutoff_time` of the FW variant that ends first, then cutoff all iters of all other variants happening after `cutoff_time`
 cutoff_trajectories_ni, cutoff_time_ni = cutoff_log_shortest_time(trajis_ni)
 # plot only primal and FW gap over time

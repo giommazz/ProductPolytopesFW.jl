@@ -107,9 +107,6 @@ function main(config::Config, vertices, shifted_vertices, opt, labels, basename)
         # _, _, _, _, td_ap = run_AlternatingProjections(config, prod_lmo, true)    
         # # `FrankWolfe.alternating_projections` computes ||x-y|| rather than 1/2 ||x-y||
         # push_to_trajectories!(ni_flag, td_ap, trajectories_ni, trajectories_i, 2*opt)
-
-        # Save trajectories
-        # save_trajectories("examples/traj_$basename.jld2", trajectories_ni, trajectories_i)
     end
 
     return trajectories_ni, trajectories_i
@@ -182,8 +179,6 @@ println("********************************************************")
 println("MAIN: Generating instances and solving them to optimum")
 println("********************************************************")
 vertices, shifted_vertices, opt, fw_gap = generate_polytopes(config)
-# To mask up numerical instabilities of Plots when computing the primal gap, subtract something from `opt`
-opt = opt - 1e-06
 basename = generate_filename(config)
 
 # ---------------------------------------------------------------------------------
@@ -209,12 +204,17 @@ save_logdata_to_csv(padded_trajectories_i, max_length_i, labels, logs_dir, "i_"*
 # ---------------------------------------------------------------------------------
 # CREATE AND SAVE PLOTS
 # cutoff trajectories at the same iteration (shortest run determines the iteration), for plotting
-cutoff_trajectories_ni, cutoff_time_ni = cutoff_log_shortest_time(padded_trajectories_ni)
-cutoff_trajectories_i, cutoff_time_i = cutoff_log_shortest_time(padded_trajectories_i)
+cutoff_trajectories_ni, _ = cutoff_log_shortest_time(padded_trajectories_ni)
+cutoff_trajectories_i, _ = cutoff_log_shortest_time(padded_trajectories_i)
+
+# compute primal gap from primal, for all nonintersecting instances
+cutoff_trajectories_ni_pgap = [compute_primal_gap(t, opt) for t in cutoff_trajectories_ni]
+
+
 # Generate plots (do not pass `filename` argument, so .png is not automatically saved)
 # fig_ni = plot_trajectories(trajectories_ni, labels, yscalelog=true, xscalelog=true) # plotting function from FrankWolfe.jl package
 # fig_i = plot_trajectories(trajectories_i, labels, yscalelog=true, xscalelog=true) # plotting function from FrankWolfe.jl package
-fig_ni = plot_time_only(config, cutoff_trajectories_ni, labels, yscalelog=true, xscalelog=true) # plotting function that only prints time and is customized
+fig_ni = plot_time_only(config, cutoff_trajectories_ni_pgap, labels, yscalelog=true, xscalelog=true) # plotting function that only prints time and is customized
 fig_i  = plot_time_only(config, cutoff_trajectories_i, labels, yscalelog=true, xscalelog=true) # plotting function that only prints time and is customized
 # Decide filename
 fig_ni_filename = plots_dir*"/plot_ni_$basename"
