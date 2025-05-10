@@ -11,7 +11,7 @@ n_points: 0
 # epsilon-optimality threshold
 target_tolerance: 1e-07
 # epsilon-optimality threshold for finding optimal solution
-target_tolerance_opt: 1e-08
+target_tolerance_opt: 1e-09
 # Number of FW iterations
 max_iterations: 1000
 # Number of FW iterations to compute optimal solution

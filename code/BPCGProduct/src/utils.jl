@@ -420,14 +420,32 @@ function compute_primal_gap(trajectories_curr::Vector{Any}, opt::Float64)
         iter, primal, dual, dgap, time = trajectories_curr_pg[i]    
         # Compute primal gap
         pgap = primal - opt
-        
-        # Since ϵ-accuracy on optimal solution (1e-08) and accuracy on "normal" runs (1e-07) are close, it could be that the pgap is negative
-        #   this is just a numerical problem, so negative gaps are clamped to a small positive value for plotting
-        pgap = pgap > 0 ? pgap : 1e-09   # clamp negatives / zeros
-        
         # Replace current tuple with a new one including the primal gap instead of the primal value
         trajectories_curr_pg[i] = (iter, pgap, dual, dgap, time)
     end
     
     return trajectories_curr_pg
+end
+
+"""
+    best_seen_solution(trajectories, opt)
+
+    Input: `trajectories::Vector{Vector{Tuple{Int,T,T,T,T}}}`, with each tuple being (iter, primal, dual, dgap, time)
+    Scan *all* `primal` entries and return min primal value seen
+"""
+function best_seen_solution(trajectories::Vector{Vector{Any}}, opt::Float64)
+    
+    # Initialize with +∞ so any real primal value will be smaller
+    best = typemax(Float64)
+
+    # Loop over every trajectory and every tuple within it
+    @inbounds for traj in trajectories, t in traj
+        _, primal, _, _, _ = t
+        # Keep the minimum primal seen
+        if primal < best
+            best = primal
+        end
+    end
+
+    return best < opt ? best : opt
 end

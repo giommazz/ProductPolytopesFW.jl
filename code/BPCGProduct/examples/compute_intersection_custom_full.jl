@@ -137,6 +137,9 @@ println("\n\n\t\tElapsed time main: ", t_end_main - t_start_main, " seconds\n\n"
 # pad data so that all FW runs have the same number of iterations/lines
 padded_trajectories_ni, min_length_ni, max_length_ni = pad_log_data(trajectories_ni)
 padded_trajectories_i, min_length_i, max_length_i = pad_log_data(trajectories_i)
+# sometimes, for numerical reasons, since eps-optimality tolerances for "optimal" FW runs and "normal" FW runs are similar, `opt` > `primal` 
+#       on some iterations, after the 8th decimal. `best_seen_solution` makes sure that, in such a case, `opt` is updated to the smallest value
+opt = best_seen_solution(padded_trajectories_ni, opt)
 # log padded data
 save_logdata_to_csv(padded_trajectories_ni, opt, max_length_ni, labels, logs_dir, "ni_"*basename)
 save_logdata_to_csv(padded_trajectories_i, max_length_i, labels, logs_dir, "i_"*basename)

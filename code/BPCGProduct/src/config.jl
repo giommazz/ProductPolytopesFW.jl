@@ -182,7 +182,7 @@ end
 
 function get_stepsize_strategy(stepsize_strategy::Int, L::T) where T
     if stepsize_strategy == 0
-        return FrankWolfe.Goldenratio(1e-9)         # simple line search
+        return FrankWolfe.Goldenratio(1e-09)         # simple line search
     elseif stepsize_strategy == 1
         return FrankWolfe.Shortstep(L)          # short step with given L
     else
