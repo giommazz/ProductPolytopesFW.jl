@@ -7,9 +7,10 @@
 """
 Function to compute form 1 of the objective function
 f(x)  =     1/(2k) ∑_{1 ≤ i < j ≤ k} ‖xⁱ - xʲ‖           [form 1]
-      =     1/(2k) [ (k-1) ∑ᵢ₌₁ᵏ‖xⁱ‖²  -  2 ∑_{1 ≤ i < j ≤ k} ⟨xⁱ, xʲ⟩ ]       [form 2.a]
-      =     1/(2k) k∑ᵢ₌₁ᵏ‖xⁱ‖² - ‖∑_{1 ≤ i < j ≤ k} xⁱ‖²                    [form 2.b]
-      =     1/(2k)<x, Mₖ x>, where Mₖ = (kI - 𝟏𝟏ᵀ), i.e., a (kn X kn) matrix with (k-1) on the diagonal and -1 elsewhere           [form 3]
+      =     1/(2k) [ (k-1) ∑ᵢ₌₁ᵏ‖xⁱ‖²  -  2 ∑_{1 ≤ i < j ≤ k} ⟨xⁱ, xʲ⟩ ]        [form 2.a]
+      =     1/(2k) k∑ᵢ₌₁ᵏ‖xⁱ‖² - ‖∑_{1 ≤ i < j ≤ k} xⁱ‖²                       [form 2.b]
+      =     1/(2k)<Mₖ x, x>, where Mₖ = (kIₖ - 𝟙ₖ 𝟙ₖᵀ)⊗ Iₙ, i.e., a (kn X kn) block matrix with 
+            (k-1)Iₖ on the diagonal blocks and -Iₖ on the other blocks          [form 3]
 
 
 ASYMPTOTIC COMPLEXITY OF THE FORMS
@@ -18,7 +19,7 @@ ASYMPTOTIC COMPLEXITY OF THE FORMS
         dot products in ℝⁿ
 - form 2.b has complexity O(kn) because it only handles k blocks, each in ℝⁿ
 - form 3 also has complexity O(kn) when we don't explicitly materialize the whole matrix. This can be achieved considering that
-        Mₖx = kx - (𝟏ᵀx)𝟏 so we only need a linear number of calls
+        Mₖx = kx - (𝟙ₖᵀx)𝟙ₖ so we only need a linear number of calls
 
 MEMORY OF THE FORMS (EXTRA RAM NEEDED BEYOND THE k BLOCKS)
 - form 1: none

@@ -42,8 +42,9 @@ Warning! Example scripts might be outdated
 - `sinfo -N -o "%N %m"`: nodes and assigned RAM
 - `sinfo -N -l"`: info about nodes
 - `scontrol show node=<node_name>`: shows detailed attributes about a single node
+- `scancel -u <username>`: cancel all of username jobs
 
-## Updates scripts
+## Updated scripts
 - `compute_inteserction_custom_full_warmup_slurm.jl`
 - `compute_inteserction_custom_full.jl`
 - `slurm_experiments.sh`
