@@ -73,7 +73,21 @@ export OPENBLAS_NUM_THREADS=1   # force BLAS to single‑threaded mode
 
 echo "Running $script with config $config"
 # Extract parameters from config file name and create log file name
-config_basename=$(julia --project=. -e 'using YAML, Dates; config = YAML.load_file(ARGS[1]); timestamp = Dates.format(now(), "yyyymmdd_HHMMSS"); oracle = config["cvxhflag"] ? "cvxho" : "lmo"; anc = config["anc_flag"] ? "anc" : "vert"; print("k", config["k"], "_n", config["n"], "_", oracle, "_", anc, "_t", timestamp)' "$config")
+config_basename=$(julia --project=. -e '
+    using YAML, Dates;
+    config = YAML.load_file(ARGS[1]);
+    timestamp  = Dates.format(now(), "yyyymmdd_HHMMSS");
+    oracle = config["cvxhflag"] ? "cvxho" : "lmo";
+    anc    = config["anc_flag"] ? "anc"   : "vert";
+    println("k",  config["k"],
+            "_n", config["n"],
+            "_i", config["max_iterations"],
+            "_s", config["seed"],
+            "_",  oracle,
+            "_",  anc,
+            "_t", timestamp)
+' "$config")
+
 log_file="$logs_dir/${config_basename}_log.txt"
 
 # Run the Julia script with the instance name and config file as parameters and redirect output to log file
