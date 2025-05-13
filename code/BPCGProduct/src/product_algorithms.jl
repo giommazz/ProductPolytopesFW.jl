@@ -195,7 +195,7 @@ function run_BlockCoordinateFW(
     )
 
     # L-smoothness constant
-    L = 2
+    L = 1
     # DEBUG: notice that I couldn't use config.k because I sometimes call the function on two sets only
     x0 = find_starting_point(config, prod_lmo)
     n_blocks = length(prod_lmo.lmos) 
@@ -244,7 +244,7 @@ function run_FullFW(
     )
 
     # L-smoothness constant
-    L = 2
+    L = 1
 
     x0 = find_starting_point(config, prod_lmo)
 
