@@ -219,3 +219,9 @@ function load_fw_trajectories(path::String; wanted_fw_variants::Vector{String}=S
 
     return trajectories, retrieved_fw_labels, opt
 end
+
+# given a log string, retrieves k and n
+function get_k_n_from_logstring(logname::String)
+    m = match(r"_k(\d+)_n(\d+)_", logname)
+    return parse.(Int, m.captures)
+end

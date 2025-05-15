@@ -42,6 +42,6 @@ module BPCGProduct
     # From `plot_utils.jl`
     export plot_trajectories
     # From `plotting_utils.jl`
-    export plot_time_only, cutoff_log_shortest_time, load_fw_trajectories
+    export plot_time_only, cutoff_log_shortest_time, load_fw_trajectories, get_k_n_from_logstring
 
 end # module BPCGProduct
