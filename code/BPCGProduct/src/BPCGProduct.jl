@@ -35,13 +35,13 @@ module BPCGProduct
     export run_BlockCoordinateFW, run_FullFW, run_AlternatingProjections, AwayStep
     # From `utils.jl`
     export ensure_dir, unique_combinations, generate_rand_float_vector, extract_n_k_from_filename, base_name, 
-        approxequal, log_times, pad_log_data, save_logdata_to_csv, load_fw_trajectories,
+        approxequal, log_times, pad_log_data, save_logdata_to_csv,
         push_to_trajectories!, save_trajectories, load_trajectories, compute_primal_gap, best_seen_solution
     # From `polytopes.jl`
     export generate_polytopes, compute_distance, save_polytopes, load_polytopes, generate_filename
     # From `plot_utils.jl`
     export plot_trajectories
     # From `plotting_utils.jl`
-    export plot_time_only, cutoff_log_shortest_time
+    export plot_time_only, cutoff_log_shortest_time, load_fw_trajectories
 
 end # module BPCGProduct

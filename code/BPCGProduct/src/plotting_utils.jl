@@ -120,3 +120,92 @@ function cutoff_log_shortest_time(trajectories::Vector{Vector{Any}})
     
     return cutoff_trajectories, cutoff_time
 end
+
+"""
+    load_fw_trajectories(path::String; T=Float64)
+
+Input: .csv log at `path` of the form "iter,FW1_prim,FW1_dual,FW1_dgap,FW1_time,FW2_prim, ..."
+Output: Vector{Vector{NTuple{5, T}}} of trajectories such that each NTuple is (iter, prim, dual, dgap, time).
+"""
+function load_fw_trajectories(path::String)
+    
+    # `splitext` returns (root, extension)
+    ext = splitext(path)[2]
+    if lowercase(ext) != ".csv"
+        throw(ArgumentError("`path` must end in \".csv\" but extension is \"$ext\""))
+    end
+
+    # read .csv file
+    df = CSV.read(path, DataFrame)
+    # extract column names
+    cols = names(df)
+
+    # determine n. of FW variants that were executed (columns are :iter,:opt, then 4×n_variants columns)
+    ncols = ncol(df)
+    @assert ncols ≥ 6 "Expected ≥6 columns (iter, opt, plus at least one variant's 4 columns)"
+    n_variants = Int((ncols - 2) ÷ 4)
+
+    # extract the (constant) opt value from the second column of row 1
+    opt = Float64(df[1, cols[2]])
+
+    # pre-allocate the output: one vector per variant
+    trajectories = Vector{Vector{Any}}(undef, n_variants)
+    for i in 1:n_variants
+        trajectories[i] = Vector{Any}(undef, nrow(df))
+    end
+
+    # define allowed tokens
+    FW_TOKENS = ["AP", "BPFW", "AFW", "FW", "BC", "C", "F"]
+    # sort tokens by descending length so that multi‑letter tokens (e.g. "BPFW") match before shorter ones ("FW")
+    sorted_tokens = sort(FW_TOKENS, by=length, rev=true)
+    # join the sorted tokens with "|" to build the alternation part of a regex pattern
+    token_pattern = join(sorted_tokens, "|")
+    # compile the final regex that will match any one of the tokens
+    token_re = Regex("($token_pattern)")
+
+    # prepare empty array of strings to hold the final human-readable labels
+    variant_labels = String[]
+    # for each FW variant (each group of 4 columns in the .csv logfile)...
+    for v in 1:n_variants
+        # a) pick header name for this variant's _prim column
+        # b) convert to plain string
+        # c) split on "_" to isolate block name (e.g. "CBCFW")
+        # after iter,opt the first "prim" of current FW variant sits at index = 2 + (v-1)*4 + 1
+        prim_header = String(cols[2 + (v-1)*4 + 1])         # e.g. "CBCFW_prim"
+        block_name  = split(prim_header, "_")[1]    # e.g. "CBCFW"
+
+        # d) find all occurrences of tokens in that block name, yielding ["C","BC","FW"]
+        parts       = [m.match for m in eachmatch(token_re, block_name)]
+        # e) join the parts with "-" to get "C-BC-FW", then append to the labels array
+        push!(variant_labels, join(parts, "-"))     # yields "C-BC-FW", etc.
+    end
+
+    # row indices
+    for row_idx in 1:nrow(df)
+        
+        # read iteration number
+        iter = Int64(df[row_idx, cols[1]])
+        
+        # for each variant, grab its 4 fields
+        for FWvar_index in 1:n_variants
+            # skip the first two columns (iter,opt), then block of 4 per FW variant
+            base = 2 + (FWvar_index - 1)*4
+  
+            # ...then retrieve tuple indices for each variant and each row
+            prim_col = cols[base+1]
+            dual_col = cols[base+2]
+            dgap_col = cols[base+3]
+            time_col = cols[base+4]
+
+            # now you have row indices and column indices, convert values from String to Number
+            prim = Float64(df[row_idx, prim_col])
+            dual = Float64(df[row_idx, dual_col])
+            dgap = Float64(df[row_idx, dgap_col])
+            time = Float64(df[row_idx, time_col])
+
+            trajectories[FWvar_index][row_idx] = (iter, prim, dual, dgap, time)
+        end
+    end
+
+    return trajectories, variant_labels, opt
+end
