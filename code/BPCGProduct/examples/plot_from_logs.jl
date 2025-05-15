@@ -14,14 +14,15 @@ config = Config("examples/config.yml")
 # ---------------------------------------------------------------------------------
 # SCRIPT PARAMETERS
 # ---------------------------------------------------------------------------------
-basename = "ni_k2_n501_i1000_s240389_cvxho_anc_t20250510_182815"
+basename = "ni_k2_n50_i1000_s240389_cvxho_anc_t20250515_133025"
 logname = basename*".csv"
 
 # ---------------------------------------------------------------------------------
 # RETRIEVE AND PROCESS LOGS
 # ---------------------------------------------------------------------------------
 # retrieve logs
-trajis_ni, labels, opt = load_fw_trajectories("examples/results_linesearch_afw/iter_logs/$logname")
+wanted = ["C-BC-FW", "F-BC-FW", "F-BC-AFW", "F-FW",]
+trajis_ni, labels, opt = load_fw_trajectories("examples/results_linesearch_afw/iter_logs/$logname")#, wanted_fw_variants=wanted)
 println(labels)
 # find `cutoff_time` of the FW variant that ends first, then cutoff all iters of all other variants happening after `cutoff_time`
 cutoff_trajectories_ni, cutoff_time_ni = cutoff_log_shortest_time(trajis_ni)

@@ -124,36 +124,27 @@ end
 """
     load_fw_trajectories(path::String; T=Float64)
 
-Input: .csv log at `path` of the form "iter,FW1_prim,FW1_dual,FW1_dgap,FW1_time,FW2_prim, ..."
+Input:
+    - .csv log at `path` of the form "iter,FW1_prim,FW1_dual,FW1_dgap,FW1_time,FW2_prim, ..."
+    - optional: a list of wanted labels, in case we only want to plot some of the logged FW variants
 Output: Vector{Vector{NTuple{5, T}}} of trajectories such that each NTuple is (iter, prim, dual, dgap, time).
 """
-function load_fw_trajectories(path::String)
+function load_fw_trajectories(path::String; wanted_fw_variants::Vector{String}=String[])
     
     # `splitext` returns (root, extension)
-    ext = splitext(path)[2]
-    if lowercase(ext) != ".csv"
-        throw(ArgumentError("`path` must end in \".csv\" but extension is \"$ext\""))
-    end
-
+    ext = lowercase(splitext(path)[2])
+    @assert ext == ".csv" "Expected a .csv file"
+    
     # read .csv file
     df = CSV.read(path, DataFrame)
     # extract column names
     cols = names(df)
-
     # determine n. of FW variants that were executed (columns are :iter,:opt, then 4×n_variants columns)
     ncols = ncol(df)
     @assert ncols ≥ 6 "Expected ≥6 columns (iter, opt, plus at least one variant's 4 columns)"
     n_variants = Int((ncols - 2) ÷ 4)
 
-    # extract the (constant) opt value from the second column of row 1
-    opt = Float64(df[1, cols[2]])
-
-    # pre-allocate the output: one vector per variant
-    trajectories = Vector{Vector{Any}}(undef, n_variants)
-    for i in 1:n_variants
-        trajectories[i] = Vector{Any}(undef, nrow(df))
-    end
-
+    
     # define allowed tokens
     FW_TOKENS = ["AP", "BPFW", "AFW", "FW", "BC", "C", "F"]
     # sort tokens by descending length so that multi‑letter tokens (e.g. "BPFW") match before shorter ones ("FW")
@@ -180,6 +171,27 @@ function load_fw_trajectories(path::String)
         push!(variant_labels, join(parts, "-"))     # yields "C-BC-FW", etc.
     end
 
+    # If user asked for a subset, filter indices + labels
+    if isempty(wanted_fw_variants)
+        wanted_idxs = 1:n_variants
+    else
+        # retrieve wanted FW labels from `variant_labels` created above
+        wanted_idxs = findall(lbl -> lbl in wanted_fw_variants, variant_labels)
+        # check that `idxs` is not empty 
+        @assert !isempty(wanted_idxs) "No matching FW variants: $(wanted_fw_variants)"
+    end
+    retrieved_fw_labels   = variant_labels[wanted_idxs]
+
+    # *****************************
+    # extract the (constant) opt value from the second column of row 1
+    opt = Float64(df[1, cols[2]])
+
+    # pre-allocate the output: one vector per variant
+    trajectories = Vector{Vector{Any}}(undef, length(retrieved_fw_labels))
+    for i in 1:length(retrieved_fw_labels)
+        trajectories[i] = Vector{Any}(undef, nrow(df))
+    end
+
     # row indices
     for row_idx in 1:nrow(df)
         
@@ -187,16 +199,14 @@ function load_fw_trajectories(path::String)
         iter = Int64(df[row_idx, cols[1]])
         
         # for each variant, grab its 4 fields
-        for FWvar_index in 1:n_variants
+        for FWvar_index in 1:length(retrieved_fw_labels)
             # skip the first two columns (iter,opt), then block of 4 per FW variant
             base = 2 + (FWvar_index - 1)*4
-  
             # ...then retrieve tuple indices for each variant and each row
             prim_col = cols[base+1]
             dual_col = cols[base+2]
             dgap_col = cols[base+3]
             time_col = cols[base+4]
-
             # now you have row indices and column indices, convert values from String to Number
             prim = Float64(df[row_idx, prim_col])
             dual = Float64(df[row_idx, dual_col])
@@ -207,5 +217,5 @@ function load_fw_trajectories(path::String)
         end
     end
 
-    return trajectories, variant_labels, opt
+    return trajectories, retrieved_fw_labels, opt
 end
