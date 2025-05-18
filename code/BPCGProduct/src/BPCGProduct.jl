@@ -26,7 +26,7 @@ module BPCGProduct
     include("plotting_utils.jl")
 
     # From `config.jl`
-    export Config, print_config, modify_config
+    export Config, print_config, modify_config, write_config
     # From `objective_functions.jl`
     export convex_feasibility_objective, convex_feasibility_gradient!
     # From `lmos.jl`

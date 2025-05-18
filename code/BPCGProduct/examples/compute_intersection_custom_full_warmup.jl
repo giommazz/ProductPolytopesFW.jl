@@ -1,4 +1,4 @@
-# `compute_intersection_custom_full_warmup_slurm.jl`
+# `compute_intersection_custom_full_warmup.jl`
 # Run either within the Julia REPL as include("/examples/compute_intersection_custom_full.jl")
 # or from linux terminal with: `julia --project=. examples/compute_intersection_custom_full.jl > test.log 2>&1`
 #

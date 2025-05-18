@@ -181,6 +181,7 @@ function print_config(config::Config)
 end
 
 function get_stepsize_strategy(stepsize_strategy::Int, L::T) where T
+    
     if stepsize_strategy == 0
         return FrankWolfe.Goldenratio(1e-09)         # simple line search
     elseif stepsize_strategy == 1
@@ -188,4 +189,25 @@ function get_stepsize_strategy(stepsize_strategy::Int, L::T) where T
     else
         error("Invalid stepsize strategy type")
     end
+end
+
+# turns Config objectinto dictionary that YAML.jl can serialise
+function todict(config::Config)
+    
+    config_dict = Dict{String,Any}()
+    # loop over keys
+    for field in fieldnames(Config)
+        config_dict[string(field)] = getfield(config, field)
+    end
+
+    return config_dict
+end
+    
+# Serialize `config` to YAML and store it at `config_filename`
+function write_config(config::Config, config_filename::AbstractString)
+    
+    # make sure the destination directory exists
+    mkpath(dirname(config_filename))
+    YAML.write_file(config_filename, todict(config))
+    return abspath(config_filename)
 end

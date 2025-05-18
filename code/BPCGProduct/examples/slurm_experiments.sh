@@ -10,10 +10,10 @@
 # *************************
 # Directives for the SLURM scheduler
 #SBATCH --job-name=convexfeas_polytopes_afw   # job name
-#SBATCH --time=14-00:00:00  # timelimit (format is jj-hh:mm:ss). Use `sinfo` to see node time limits
-#SBATCH --cpus-per-task=2   # reserve a certain amount of cores for this job
+#SBATCH --time=14-00:00:00      # timelimit (format is jj-hh:mm:ss). Use `sinfo` to see node time limits
+#SBATCH --cpus-per-task=2       # reserve a certain amount of cores for this job
 #SBATCH --mem=480G
-#SBATCH -N1 --nodelist=htc-cmp[004-006] # 501-532       # choose one node from the list in the square brackets
+#SBATCH -N1 --nodelist=htc-cmp[501-532] # choose one node from the list in the square brackets
 #SBATCH --chdir=/home/htc/giommazz/afw-product/code/BPCGProduct/  # Navigate to dir where script you want to run is
 #SBATCH --output=/home/htc/giommazz/afw-product/code/BPCGProduct/examples/logs/%x_%A.out # logfiles ---> %x=job name, %A=job ID
 #SBATCH --partition=big  # Specify the desired partition on cluster (default: small)
