@@ -106,6 +106,10 @@ function plot_time_only(
     return final_plot
 end
 
+
+
+
+
 # Input: each Vector in `trajectories` is a vector of 5-tuples: (iter, pgap, dual, dgap, time)
 # Computed: `cutoff_time` = min of the final times among all runs
 # The function returns new trajectories, truncated so that every run only contains entries where `time` ≤ `cutoff_time`
@@ -120,6 +124,9 @@ function cutoff_log_shortest_time(trajectories::Vector{Vector{Any}})
     
     return cutoff_trajectories, cutoff_time
 end
+
+
+
 
 """
     load_fw_trajectories(path::String; T=Float64)

@@ -1,0 +1,607 @@
+
+Configuration Parameters:
+  Number of polytopes (k): 2
+  Polytope dimension (n): 10000
+  Number of points (n_points): [19778, 19202]
+  Epsilon-optimality threshold (target_tolerance): 1.0e-7
+  Epsilon-optimality threshold to compute optimal sols (target_tolerance_opt): 1.0e-8
+  Number of FW iterations (max_iterations): 1000
+  Number of FW iterations to compute optimal solutions (max_iterations_opt): 10000
+  How often FW iteration log is printed to screen (max_print_iterations): 100
+  Seed for reproducibility (seed): 5
+  Use FW's ConvexHullOracle LMOs or MathOptLMO (cvxhflag): true
+  Intersect polytopes close to first polytope's analytic center (true) or vertex (false): true
+  Stepsize strategy (`0` is line search; `1` uses short-step with L=2 specified in `product_algorithms.jl`): 0
+
+
+Configuration Parameters:
+  Number of polytopes (k): 2
+  Polytope dimension (n): 15
+  Number of points (n_points): [19778, 19202]
+  Epsilon-optimality threshold (target_tolerance): 1.0e-7
+  Epsilon-optimality threshold to compute optimal sols (target_tolerance_opt): 1.0e-8
+  Number of FW iterations (max_iterations): 1000
+  Number of FW iterations to compute optimal solutions (max_iterations_opt): 10000
+  How often FW iteration log is printed to screen (max_print_iterations): 100
+  Seed for reproducibility (seed): 5
+  Use FW's ConvexHullOracle LMOs or MathOptLMO (cvxhflag): true
+  Intersect polytopes close to first polytope's analytic center (true) or vertex (false): true
+  Stepsize strategy (`0` is line search; `1` uses short-step with L=2 specified in `product_algorithms.jl`): 0
+
+
+
+********************************************************
+WARMUP: Generating instances and solving them to optimum
+********************************************************
+Generating 2 intersecting polytopes of dimension 15 (n. vertices for each: [19778, 19202])
+
+Block coordinate Frank-Wolfe (BCFW).
+MEMORY_MODE: FrankWolfe.InplaceEmphasis() STEPSIZE: DataType[FrankWolfe.Goldenratio{Float64}, FrankWolfe.Goldenratio{Float64}] EPSILON: 1.0e-8 MAXITERATION: 10000 TYPE: Float64
+MOMENTUM: nothing GRADIENTTYPE: FrankWolfe.BlockVector{Float64, Vector{Float64}, Tuple{Int64}} UPDATE_ORDER: FrankWolfe.CyclicUpdate(-1) UPDATE_STEP: DataType[AwayStep, AwayStep]
+
+-------------------------------------------------------------------------------------------------
+  Type     Iteration         Primal           Dual       Dual Gap           Time         It/sec
+-------------------------------------------------------------------------------------------------[s
+     I             1   2.591621e+04  -6.310314e+03   3.222652e+04   0.000000e+00            Inf[s
+     A         10000   2.470437e+04   2.470437e+04   3.542424e-05   1.001312e+01   9.986893e+02[s
+  Last         10001   2.470437e+04   2.470437e+04   3.107914e-05   1.007697e+01   9.924609e+02
+-------------------------------------------------------------------------------------------------[s
+
+Block coordinate Frank-Wolfe (BCFW).
+MEMORY_MODE: FrankWolfe.InplaceEmphasis() STEPSIZE: DataType[FrankWolfe.Goldenratio{Float64}, FrankWolfe.Goldenratio{Float64}] EPSILON: 1.0e-7 MAXITERATION: 10000 TYPE: Float64
+MOMENTUM: nothing GRADIENTTYPE: FrankWolfe.BlockVector{Float64, Vector{Float64}, Tuple{Int64}} UPDATE_ORDER: FrankWolfe.CyclicUpdate(-1) UPDATE_STEP: DataType[AwayStep, AwayStep]
+
+-------------------------------------------------------------------------------------------------
+  Type     Iteration         Primal           Dual       Dual Gap           Time         It/sec
+-------------------------------------------------------------------------------------------------[s
+     I             1   2.591621e+04  -6.310314e+03   3.222652e+04   0.000000e+00            Inf[s
+     A         10000   2.470437e+04   2.470437e+04   3.542424e-05   8.002232e+00   1.249651e+03[s
+  Last         10001   2.470437e+04   2.470437e+04   3.107914e-05   8.005060e+00   1.249335e+03
+-------------------------------------------------------------------------------------------------[s
+********************************************************
+WARMUP: Running FW on the instances
+********************************************************
+
+
+Non intersecting
+
+Block coordinate Frank-Wolfe (BCFW).
+MEMORY_MODE: FrankWolfe.InplaceEmphasis() STEPSIZE: DataType[FrankWolfe.Goldenratio{Float64}, FrankWolfe.Goldenratio{Float64}] EPSILON: 1.0e-7 MAXITERATION: 1000 TYPE: Float64
+MOMENTUM: nothing GRADIENTTYPE: FrankWolfe.BlockVector{Float64, Vector{Float64}, Tuple{Int64}} UPDATE_ORDER: FrankWolfe.CyclicUpdate(-1) UPDATE_STEP: DataType[FrankWolfe.FrankWolfeStep, FrankWolfe.FrankWolfeStep]
+
+-------------------------------------------------------------------------------------------------
+  Type     Iteration         Primal           Dual       Dual Gap           Time         It/sec
+-------------------------------------------------------------------------------------------------[s
+     I             1   2.591621e+04  -6.310314e+03   3.222652e+04   0.000000e+00            Inf[s
+    FW           100   2.470437e+04   2.470421e+04   1.633401e-01   1.726784e-01   5.791114e+02[s
+    FW           200   2.470437e+04   2.470436e+04   1.782255e-02   2.505996e-01   7.980859e+02[s
+    FW           300   2.470437e+04   2.470437e+04   2.181267e-03   3.321331e-01   9.032525e+02[s
+    FW           400   2.470437e+04   2.470437e+04   9.034661e-05   4.178224e-01   9.573446e+02[s
+    FW           500   2.470437e+04   2.470437e+04   4.328164e-05   4.922805e-01   1.015681e+03[s
+    FW           600   2.470437e+04   2.470437e+04   2.338802e-04   5.746788e-01   1.044061e+03[s
+    FW           700   2.470437e+04   2.470437e+04   4.912412e-05   6.469049e-01   1.082076e+03[s
+    FW           800   2.470437e+04   2.470437e+04   1.672100e-04   7.199542e-01   1.111182e+03[s
+    FW           900   2.470437e+04   2.470437e+04   1.328837e-04   7.920352e-01   1.136313e+03[s
+    FW          1000   2.470437e+04   2.470437e+04   2.064552e-04   8.656017e-01   1.155266e+03[s
+  Last          1001   2.470437e+04   2.470437e+04   1.402825e-04   8.678905e-01   1.153371e+03
+-------------------------------------------------------------------------------------------------[s
+
+Block coordinate Frank-Wolfe (BCFW).
+MEMORY_MODE: FrankWolfe.InplaceEmphasis() STEPSIZE: DataType[FrankWolfe.Goldenratio{Float64}, FrankWolfe.Goldenratio{Float64}] EPSILON: 1.0e-7 MAXITERATION: 1000 TYPE: Float64
+MOMENTUM: nothing GRADIENTTYPE: FrankWolfe.BlockVector{Float64, Vector{Float64}, Tuple{Int64}} UPDATE_ORDER: FrankWolfe.FullUpdate() UPDATE_STEP: DataType[FrankWolfe.FrankWolfeStep, FrankWolfe.FrankWolfeStep]
+
+-------------------------------------------------------------------------------------------------
+  Type     Iteration         Primal           Dual       Dual Gap           Time         It/sec
+-------------------------------------------------------------------------------------------------[s
+     I             1   2.591621e+04  -9.910415e+03   3.582662e+04   0.000000e+00            Inf[s
+    FW           100   2.470437e+04   2.470437e+04   3.824221e-05   1.409598e-01   7.094222e+02[s
+    FW           200   2.470437e+04   2.470437e+04   2.570419e-04   2.159065e-01   9.263271e+02[s
+    FW           300   2.470437e+04   2.470437e+04   6.340260e-05   3.035243e-01   9.883886e+02[s
+    FW           400   2.470437e+04   2.470437e+04   3.026120e-05   3.788731e-01   1.055763e+03[s
+    FW           500   2.470437e+04   2.470437e+04   4.171590e-05   4.654586e-01   1.074209e+03[s
+    FW           600   2.470437e+04   2.470437e+04   5.296704e-05   5.399352e-01   1.111244e+03[s
+    FW           700   2.470437e+04   2.470437e+04   7.185611e-05   6.202738e-01   1.128534e+03[s
+    FW           800   2.470437e+04   2.470437e+04   3.373408e-05   6.944799e-01   1.151941e+03[s
+    FW           900   2.470437e+04   2.470437e+04   4.518840e-05   7.683892e-01   1.171281e+03[s
+    FW          1000   2.470437e+04   2.470437e+04   2.290478e-04   8.491409e-01   1.177661e+03[s
+  Last          1001   2.470437e+04   2.470437e+04   2.755043e-04   8.514184e-01   1.175685e+03
+-------------------------------------------------------------------------------------------------[s
+
+Block coordinate Frank-Wolfe (BCFW).
+MEMORY_MODE: FrankWolfe.InplaceEmphasis() STEPSIZE: DataType[FrankWolfe.Goldenratio{Float64}, FrankWolfe.Goldenratio{Float64}] EPSILON: 1.0e-7 MAXITERATION: 1000 TYPE: Float64
+MOMENTUM: nothing GRADIENTTYPE: FrankWolfe.BlockVector{Float64, Vector{Float64}, Tuple{Int64}} UPDATE_ORDER: FrankWolfe.FullUpdate() UPDATE_STEP: DataType[AwayStep, AwayStep]
+
+-------------------------------------------------------------------------------------------------
+  Type     Iteration         Primal           Dual       Dual Gap           Time         It/sec
+-------------------------------------------------------------------------------------------------[s
+     I             1   2.591621e+04  -9.910415e+03   3.582662e+04   0.000000e+00            Inf[s
+    FW           100   2.470437e+04   2.470437e+04   3.079043e-04   8.002717e-02   1.249576e+03[s
+     A           200   2.470437e+04   2.470437e+04   5.830017e-05   1.679581e-01   1.190773e+03[s
+     A           300   2.470437e+04   2.470437e+04   1.404189e-05   2.425564e-01   1.236826e+03[s
+     A           400   2.470437e+04   2.470437e+04   1.253102e-04   3.293977e-01   1.214338e+03[s
+    FW           500   2.470437e+04   2.470437e+04   5.866164e-05   4.044941e-01   1.236112e+03[s
+     A           600   2.470437e+04   2.470437e+04   9.438670e-05   4.909788e-01   1.222049e+03[s
+    FW           700   2.470437e+04   2.470437e+04   1.227257e-04   5.662420e-01   1.236221e+03[s
+     A           800   2.470437e+04   2.470437e+04   7.208065e-05   6.486774e-01   1.233279e+03[s
+    FW           900   2.470437e+04   2.470437e+04   1.660217e-04   7.246635e-01   1.241956e+03[s
+     A          1000   2.470437e+04   2.470437e+04   5.838425e-05   8.087329e-01   1.236502e+03[s
+  Last          1001   2.470437e+04   2.470437e+04   5.562520e-05   8.110433e-01   1.234213e+03
+-------------------------------------------------------------------------------------------------[s
+
+Vanilla Frank-Wolfe Algorithm.
+MEMORY_MODE: FrankWolfe.InplaceEmphasis() STEPSIZE: Goldenratio EPSILON: 1.0e-7 MAXITERATION: 1000 TYPE: Float64
+MOMENTUM: nothing GRADIENTTYPE: Nothing
+LMO: FrankWolfe.ProductLMO{2, Tuple{FrankWolfe.ConvexHullOracle{Vector{Float64}, Vector{Vector{Float64}}}, FrankWolfe.ConvexHullOracle{Vector{Float64}, Vector{Vector{Float64}}}}}
+
+-------------------------------------------------------------------------------------------------
+  Type     Iteration         Primal           Dual       Dual Gap           Time         It/sec
+-------------------------------------------------------------------------------------------------[s
+     I             1   5.240175e+04   1.657512e+04   3.582662e+04   0.000000e+00            Inf[s
+    FW           100   2.470437e+04   2.470437e+04   1.483721e-04   1.178621e-01   8.484493e+02[s
+    FW           200   2.470437e+04   2.470437e+04   4.420776e-05   1.971035e-01   1.014695e+03[s
+    FW           300   2.470437e+04   2.470437e+04   2.193133e-05   2.522298e-01   1.189391e+03[s
+    FW           400   2.470437e+04   2.470437e+04   6.691416e-05   3.069934e-01   1.302960e+03[s
+    FW           500   2.470437e+04   2.470437e+04   1.872355e-04   3.617281e-01   1.382254e+03[s
+    FW           600   2.470437e+04   2.470437e+04   2.308964e-04   4.165157e-01   1.440522e+03[s
+    FW           700   2.470437e+04   2.470437e+04   2.331954e-04   4.712410e-01   1.485439e+03[s
+    FW           800   2.470437e+04   2.470437e+04   1.709414e-04   5.259282e-01   1.521120e+03[s
+    FW           900   2.470437e+04   2.470437e+04   3.970018e-05   5.826424e-01   1.544687e+03[s
+    FW          1000   2.470437e+04   2.470437e+04   2.168990e-04   6.374773e-01   1.568683e+03[s
+  Last          1001   2.470437e+04   2.470437e+04   2.999467e-05   6.392420e-01   1.565917e+03
+-------------------------------------------------------------------------------------------------[s
+
+Away-step Frank-Wolfe Algorithm.
+MEMORY_MODE: FrankWolfe.InplaceEmphasis() STEPSIZE: Goldenratio EPSILON: 1.0e-7 MAXITERATION: 1000 TYPE: Float64
+GRADIENTTYPE: FrankWolfe.BlockVector{Float64, Vector{Float64}, Tuple{Int64}} LAZY: false lazy_tolerance: 2.0 MOMENTUM: nothing AWAYSTEPS: true
+LMO: FrankWolfe.ProductLMO{2, Tuple{FrankWolfe.ConvexHullOracle{Vector{Float64}, Vector{Vector{Float64}}}, FrankWolfe.ConvexHullOracle{Vector{Float64}, Vector{Vector{Float64}}}}}
+
+----------------------------------------------------------------------------------------------------------------
+  Type     Iteration         Primal           Dual       Dual Gap           Time         It/sec     #ActiveSet
+----------------------------------------------------------------------------------------------------------------[s
+     I             1   5.240175e+04           -Inf            Inf   0.000000e+00            Inf              2[s
+     D           100   2.470437e+04   2.470147e+04   2.908343e+00   7.268895e-01   1.375725e+02              5[s
+     D           200   2.490043e+04   2.387922e+04   1.021202e+03   7.833415e-01   2.553165e+02              7[s
+    FW           300   2.472407e+04   2.458474e+04   1.393322e+02   8.362398e-01   3.587488e+02              2[s
+    FW           400   2.470439e+04   2.468038e+04   2.401375e+01   8.890014e-01   4.499431e+02              4[s
+    FW           500   2.503766e+04   2.503651e+04   1.149654e+00   9.415264e-01   5.310526e+02              6[s
+     D           600   2.472407e+04   2.439463e+04   3.294408e+02   9.940415e-01   6.035965e+02              1[s
+    FW           700   2.470479e+04   2.456546e+04   1.393322e+02   1.046575e+00   6.688481e+02              3[s
+     D           800   2.470437e+04   2.470147e+04   2.908343e+00   1.099059e+00   7.278957e+02              5[s
+     D           900   2.490043e+04   2.387922e+04   1.021202e+03   1.151619e+00   7.815088e+02              7[s
+    FW          1000   2.472407e+04   2.458474e+04   1.393322e+02   1.204014e+00   8.305549e+02              2[s
+  Last          1001   2.470439e+04   2.470148e+04   2.908343e+00   1.205760e+00   8.301821e+02              3
+----------------------------------------------------------------------------------------------------------------[s
+    PP          1001   2.470439e+04   2.470148e+04   2.908343e+00   1.245611e+00   8.036216e+02              3
+----------------------------------------------------------------------------------------------------------------[s
+
+
+Intersecting
+
+Block coordinate Frank-Wolfe (BCFW).
+MEMORY_MODE: FrankWolfe.InplaceEmphasis() STEPSIZE: DataType[FrankWolfe.Goldenratio{Float64}, FrankWolfe.Goldenratio{Float64}] EPSILON: 1.0e-7 MAXITERATION: 1000 TYPE: Float64
+MOMENTUM: nothing GRADIENTTYPE: FrankWolfe.BlockVector{Float64, Vector{Float64}, Tuple{Int64}} UPDATE_ORDER: FrankWolfe.CyclicUpdate(-1) UPDATE_STEP: DataType[FrankWolfe.FrankWolfeStep, FrankWolfe.FrankWolfeStep]
+
+-------------------------------------------------------------------------------------------------
+  Type     Iteration         Primal           Dual       Dual Gap           Time         It/sec
+-------------------------------------------------------------------------------------------------[s
+     I             1   1.376577e+03  -1.162954e+04   1.300612e+04   0.000000e+00            Inf[s
+    FW           100   1.449814e-02  -5.545690e-01   5.690671e-01   8.925246e-02   1.120417e+03[s
+    FW           200   2.304863e-03  -3.232879e-01   3.255928e-01   1.917750e-01   1.042889e+03[s
+    FW           300   4.489335e-04  -8.866483e-02   8.911376e-02   2.844226e-01   1.054769e+03[s
+    FW           400   8.295305e-05  -2.190064e-02   2.198359e-02   3.748057e-01   1.067220e+03[s
+    FW           500   1.871502e-05  -1.600804e-02   1.602675e-02   4.600547e-01   1.086827e+03[s
+    FW           600   3.976245e-06  -7.347217e-03   7.351193e-03   5.447671e-01   1.101388e+03[s
+    FW           700   8.496500e-07  -2.737595e-03   2.738445e-03   6.297318e-01   1.111584e+03[s
+    FW           800   2.060915e-07  -1.870593e-03   1.870800e-03   7.146162e-01   1.119482e+03[s
+    FW           900   4.033063e-08  -2.013803e-03   2.013844e-03   7.998210e-01   1.125252e+03[s
+    FW          1000   3.565219e-09  -4.892600e-04   4.892636e-04   8.845724e-01   1.130490e+03[s
+  Last          1001   2.793968e-09  -8.558603e-04   8.558630e-04   8.871522e-01   1.128330e+03
+-------------------------------------------------------------------------------------------------[s
+
+Block coordinate Frank-Wolfe (BCFW).
+MEMORY_MODE: FrankWolfe.InplaceEmphasis() STEPSIZE: DataType[FrankWolfe.Goldenratio{Float64}, FrankWolfe.Goldenratio{Float64}] EPSILON: 1.0e-7 MAXITERATION: 1000 TYPE: Float64
+MOMENTUM: nothing GRADIENTTYPE: FrankWolfe.BlockVector{Float64, Vector{Float64}, Tuple{Int64}} UPDATE_ORDER: FrankWolfe.FullUpdate() UPDATE_STEP: DataType[FrankWolfe.FrankWolfeStep, FrankWolfe.FrankWolfeStep]
+
+-------------------------------------------------------------------------------------------------
+  Type     Iteration         Primal           Dual       Dual Gap           Time         It/sec
+-------------------------------------------------------------------------------------------------[s
+     I             1   1.786369e+03  -1.463889e+04   1.642525e+04   0.000000e+00            Inf[s
+    FW           100   2.416472e-02  -3.659661e-01   3.901308e-01   7.989483e-02   1.251646e+03[s
+    FW           200   4.989123e-03  -9.026815e-01   9.076706e-01   1.575558e-01   1.269392e+03[s
+    FW           300   1.496551e-03  -9.084260e-02   9.233915e-02   2.420794e-01   1.239263e+03[s
+    FW           400   3.692021e-04  -7.370258e-02   7.407178e-02   3.197847e-01   1.250841e+03[s
+    FW           500   9.418781e-05  -2.488051e-02   2.497470e-02   4.040539e-01   1.237459e+03[s
+    FW           600   2.855140e-05  -2.086566e-02   2.089421e-02   4.820407e-01   1.244708e+03[s
+    FW           700   9.769486e-06  -1.808314e-02   1.809290e-02   5.666101e-01   1.235417e+03[s
+    FW           800   2.982219e-06  -1.671346e-02   1.671644e-02   6.452154e-01   1.239896e+03[s
+    FW           900   9.106298e-07  -3.431630e-03   3.432541e-03   7.301137e-01   1.232685e+03[s
+    FW          1000   2.919696e-07  -5.323682e-03   5.323974e-03   8.089198e-01   1.236216e+03[s
+  Last          1001   2.864981e-07  -7.853332e-03   7.853618e-03   8.112892e-01   1.233839e+03
+-------------------------------------------------------------------------------------------------[s
+
+Block coordinate Frank-Wolfe (BCFW).
+MEMORY_MODE: FrankWolfe.InplaceEmphasis() STEPSIZE: DataType[FrankWolfe.Goldenratio{Float64}, FrankWolfe.Goldenratio{Float64}] EPSILON: 1.0e-7 MAXITERATION: 1000 TYPE: Float64
+MOMENTUM: nothing GRADIENTTYPE: FrankWolfe.BlockVector{Float64, Vector{Float64}, Tuple{Int64}} UPDATE_ORDER: FrankWolfe.FullUpdate() UPDATE_STEP: DataType[AwayStep, AwayStep]
+
+-------------------------------------------------------------------------------------------------
+  Type     Iteration         Primal           Dual       Dual Gap           Time         It/sec
+-------------------------------------------------------------------------------------------------[s
+     I             1   1.786369e+03  -1.463889e+04   1.642525e+04   0.000000e+00            Inf[s
+    FW           100   1.626033e-02  -1.491532e+00   1.507792e+00   8.078655e-02   1.237830e+03[s
+    FW           200   2.387997e-04  -2.847395e-01   2.849783e-01   1.564539e-01   1.278332e+03[s
+     A           300   7.400224e-06  -3.840291e-02   3.841031e-02   2.317262e-01   1.294631e+03[s
+    FW           400   2.236047e-07  -1.282315e-02   1.282337e-02   3.132664e-01   1.276868e+03[s
+    FW           500   9.080395e-09  -2.321806e-03   2.321815e-03   3.867973e-01   1.292667e+03[s
+     D           600   2.124580e-09  -6.213765e-04   6.213786e-04   4.578792e-01   1.310389e+03[s
+     D           700   2.124580e-09  -6.213765e-04   6.213786e-04   5.322675e-01   1.315128e+03[s
+     D           800   2.124580e-09  -6.213765e-04   6.213786e-04   6.003506e-01   1.332555e+03[s
+     D           900   2.124580e-09  -6.213765e-04   6.213786e-04   6.682198e-01   1.346862e+03[s
+     D          1000   2.124580e-09  -6.213765e-04   6.213786e-04   7.425059e-01   1.346791e+03[s
+  Last          1001   2.437446e-09  -6.213762e-04   6.213786e-04   7.445857e-01   1.344372e+03
+-------------------------------------------------------------------------------------------------[s
+
+Vanilla Frank-Wolfe Algorithm.
+MEMORY_MODE: FrankWolfe.InplaceEmphasis() STEPSIZE: Goldenratio EPSILON: 1.0e-7 MAXITERATION: 1000 TYPE: Float64
+MOMENTUM: nothing GRADIENTTYPE: Nothing
+LMO: FrankWolfe.ProductLMO{2, Tuple{FrankWolfe.ConvexHullOracle{Vector{Float64}, Vector{Vector{Float64}}}, FrankWolfe.ConvexHullOracle{Vector{Float64}, Vector{Vector{Float64}}}}}
+
+-------------------------------------------------------------------------------------------------
+  Type     Iteration         Primal           Dual       Dual Gap           Time         It/sec
+-------------------------------------------------------------------------------------------------[s
+     I             1   7.405088e+03  -9.020167e+03   1.642525e+04   0.000000e+00            Inf[s
+    FW           100   1.065656e-01  -1.389845e+00   1.496411e+00   5.363953e-02   1.864297e+03[s
+    FW           200   3.529658e-02  -4.106981e-01   4.459947e-01   1.073759e-01   1.862615e+03[s
+    FW           300   1.343947e-02  -2.368466e+00   2.381905e+00   1.610050e-01   1.863296e+03[s
+    FW           400   5.958983e-03  -1.687532e-01   1.747122e-01   2.147862e-01   1.862317e+03[s
+    FW           500   2.598934e-03  -1.771294e-01   1.797283e-01   2.687268e-01   1.860626e+03[s
+    FW           600   1.111045e-03  -1.812958e-01   1.824068e-01   3.224138e-01   1.860962e+03[s
+    FW           700   5.254163e-04  -8.288208e-02   8.340750e-02   3.761295e-01   1.861061e+03[s
+    FW           800   2.705676e-04  -4.877186e-02   4.904243e-02   4.359178e-01   1.835208e+03[s
+    FW           900   1.398190e-04  -2.681749e-02   2.695731e-02   4.895614e-01   1.838380e+03[s
+    FW          1000   6.852186e-05  -2.295727e-02   2.302580e-02   5.434631e-01   1.840051e+03[s
+  Last          1001   6.801930e-05  -2.858157e-02   2.864959e-02   5.451614e-01   1.836153e+03
+-------------------------------------------------------------------------------------------------[s
+
+Away-step Frank-Wolfe Algorithm.
+MEMORY_MODE: FrankWolfe.InplaceEmphasis() STEPSIZE: Goldenratio EPSILON: 1.0e-7 MAXITERATION: 1000 TYPE: Float64
+GRADIENTTYPE: FrankWolfe.BlockVector{Float64, Vector{Float64}, Tuple{Int64}} LAZY: false lazy_tolerance: 2.0 MOMENTUM: nothing AWAYSTEPS: true
+LMO: FrankWolfe.ProductLMO{2, Tuple{FrankWolfe.ConvexHullOracle{Vector{Float64}, Vector{Vector{Float64}}}, FrankWolfe.ConvexHullOracle{Vector{Float64}, Vector{Vector{Float64}}}}}
+
+----------------------------------------------------------------------------------------------------------------
+  Type     Iteration         Primal           Dual       Dual Gap           Time         It/sec     #ActiveSet
+----------------------------------------------------------------------------------------------------------------[s
+     I             1   7.405088e+03           -Inf            Inf   0.000000e+00            Inf              2[s
+    FW           100   7.859228e-01  -3.914404e+00   4.700326e+00   6.154152e-02   1.624919e+03             34[s
+     D           200   3.055404e-01  -2.849861e+00   3.155401e+00   1.133128e-01   1.765026e+03             65[s
+     A           300   1.566508e-01  -1.607571e+00   1.764222e+00   1.652518e-01   1.815412e+03             86[s
+     A           400   7.632235e-02  -1.646287e+00   1.722610e+00   2.174975e-01   1.839102e+03            107[s
+     A           500   3.914527e-02  -6.252833e-01   6.644286e-01   2.701004e-01   1.851164e+03            132[s
+     A           600   2.019780e-02  -4.771412e-01   4.973390e-01   3.241692e-01   1.850885e+03            157[s
+     A           700   8.756576e-03  -3.127778e-01   3.215344e-01   3.773776e-01   1.854906e+03            185[s
+     A           800   4.896746e-03  -4.082660e-01   4.131628e-01   4.311486e-01   1.855509e+03            216[s
+     A           900   2.547631e-03  -2.034789e-01   2.060266e-01   4.911209e-01   1.832543e+03            243[s
+     A          1000   1.300770e-03  -1.145310e-01   1.158318e-01   5.451866e-01   1.834234e+03            263[s
+  Last          1001   1.280831e-03  -1.579394e-01   1.592202e-01   5.469545e-01   1.830134e+03            263
+----------------------------------------------------------------------------------------------------------------[s
+    PP          1001   1.280831e-03  -1.579394e-01   1.592202e-01   5.476251e-01   1.827893e+03            263
+----------------------------------------------------------------------------------------------------------------[s
+
+
+
+********************************************************
+MAIN: Generating instances and solving them to optimum
+********************************************************
+Generating 2 intersecting polytopes of dimension 10000 (n. vertices for each: [19778, 19202])
+
+Block coordinate Frank-Wolfe (BCFW).
+MEMORY_MODE: FrankWolfe.InplaceEmphasis() STEPSIZE: DataType[FrankWolfe.Goldenratio{Float64}, FrankWolfe.Goldenratio{Float64}] EPSILON: 1.0e-8 MAXITERATION: 10000 TYPE: Float64
+MOMENTUM: nothing GRADIENTTYPE: FrankWolfe.BlockVector{Float64, Vector{Float64}, Tuple{Int64}} UPDATE_ORDER: FrankWolfe.CyclicUpdate(-1) UPDATE_STEP: DataType[AwayStep, AwayStep]
+
+-------------------------------------------------------------------------------------------------
+  Type     Iteration         Primal           Dual       Dual Gap           Time         It/sec
+-------------------------------------------------------------------------------------------------[s
+     I             1   4.178375e+07   3.615653e+07   5.627225e+06   0.000000e+00            Inf[s
+    FW         10000   4.043153e+07   4.043153e+07   7.729213e-03   2.616829e+03   3.821418e+00[s
+  Last         10001   4.043153e+07   4.043153e+07   6.187241e-02   2.617624e+03   3.820640e+00
+-------------------------------------------------------------------------------------------------[s
+
+Block coordinate Frank-Wolfe (BCFW).
+MEMORY_MODE: FrankWolfe.InplaceEmphasis() STEPSIZE: DataType[FrankWolfe.Goldenratio{Float64}, FrankWolfe.Goldenratio{Float64}] EPSILON: 1.0e-7 MAXITERATION: 10000 TYPE: Float64
+MOMENTUM: nothing GRADIENTTYPE: FrankWolfe.BlockVector{Float64, Vector{Float64}, Tuple{Int64}} UPDATE_ORDER: FrankWolfe.CyclicUpdate(-1) UPDATE_STEP: DataType[AwayStep, AwayStep]
+
+-------------------------------------------------------------------------------------------------
+  Type     Iteration         Primal           Dual       Dual Gap           Time         It/sec
+-------------------------------------------------------------------------------------------------[s
+     I             1   4.178375e+07   3.615653e+07   5.627225e+06   0.000000e+00            Inf[s
+    FW         10000   4.043153e+07   4.043153e+07   7.729213e-03   2.662108e+03   3.756422e+00[s
+  Last         10001   4.043153e+07   4.043153e+07   6.187241e-02   2.662884e+03   3.755702e+00
+-------------------------------------------------------------------------------------------------[s
+
+
+********************************************************
+MAIN: Running FW on the instances
+********************************************************
+
+
+Non intersecting
+
+
+
+ ----------> Cyclic Block-coordinate vanilla FW
+
+Block coordinate Frank-Wolfe (BCFW).
+MEMORY_MODE: FrankWolfe.InplaceEmphasis() STEPSIZE: DataType[FrankWolfe.Goldenratio{Float64}, FrankWolfe.Goldenratio{Float64}] EPSILON: 1.0e-7 MAXITERATION: 1000 TYPE: Float64
+MOMENTUM: nothing GRADIENTTYPE: FrankWolfe.BlockVector{Float64, Vector{Float64}, Tuple{Int64}} UPDATE_ORDER: FrankWolfe.CyclicUpdate(-1) UPDATE_STEP: DataType[FrankWolfe.FrankWolfeStep, FrankWolfe.FrankWolfeStep]
+
+-------------------------------------------------------------------------------------------------
+  Type     Iteration         Primal           Dual       Dual Gap           Time         It/sec
+-------------------------------------------------------------------------------------------------[s
+     I             1   4.178375e+07   3.615653e+07   5.627225e+06   0.000000e+00            Inf[s
+    FW           100   4.044080e+07   4.042114e+07   1.966334e+04   2.567687e+01   3.894556e+00[s
+    FW           200   4.043780e+07   4.042496e+07   1.284008e+04   5.280034e+01   3.787854e+00[s
+    FW           300   4.043633e+07   4.042630e+07   1.003322e+04   8.044266e+01   3.729364e+00[s
+    FW           400   4.043543e+07   4.042727e+07   8.161278e+03   1.069082e+02   3.741528e+00[s
+    FW           500   4.043482e+07   4.042804e+07   6.778230e+03   1.338164e+02   3.736464e+00[s
+    FW           600   4.043438e+07   4.042827e+07   6.106881e+03   1.605071e+02   3.738151e+00[s
+    FW           700   4.043404e+07   4.042908e+07   4.964913e+03   1.869602e+02   3.744112e+00[s
+    FW           800   4.043378e+07   4.042905e+07   4.727791e+03   2.130644e+02   3.754733e+00[s
+    FW           900   4.043357e+07   4.042949e+07   4.081766e+03   2.400695e+02   3.748914e+00[s
+    FW          1000   4.043339e+07   4.042976e+07   3.637232e+03   2.668508e+02   3.747413e+00[s
+  Last          1001   4.043339e+07   4.042982e+07   3.571423e+03   2.676037e+02   3.740606e+00
+-------------------------------------------------------------------------------------------------[s
+
+
+
+ ----------> Full Block-coordinate vanilla FW
+
+Block coordinate Frank-Wolfe (BCFW).
+MEMORY_MODE: FrankWolfe.InplaceEmphasis() STEPSIZE: DataType[FrankWolfe.Goldenratio{Float64}, FrankWolfe.Goldenratio{Float64}] EPSILON: 1.0e-7 MAXITERATION: 1000 TYPE: Float64
+MOMENTUM: nothing GRADIENTTYPE: FrankWolfe.BlockVector{Float64, Vector{Float64}, Tuple{Int64}} UPDATE_ORDER: FrankWolfe.FullUpdate() UPDATE_STEP: DataType[FrankWolfe.FrankWolfeStep, FrankWolfe.FrankWolfeStep]
+
+-------------------------------------------------------------------------------------------------
+  Type     Iteration         Primal           Dual       Dual Gap           Time         It/sec
+-------------------------------------------------------------------------------------------------[s
+     I             1   4.177888e+07   3.611742e+07   5.661464e+06   0.000000e+00            Inf[s
+    FW           100   4.044073e+07   4.042144e+07   1.928839e+04   2.220613e+01   4.503260e+00[s
+    FW           200   4.043776e+07   4.042563e+07   1.212937e+04   4.463035e+01   4.481256e+00[s
+    FW           300   4.043632e+07   4.042716e+07   9.160452e+03   6.687530e+01   4.485961e+00[s
+    FW           400   4.043541e+07   4.042700e+07   8.418690e+03   8.901140e+01   4.493806e+00[s
+    FW           500   4.043481e+07   4.042791e+07   6.907546e+03   1.116073e+02   4.479992e+00[s
+    FW           600   4.043437e+07   4.042848e+07   5.895444e+03   1.338326e+02   4.483214e+00[s
+    FW           700   4.043404e+07   4.042910e+07   4.940849e+03   1.560473e+02   4.485820e+00[s
+    FW           800   4.043378e+07   4.042916e+07   4.612377e+03   1.784694e+02   4.482561e+00[s
+    FW           900   4.043357e+07   4.042969e+07   3.873432e+03   2.004713e+02   4.489421e+00[s
+    FW          1000   4.043339e+07   4.042965e+07   3.744780e+03   2.230300e+02   4.483703e+00[s
+  Last          1001   4.043339e+07   4.042955e+07   3.839002e+03   2.236983e+02   4.474777e+00
+-------------------------------------------------------------------------------------------------[s
+
+
+
+ ----------> Full Block-coordinate Away FW (ours)
+
+Block coordinate Frank-Wolfe (BCFW).
+MEMORY_MODE: FrankWolfe.InplaceEmphasis() STEPSIZE: DataType[FrankWolfe.Goldenratio{Float64}, FrankWolfe.Goldenratio{Float64}] EPSILON: 1.0e-7 MAXITERATION: 1000 TYPE: Float64
+MOMENTUM: nothing GRADIENTTYPE: FrankWolfe.BlockVector{Float64, Vector{Float64}, Tuple{Int64}} UPDATE_ORDER: FrankWolfe.FullUpdate() UPDATE_STEP: DataType[AwayStep, AwayStep]
+
+-------------------------------------------------------------------------------------------------
+  Type     Iteration         Primal           Dual       Dual Gap           Time         It/sec
+-------------------------------------------------------------------------------------------------[s
+     I             1   4.177888e+07   3.611742e+07   5.661464e+06   0.000000e+00            Inf[s
+    FW           100   4.043153e+07   4.043008e+07   1.444907e+03   2.182390e+01   4.582133e+00[s
+    FW           200   4.043153e+07   4.043153e+07   2.317331e+00   4.386289e+01   4.559664e+00[s
+    FW           300   4.043153e+07   4.043153e+07   3.038847e-01   6.651834e+01   4.510035e+00[s
+     A           400   4.043153e+07   4.043153e+07   1.003043e-01   8.867415e+01   4.510897e+00[s
+    FW           500   4.043153e+07   4.043153e+07   4.078625e-01   1.111811e+02   4.497166e+00[s
+     A           600   4.043153e+07   4.043153e+07   5.344180e-02   1.334664e+02   4.495512e+00[s
+    FW           700   4.043153e+07   4.043153e+07   1.083110e-01   1.557705e+02   4.493791e+00[s
+     A           800   4.043153e+07   4.043153e+07   1.985618e-01   1.783767e+02   4.484891e+00[s
+    FW           900   4.043153e+07   4.043153e+07   1.571509e-01   2.007453e+02   4.483293e+00[s
+    FW          1000   4.043153e+07   4.043153e+07   4.367683e-02   2.231668e+02   4.480953e+00[s
+  Last          1001   4.043153e+07   4.043153e+07   2.251491e-01   2.238398e+02   4.471949e+00
+-------------------------------------------------------------------------------------------------[s
+
+
+
+ ----------> Full FW
+
+Vanilla Frank-Wolfe Algorithm.
+MEMORY_MODE: FrankWolfe.InplaceEmphasis() STEPSIZE: Goldenratio EPSILON: 1.0e-7 MAXITERATION: 1000 TYPE: Float64
+MOMENTUM: nothing GRADIENTTYPE: Nothing
+LMO: FrankWolfe.ProductLMO{2, Tuple{FrankWolfe.ConvexHullOracle{Vector{Float64}, Vector{Vector{Float64}}}, FrankWolfe.ConvexHullOracle{Vector{Float64}, Vector{Vector{Float64}}}}}
+
+-------------------------------------------------------------------------------------------------
+  Type     Iteration         Primal           Dual       Dual Gap           Time         It/sec
+-------------------------------------------------------------------------------------------------[s
+     I             1   4.348509e+07   3.782363e+07   5.661464e+06   0.000000e+00            Inf[s
+    FW           100   4.044115e+07   4.042007e+07   2.108415e+04   2.524475e+01   3.961220e+00[s
+    FW           200   4.043798e+07   4.042503e+07   1.295597e+04   5.117454e+01   3.908194e+00[s
+    FW           300   4.043647e+07   4.042631e+07   1.016459e+04   7.731518e+01   3.880221e+00[s
+    FW           400   4.043553e+07   4.042729e+07   8.242156e+03   1.030673e+02   3.880961e+00[s
+    FW           500   4.043490e+07   4.042812e+07   6.779546e+03   1.294072e+02   3.863772e+00[s
+    FW           600   4.043444e+07   4.042859e+07   5.855550e+03   1.555334e+02   3.857693e+00[s
+    FW           700   4.043410e+07   4.042887e+07   5.227135e+03   1.818177e+02   3.850011e+00[s
+    FW           800   4.043382e+07   4.042918e+07   4.640038e+03   2.076132e+02   3.853319e+00[s
+    FW           900   4.043361e+07   4.042951e+07   4.100679e+03   2.338217e+02   3.849087e+00[s
+    FW          1000   4.043343e+07   4.042962e+07   3.803578e+03   2.598411e+02   3.848506e+00[s
+  Last          1001   4.043342e+07   4.042971e+07   3.710040e+03   2.605667e+02   3.841627e+00
+-------------------------------------------------------------------------------------------------[s
+
+
+
+ ----------> Full AFW
+
+Away-step Frank-Wolfe Algorithm.
+MEMORY_MODE: FrankWolfe.InplaceEmphasis() STEPSIZE: Goldenratio EPSILON: 1.0e-7 MAXITERATION: 1000 TYPE: Float64
+GRADIENTTYPE: FrankWolfe.BlockVector{Float64, Vector{Float64}, Tuple{Int64}} LAZY: false lazy_tolerance: 2.0 MOMENTUM: nothing AWAYSTEPS: true
+LMO: FrankWolfe.ProductLMO{2, Tuple{FrankWolfe.ConvexHullOracle{Vector{Float64}, Vector{Vector{Float64}}}, FrankWolfe.ConvexHullOracle{Vector{Float64}, Vector{Vector{Float64}}}}}
+
+----------------------------------------------------------------------------------------------------------------
+  Type     Iteration         Primal           Dual       Dual Gap           Time         It/sec     #ActiveSet
+----------------------------------------------------------------------------------------------------------------[s
+     I             1   4.348509e+07           -Inf            Inf   0.000000e+00            Inf              2[s
+    FW           100   4.043159e+07   4.042821e+07   3.382016e+03   2.567518e+01   3.894812e+00             90[s
+     A           200   4.043153e+07   4.043052e+07   1.013284e+03   5.161207e+01   3.875063e+00            154[s
+     A           300   4.043153e+07   4.043119e+07   3.373172e+02   7.756211e+01   3.867868e+00            207[s
+     A           400   4.043153e+07   4.043144e+07   9.183343e+01   1.027605e+02   3.892545e+00            259[s
+    FW           500   4.043153e+07   4.043150e+07   2.890546e+01   1.287708e+02   3.882869e+00            314[s
+    FW           600   4.043153e+07   4.043152e+07   9.698417e+00   1.548778e+02   3.874022e+00            366[s
+     A           700   4.043153e+07   4.043152e+07   3.245452e+00   1.810368e+02   3.866617e+00            419[s
+    FW           800   4.043153e+07   4.043153e+07   1.085744e+00   2.070471e+02   3.863855e+00            469[s
+    FW           900   4.043153e+07   4.043153e+07   3.077457e-01   2.331441e+02   3.860274e+00            523[s
+    FW          1000   4.043153e+07   4.043153e+07   1.155564e-01   2.586273e+02   3.866568e+00            578[s
+  Last          1001   4.043153e+07   4.043153e+07   1.174580e-01   2.593558e+02   3.859563e+00            578
+----------------------------------------------------------------------------------------------------------------[s
+    PP          1001   4.043153e+07   4.043153e+07   1.174580e-01   2.595772e+02   3.856270e+00            578
+----------------------------------------------------------------------------------------------------------------[s
+
+
+Intersecting
+
+
+
+ ----------> Cyclic Block-coordinate vanilla FW
+
+Block coordinate Frank-Wolfe (BCFW).
+MEMORY_MODE: FrankWolfe.InplaceEmphasis() STEPSIZE: DataType[FrankWolfe.Goldenratio{Float64}, FrankWolfe.Goldenratio{Float64}] EPSILON: 1.0e-7 MAXITERATION: 1000 TYPE: Float64
+MOMENTUM: nothing GRADIENTTYPE: FrankWolfe.BlockVector{Float64, Vector{Float64}, Tuple{Int64}} UPDATE_ORDER: FrankWolfe.CyclicUpdate(-1) UPDATE_STEP: DataType[FrankWolfe.FrankWolfeStep, FrankWolfe.FrankWolfeStep]
+
+-------------------------------------------------------------------------------------------------
+  Type     Iteration         Primal           Dual       Dual Gap           Time         It/sec
+-------------------------------------------------------------------------------------------------[s
+     I             1   8.340580e+03  -9.014193e+06   9.022533e+06   0.000000e+00            Inf[s
+    FW           100   2.994276e+02  -2.142481e+03   2.441909e+03   2.653237e+01   3.768981e+00[s
+    FW           200   1.380177e+02  -1.070870e+03   1.208888e+03   5.295242e+01   3.776976e+00[s
+    FW           300   8.610536e+01  -6.987902e+02   7.848955e+02   7.940045e+01   3.778316e+00[s
+    FW           400   6.111446e+01  -4.989947e+02   5.601092e+02   1.060274e+02   3.772609e+00[s
+    FW           500   4.660470e+01  -3.795271e+02   4.261318e+02   1.323326e+02   3.778359e+00[s
+    FW           600   3.714696e+01  -3.216673e+02   3.588143e+02   1.589279e+02   3.775297e+00[s
+    FW           700   3.066056e+01  -2.912336e+02   3.218941e+02   1.857588e+02   3.768328e+00[s
+    FW           800   2.591391e+01  -2.375790e+02   2.634929e+02   2.119620e+02   3.774261e+00[s
+    FW           900   2.232030e+01  -2.116234e+02   2.339437e+02   2.378163e+02   3.784434e+00[s
+    FW          1000   1.952452e+01  -1.867517e+02   2.062762e+02   2.639527e+02   3.788558e+00[s
+  Last          1001   1.952341e+01  -5.575344e+01   7.527685e+01   2.647529e+02   3.780884e+00
+-------------------------------------------------------------------------------------------------[s
+
+
+
+ ----------> Full Block-coordinate vanilla FW
+
+Block coordinate Frank-Wolfe (BCFW).
+MEMORY_MODE: FrankWolfe.InplaceEmphasis() STEPSIZE: DataType[FrankWolfe.Goldenratio{Float64}, FrankWolfe.Goldenratio{Float64}] EPSILON: 1.0e-7 MAXITERATION: 1000 TYPE: Float64
+MOMENTUM: nothing GRADIENTTYPE: FrankWolfe.BlockVector{Float64, Vector{Float64}, Tuple{Int64}} UPDATE_ORDER: FrankWolfe.FullUpdate() UPDATE_STEP: DataType[FrankWolfe.FrankWolfeStep, FrankWolfe.FrankWolfeStep]
+
+-------------------------------------------------------------------------------------------------
+  Type     Iteration         Primal           Dual       Dual Gap           Time         It/sec
+-------------------------------------------------------------------------------------------------[s
+     I             1   8.340766e+03  -9.041969e+06   9.050310e+06   0.000000e+00            Inf[s
+    FW           100   2.985845e+02  -2.050131e+03   2.348716e+03   2.218487e+01   4.507577e+00[s
+    FW           200   1.364754e+02  -1.053508e+03   1.189983e+03   4.472082e+01   4.472190e+00[s
+    FW           300   8.488457e+01  -6.882018e+02   7.730864e+02   6.698761e+01   4.478440e+00[s
+    FW           400   6.024282e+01  -4.982646e+02   5.585074e+02   8.946927e+01   4.470809e+00[s
+    FW           500   4.591937e+01  -3.955746e+02   4.414939e+02   1.116778e+02   4.477166e+00[s
+    FW           600   3.666199e+01  -3.147757e+02   3.514377e+02   1.337938e+02   4.484513e+00[s
+    FW           700   3.031646e+01  -2.761436e+02   3.064601e+02   1.565244e+02   4.472145e+00[s
+    FW           800   2.569731e+01  -2.407053e+02   2.664026e+02   1.787384e+02   4.475814e+00[s
+    FW           900   2.214874e+01  -2.029908e+02   2.251396e+02   2.010048e+02   4.477505e+00[s
+    FW          1000   1.939781e+01  -1.890636e+02   2.084614e+02   2.233148e+02   4.477984e+00[s
+  Last          1001   1.939678e+01  -4.769714e+01   6.709392e+01   2.239879e+02   4.468992e+00
+-------------------------------------------------------------------------------------------------[s
+
+
+
+ ----------> Full Block-coordinate Away FW (ours)
+
+Block coordinate Frank-Wolfe (BCFW).
+MEMORY_MODE: FrankWolfe.InplaceEmphasis() STEPSIZE: DataType[FrankWolfe.Goldenratio{Float64}, FrankWolfe.Goldenratio{Float64}] EPSILON: 1.0e-7 MAXITERATION: 1000 TYPE: Float64
+MOMENTUM: nothing GRADIENTTYPE: FrankWolfe.BlockVector{Float64, Vector{Float64}, Tuple{Int64}} UPDATE_ORDER: FrankWolfe.FullUpdate() UPDATE_STEP: DataType[AwayStep, AwayStep]
+
+-------------------------------------------------------------------------------------------------
+  Type     Iteration         Primal           Dual       Dual Gap           Time         It/sec
+-------------------------------------------------------------------------------------------------[s
+     I             1   8.340766e+03  -9.041969e+06   9.050310e+06   0.000000e+00            Inf[s
+     A           100   2.103323e+02  -2.857920e+03   3.068252e+03   2.155133e+01   4.640086e+00[s
+    FW           200   9.419970e+01  -1.371939e+03   1.466139e+03   4.358786e+01   4.588433e+00[s
+     A           300   5.642722e+01  -9.217879e+02   9.782151e+02   6.540759e+01   4.586623e+00[s
+     A           400   3.863922e+01  -6.888526e+02   7.274919e+02   8.730004e+01   4.581899e+00[s
+    FW           500   2.827728e+01  -5.453869e+02   5.736642e+02   1.094143e+02   4.569786e+00[s
+     D           600   2.197132e+01  -4.059406e+02   4.279119e+02   1.312790e+02   4.570420e+00[s
+     A           700   1.758676e+01  -3.447599e+02   3.623467e+02   1.531883e+02   4.569539e+00[s
+     A           800   1.464274e+01  -2.846615e+02   2.993043e+02   1.751420e+02   4.567722e+00[s
+     A           900   1.235489e+01  -2.496808e+02   2.620357e+02   1.971245e+02   4.565643e+00[s
+     A          1000   1.062181e+01  -2.225487e+02   2.331705e+02   2.194635e+02   4.556566e+00[s
+  Last          1001   1.060647e+01  -2.215923e+02   2.321987e+02   2.201233e+02   4.547452e+00
+-------------------------------------------------------------------------------------------------[s
+
+
+
+ ----------> Full FW
+
+Vanilla Frank-Wolfe Algorithm.
+MEMORY_MODE: FrankWolfe.InplaceEmphasis() STEPSIZE: Goldenratio EPSILON: 1.0e-7 MAXITERATION: 1000 TYPE: Float64
+MOMENTUM: nothing GRADIENTTYPE: Nothing
+LMO: FrankWolfe.ProductLMO{2, Tuple{FrankWolfe.ConvexHullOracle{Vector{Float64}, Vector{Vector{Float64}}}, FrankWolfe.ConvexHullOracle{Vector{Float64}, Vector{Vector{Float64}}}}}
+
+-------------------------------------------------------------------------------------------------
+  Type     Iteration         Primal           Dual       Dual Gap           Time         It/sec
+-------------------------------------------------------------------------------------------------[s
+     I             1   4.376673e+06  -4.673636e+06   9.050310e+06   0.000000e+00            Inf[s
+    FW           100   3.072916e+02  -2.004368e+03   2.311659e+03   2.532513e+01   3.948648e+00[s
+    FW           200   1.408989e+02  -1.016723e+03   1.157622e+03   5.122493e+01   3.904349e+00[s
+    FW           300   8.766099e+01  -6.639343e+02   7.515953e+02   7.678840e+01   3.906840e+00[s
+    FW           400   6.214290e+01  -4.968317e+02   5.589746e+02   1.029296e+02   3.886153e+00[s
+    FW           500   4.740949e+01  -3.882631e+02   4.356726e+02   1.289329e+02   3.877985e+00[s
+    FW           600   3.797360e+01  -3.102544e+02   3.482280e+02   1.550101e+02   3.870714e+00[s
+    FW           700   3.143277e+01  -2.782823e+02   3.097150e+02   1.813786e+02   3.859332e+00[s
+    FW           800   2.663277e+01  -2.337647e+02   2.603974e+02   2.068960e+02   3.866676e+00[s
+    FW           900   2.300799e+01  -2.070674e+02   2.300754e+02   2.330498e+02   3.861835e+00[s
+    FW          1000   2.017865e+01  -1.840792e+02   2.042579e+02   2.594067e+02   3.854951e+00[s
+  Last          1001   2.017403e+01  -4.820926e+01   6.838329e+01   2.601314e+02   3.848055e+00
+-------------------------------------------------------------------------------------------------[s
+
+
+
+ ----------> Full AFW
+
+Away-step Frank-Wolfe Algorithm.
+MEMORY_MODE: FrankWolfe.InplaceEmphasis() STEPSIZE: Goldenratio EPSILON: 1.0e-7 MAXITERATION: 1000 TYPE: Float64
+GRADIENTTYPE: FrankWolfe.BlockVector{Float64, Vector{Float64}, Tuple{Int64}} LAZY: false lazy_tolerance: 2.0 MOMENTUM: nothing AWAYSTEPS: true
+LMO: FrankWolfe.ProductLMO{2, Tuple{FrankWolfe.ConvexHullOracle{Vector{Float64}, Vector{Vector{Float64}}}, FrankWolfe.ConvexHullOracle{Vector{Float64}, Vector{Vector{Float64}}}}}
+
+----------------------------------------------------------------------------------------------------------------
+  Type     Iteration         Primal           Dual       Dual Gap           Time         It/sec     #ActiveSet
+----------------------------------------------------------------------------------------------------------------[s
+     I             1   4.376673e+06           -Inf            Inf   0.000000e+00            Inf              2[s
+    FW           100   2.164102e+02  -2.899694e+03   3.116104e+03   2.529691e+01   3.953052e+00             53[s
+    FW           200   9.361564e+01  -1.378036e+03   1.471651e+03   5.097634e+01   3.923389e+00            103[s
+    FW           300   5.565471e+01  -9.102409e+02   9.658956e+02   7.647173e+01   3.923018e+00            153[s
+    FW           400   3.833014e+01  -5.417381e+02   5.800682e+02   1.015131e+02   3.940379e+00            203[s
+    FW           500   2.832573e+01  -5.051964e+02   5.335221e+02   1.272386e+02   3.929624e+00            253[s
+    FW           600   2.217820e+01  -3.950145e+02   4.171927e+02   1.527858e+02   3.927066e+00            303[s
+    FW           700   1.785703e+01  -3.376150e+02   3.554720e+02   1.787284e+02   3.916557e+00            353[s
+    FW           800   1.479392e+01  -3.010927e+02   3.158866e+02   2.038936e+02   3.923614e+00            403[s
+    FW           900   1.249291e+01  -2.536759e+02   2.661688e+02   2.295762e+02   3.920267e+00            453[s
+    FW          1000   1.070000e+01  -2.317646e+02   2.424646e+02   2.552112e+02   3.918323e+00            503[s
+  Last          1001   1.066873e+01  -4.219110e+02   4.325797e+02   2.559817e+02   3.910436e+00            503
+----------------------------------------------------------------------------------------------------------------[s
+    PP          1001   1.066873e+01  -4.219110e+02   4.325797e+02   2.562127e+02   3.906911e+00            503
+----------------------------------------------------------------------------------------------------------------[s
+
+
+		Elapsed time main: 2468.0305519104004 seconds
+
+
+Label: C-BC-FW, Total Time: 133002.45690271698, Average Time per Iteration: 132.7369829368433
+Label: F-BC-FW, Total Time: 112240.07601077508, Average Time per Iteration: 112.01604392292923
+Label: F-BC-AFW, Total Time: 109942.55510675983, Average Time per Iteration: 109.72310888898187
+Label: F-FW, Total Time: 129759.5552495861, Average Time per Iteration: 129.5005541413035
+Label: F-AFW, Total Time: 128279.37635271304, Average Time per Iteration: 127.89568928485846
+Label: C-BC-FW, Total Time: 134029.18710906306, Average Time per Iteration: 133.76166378150006
+Label: F-BC-FW, Total Time: 112015.59773850298, Average Time per Iteration: 111.79201371108083
+Label: F-BC-AFW, Total Time: 111753.72915618002, Average Time per Iteration: 111.53066782053895
+Label: F-FW, Total Time: 130148.19522994087, Average Time per Iteration: 129.88841839315455
+Label: F-AFW, Total Time: 130065.62038995503, Average Time per Iteration: 129.67659061810073
+
+
+		Elapsed time tot: 7801.356689929962 seconds
+
+
