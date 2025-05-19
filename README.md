@@ -1,5 +1,5 @@
-# bpcg-product
-Experiments to test BPCG over the product domain on different problems
+# product-polytopes-afw
+Experiments to test the Away Frank-Wolfe algorithm over an intersection of several polytopes
 
 This repository contains two main components:
 - `code/`: containing Julia code for experiments
@@ -11,7 +11,7 @@ This repository contains two main components:
 To get started with the project, clone repository with associated OverLeaf submodule:
 
 ```bash
-git clone --recurse-submodules git@github.com:giommazz/bpcg-product.git
+git clone --recurse-submodules git@github.com:giommazz/product-polytopes-afw.git
 ```
 
 If you've already cloned the repo but didn't include the submodule, initialize and update the submodule:
@@ -53,10 +53,10 @@ git push
 
 To set up the Julia environment necessary to run the experiments, follow these steps:
 
-1. Clone this repository and navigate to the `code/BPCGProduct` directory.
+1. Clone this repository and navigate to the `code/ProductPolytopesAFW` directory.
 2. Start Julia and activate the local environment
 ```bash
-cd bpcg-product/code/BPCGProduct
+cd product-polytopes-afw/code/ProductPolytopesAFW
 julia --project=. 
 ```
 3. Install and lock the exact package versions
