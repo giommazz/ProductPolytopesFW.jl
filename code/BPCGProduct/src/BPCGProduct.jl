@@ -40,7 +40,7 @@ module BPCGProduct
     # From `polytopes.jl`
     export generate_polytopes, compute_distance, save_polytopes, load_polytopes, generate_filename
     # From `plot_utils.jl`
-    export plot_trajectories
+    export plot_trajectories, load_fw_trajectories_i, load_fw_trajectories_ni
     # From `plotting_utils.jl`
     export plot_time_only, cutoff_log_shortest_time, load_fw_trajectories, get_k_n_from_logstring
 

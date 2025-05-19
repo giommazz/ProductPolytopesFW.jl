@@ -136,7 +136,7 @@ Input:
     - optional: a list of wanted labels, in case we only want to plot some of the logged FW variants
 Output: Vector{Vector{NTuple{5, T}}} of trajectories such that each NTuple is (iter, prim, dual, dgap, time).
 """
-function load_fw_trajectories(path::String; wanted_fw_variants::Vector{String}=String[])
+function load_fw_trajectories_ni(path::String; wanted_fw_variants::Vector{String}=String[])
     
     # `splitext` returns (root, extension)
     ext = lowercase(splitext(path)[2])
@@ -204,27 +204,77 @@ function load_fw_trajectories(path::String; wanted_fw_variants::Vector{String}=S
         
         # read iteration number
         iter = Int64(df[row_idx, cols[1]])
-        
-        # for each variant, grab its 4 fields
-        for FWvar_index in 1:length(retrieved_fw_labels)
+        # for each selected FW variant, grab its 4 fields
+        for local_idx in 1:length(wanted_idxs)
+            orig_idx = wanted_idxs[local_idx]
             # skip the first two columns (iter,opt), then block of 4 per FW variant
-            base = 2 + (FWvar_index - 1)*4
-            # ...then retrieve tuple indices for each variant and each row
-            prim_col = cols[base+1]
-            dual_col = cols[base+2]
-            dgap_col = cols[base+3]
-            time_col = cols[base+4]
-            # now you have row indices and column indices, convert values from String to Number
-            prim = Float64(df[row_idx, prim_col])
-            dual = Float64(df[row_idx, dual_col])
-            dgap = Float64(df[row_idx, dgap_col])
-            time = Float64(df[row_idx, time_col])
+            base     = 2 + (orig_idx - 1) * 4
+            # now you have `row_idx` and column indices, convert values from String to Number
+            prim = Float64(df[row_idx, cols[base + 1]])
+            dual = Float64(df[row_idx, cols[base + 2]])
+            dgap = Float64(df[row_idx, cols[base + 3]])
+            time = Float64(df[row_idx, cols[base + 4]])
 
-            trajectories[FWvar_index][row_idx] = (iter, prim, dual, dgap, time)
+            trajectories[local_idx][row_idx] = (iter, prim, dual, dgap, time)
         end
     end
 
     return trajectories, retrieved_fw_labels, opt
+end
+
+
+
+
+
+function load_fw_trajectories_i(path::String; wanted_fw_variants::Vector{String}=String[])
+    # ---------------- basic checks -------------------------------------------------
+    @assert lowercase(splitext(path)[2]) == ".csv" "Expected a .csv file"
+
+    df   = CSV.read(path, DataFrame)
+    cols = names(df)
+
+    ncols      = ncol(df)
+    @assert ncols ≥ 5 "Expect at least :iter plus one 4-column FW block"
+    n_variants = Int((ncols - 1) ÷ 4)
+
+    # ---------------- build human-readable labels (unchanged) ----------------------
+    FW_TOKENS      = ["AP","BPFW","AFW","FW","BC","C","F"]
+    token_re       = Regex("($(join(sort(FW_TOKENS, by=length, rev=true), '|')))")
+
+    variant_labels = String[]
+    for v in 1:n_variants
+        prim_header = String(cols[1 + (v-1)*4 + 1])  # after `iter`, offset +1
+        block_name  = split(prim_header, "_")[1]
+        push!(variant_labels, join([m.match for m in eachmatch(token_re, block_name)], "-"))
+    end
+
+    # ---------------- keep only requested variants ---------------------------------
+    wanted_idxs = isempty(wanted_fw_variants) ?
+                  collect(1:n_variants) :
+                  findall(lbl -> lbl in wanted_fw_variants, variant_labels)
+    @assert !isempty(wanted_idxs) "No matching FW variants: $wanted_fw_variants"
+
+    labels       = variant_labels[wanted_idxs]
+    trajectories = [Vector{Any}(undef, nrow(df)) for _ in wanted_idxs]
+
+    # ---------------- fill trajectories --------------------------------------------
+    for row_idx in 1:nrow(df)
+        iter = Int64(df[row_idx, cols[1]])
+
+        for local_idx in 1:length(wanted_idxs)
+            orig_idx = wanted_idxs[local_idx]
+            base     = 1 + (orig_idx - 1)*4
+
+            prim = Float64(df[row_idx, cols[base + 1]])
+            dual = Float64(df[row_idx, cols[base + 2]])
+            dgap = Float64(df[row_idx, cols[base + 3]])
+            time = Float64(df[row_idx, cols[base + 4]])
+
+            trajectories[local_idx][row_idx] = (iter, prim, dual, dgap, time)
+        end
+    end
+
+    return trajectories, labels 
 end
 
 # given a log string, retrieves k and n
