@@ -1,7 +1,8 @@
-# plot_from_logs.j
-# This example shows how to build plots from existing plots. 
+# plot_from_logs.jl
+# This example shows how to build plots from an existing logfile. 
 # This is useful if the user decides at a certain point to change anything in the plotting functions. but does not want
 #   At that point, instead of re-running all the experiments from scratch, one can just plot using saved logs
+#   One can decide to plot only some FW variants from the logs
 using ProductPolytopesAFW
 using FrankWolfe
 using Plots

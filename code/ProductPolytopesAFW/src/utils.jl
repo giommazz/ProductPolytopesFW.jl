@@ -358,3 +358,9 @@ function best_seen_solution(trajectories::Vector{Vector{Any}}, opt::Float64)
 
     return best < opt ? best : opt
 end
+
+# given a log string, retrieves k and n
+function get_k_n_from_logstring(logname::String)
+    m = match(r"_k(\d+)_n(\d+)_", logname)
+    return parse.(Int, m.captures)
+end

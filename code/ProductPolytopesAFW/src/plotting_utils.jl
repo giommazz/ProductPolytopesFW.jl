@@ -118,13 +118,15 @@ function cutoff_log_shortest_time(trajectories::Vector{Vector{Any}})
     # Decide `cutoff_time`: ∀ Vectors in `trajectories`, extract 5th element (time) of the last tuple, then compute min among all these times
     cutoff_time = minimum([last(traj)[5] for traj in trajectories])
     # Create `cutoff_trajectories`, truncated to earliest finish point: ∀ Vectors in `trajectories`, cut out tuples where `time` ≥ `cutoff_time`
-    cutoff_trajectories = [
-        filter(tuple -> tuple[5] ≤ cutoff_time, traj) for traj in trajectories
-    ]
+    cutoff_trajectories = cutoff_log_shortest_time(trajectories, cutoff_time)
     
     return cutoff_trajectories, cutoff_time
 end
-
+function cutoff_log_shortest_time(trajectories::Vector{Vector{Any}}, cutoff_time::Float64)
+    
+    # Create `cutoff_trajectories`, truncated to earliest finish point: ∀ Vectors in `trajectories`, cut out tuples where `time` ≥ `cutoff_time`
+    return [filter(tuple -> tuple[5] ≤ cutoff_time, traj) for traj in trajectories]
+end
 
 
 
@@ -141,6 +143,7 @@ function load_fw_trajectories_ni(path::String; wanted_fw_variants::Vector{String
     # `splitext` returns (root, extension)
     ext = lowercase(splitext(path)[2])
     @assert ext == ".csv" "Expected a .csv file"
+    @assert lowercase([1:3]) == "ni_" "Expected a file pertaining to an non-intersecting instance, instead found $(split(path, "/"))"
     
     # read .csv file
     df = CSV.read(path, DataFrame)
@@ -229,6 +232,7 @@ end
 function load_fw_trajectories_i(path::String; wanted_fw_variants::Vector{String}=String[])
     # ---------------- basic checks -------------------------------------------------
     @assert lowercase(splitext(path)[2]) == ".csv" "Expected a .csv file"
+    @assert lowercase([1:2]) == "i_" "Expected a file pertaining to an intersecting instance, instead found $(split(path, "/"))"
 
     df   = CSV.read(path, DataFrame)
     cols = names(df)
@@ -275,10 +279,4 @@ function load_fw_trajectories_i(path::String; wanted_fw_variants::Vector{String}
     end
 
     return trajectories, labels 
-end
-
-# given a log string, retrieves k and n
-function get_k_n_from_logstring(logname::String)
-    m = match(r"_k(\d+)_n(\d+)_", logname)
-    return parse.(Int, m.captures)
 end
