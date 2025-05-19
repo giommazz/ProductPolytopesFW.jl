@@ -42,6 +42,24 @@ function new_modified_file(
     return abspath(new_filename)
 end
 
+"""
+    safe_submit(cmd::Cmd)
+
+Runs `cmd` asynchronously (`wait=false`) on SLURM.  If `sbatch` errors, `safe_submit` catches the exception and only emits a warning
+"""
+function safe_submit(cmd::Cmd)
+    try
+        # `wait=false`: Julia will launch the external command `cmd` and then give control back to `safe_submit`
+        #       without sitting around waiting for that command to finish.
+        #       By default, `run(cmd)` blocks until the external program exits, but adding `wait=false` makes it asynchronous
+        #       Enclosing everything in a try-catch statement ensures any SLURM problem will be caught without blockng the Julia script
+        #       So, with this, SLURM enqueues the job and Julia proceeds to the next step
+        run(cmd)
+    catch err
+        @warn "slurm submission failed" cmd=cmd error=err
+    end
+end
+
 function main(dir, config, seed)
     for k in list_k, n in list_n
         
@@ -65,13 +83,12 @@ function main(dir, config, seed)
             k, n, seed)
         println(new_sh_slurmscript_filename)
         
-        slurm_command = `sbatch $(new_sh_slurmscript_filename) $(new_jl_experimentsscript_filename) $(dir)/results_linesearch_afw/ $(new_config_filename)`
+        # run `sbatch` command
+        slurm_command = `sbatch $(new_sh_slurmscript_filename) $(new_jl_experimentsscript_filename) $dir/results_linesearch_afw/ $new_config_filename`
         println("Submitting job with:\n  ", slurm_command)
-        # `wait=false`: Julia will launch the external command `sbatch...` and then give control back to `slurm_loop.jl`
-        #       without sitting around waiting for that command to finish.
-        #       By default, `run(cmd)` blocks until the external program exits, but adding `wait=false` makes it asynchronous           
-        #       So, with this, Slurm enqueues the job and `slurm_loop.jl` proceeds to the next combination
-        run(slurm_command; wait=false, ignorestatus=true)
+        # launch command, catch any errors
+        safe_submit(slurm_command)
+        println()
 
         seed += 1
     end
@@ -89,8 +106,3 @@ dir = "examples"
 config = Config(joinpath(dir, "config.yml"))
 
 main(dir, config, seed)
-
-
-#src_textline = "n_points: 0"
-#replacement_textline = "n_points: 1"
-#new_jl_experimentsscript_filename = new_modified_file(joinpath(dir, "config.yml"), src_textline, replacement_textline, 2, 2, 42)
