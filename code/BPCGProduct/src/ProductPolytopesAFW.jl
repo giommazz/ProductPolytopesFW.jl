@@ -1,5 +1,5 @@
-# `BPCGProduct.jl`
-module BPCGProduct
+# `ProductPolytopesAFW.jl`
+module ProductPolytopesAFW
     using FrankWolfe
     using Plots           # Plotting utilities needed to run FrankWolfe/plot_utils.jl
     using Random
@@ -44,4 +44,4 @@ module BPCGProduct
     # From `plotting_utils.jl`
     export plot_time_only, cutoff_log_shortest_time, load_fw_trajectories, get_k_n_from_logstring
 
-end # module BPCGProduct
+end # module ProductPolytopesAFW

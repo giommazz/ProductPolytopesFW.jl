@@ -1,6 +1,6 @@
 # `compute_intersection_legacy_lmos.jl`
-using BPCGProduct
-using BPCGProduct: FrankWolfe
+using ProductPolytopesAFW
+using FrankWolfe
 
 config = Config("examples/config.yml") # Use parameters from YAML file
 

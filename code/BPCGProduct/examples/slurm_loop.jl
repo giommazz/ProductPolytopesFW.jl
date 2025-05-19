@@ -1,6 +1,6 @@
 # `slurm_loop.jl`
 #!/usr/bin/env julia
-using BPCGProduct
+using ProductPolytopesAFW
 using Printf
 
 # ***********************************************************************

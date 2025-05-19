@@ -1,7 +1,7 @@
 # General
 To run the algorithms, for instance `examples/compute_intersection_custom_full.jl`, do:
 ```bash
-cd BPCGProduct
+cd ProductPolytopesAFW
 ```
 then set up experimental parameters in `examples/config.yml` and, finally, 
 ```
@@ -9,7 +9,7 @@ julia --project=.
 include("examples/compute_intersection_custom_full.jl")
 ```
 
-Notice that `Plots` is not installed in the `BPCGProduct` package because it is cumbersome, and we didn't want to ship our code with heavy dependencies.
+Notice that `Plots` is not installed in the `ProductPolytopesAFW` package because it is cumbersome, and we didn't want to ship our code with heavy dependencies.
 For some scripts in `/examples` to run, you should have `Plots` installed in your base `Julia` environment, so that the command `using Plots` at the top of, say, `examples/compute_intersection_custom_full.jl`, won't fail
 
 # Workflows
@@ -29,7 +29,7 @@ Warning! Example scripts might be outdated
 1. make sure to set the 'SBATCH' parameters in the SLURM script in compliance with your SLURM server constraints
 2. run the following commands
     ```
-    cd /BPCGProduct
+    cd /ProductPolytopesAFW
     chmod +x slurm_experiments.sh
     sbatch examples/slurm_experiments.sh examples/compute_intersection_custom_full_warmup_slurm.jl examples/results_linesearch_afw/ examples/config.yml
     ```

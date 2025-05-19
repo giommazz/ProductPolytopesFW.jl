@@ -2,7 +2,7 @@
 # This example shows how to build plots from existing plots. 
 # This is useful if the user decides at a certain point to change anything in the plotting functions. but does not want
 #   At that point, instead of re-running all the experiments from scratch, one can just plot using saved logs
-using BPCGProduct
+using ProductPolytopesAFW
 using FrankWolfe
 using Plots
 

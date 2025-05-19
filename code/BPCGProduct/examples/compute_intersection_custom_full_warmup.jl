@@ -3,14 +3,14 @@
 # or from linux terminal with: `julia --project=. examples/compute_intersection_custom_full.jl > test.log 2>&1`
 #
 # This includes a little script that warms up the REPL: it is executed before running the main script, so that when the main script is run, 
-#   the package `BPCGProduct` has already been precompiled and the plots obtained by `main` don't show initial arbitrary overhead
-using BPCGProduct
+#   the package `ProductPolytopesAFW` has already been precompiled and the plots obtained by `main` don't show initial arbitrary overhead
+using ProductPolytopesAFW
 using FrankWolfe
 using Plots
 
 # ---------------------------------------------------------------------------------
 # MAIN FUNCTIONS
-# Solve small instance (using `config_warmup`) to "warm-up" the REPL: this compiles `BPCGProduct`, so that no compilation needed upon running `main`
+# Solve small instance (using `config_warmup`) to "warm-up" the REPL: this compiles `ProductPolytopesAFW`, so that no compilation needed upon running `main`
 function repl_warmup(config::Config, vertices, shifted_vertices, labels, basename)
 
     # Retrieve nonintersecting and intersecting LMOs from previously generated instances

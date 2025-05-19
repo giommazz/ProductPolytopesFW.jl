@@ -1,5 +1,5 @@
 # `compute_intersection_custom_instances.jl`
-using BPCGProduct
+using ProductPolytopesAFW
 using FrankWolfe
 using LinearAlgebra
 

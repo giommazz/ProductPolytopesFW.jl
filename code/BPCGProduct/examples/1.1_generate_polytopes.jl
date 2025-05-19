@@ -1,5 +1,5 @@
 # `1.1_generate_polytopes.jl`
-using BPCGProduct
+using ProductPolytopesAFW
 
 # Use parameters from YAML file
 config = Config("examples/config.yml")
