@@ -51,11 +51,7 @@ function Config(yaml_file::String; kwargs...)
 
     # Handle the n_points field
     n_points = config["n_points"]
-    if n_points == 0
-        # Generate a list of random integers in [n, 2n+1] of length config["k"]
-        Random.seed!(config["seed"])  # Set the seed for reproducibility
-        n_points = [rand(config["n"]:config["n"]*2 + 1) for _ in 1:config["k"]]
-    end
+    if n_points == 0 generate_n_points(config["n"], config["k"], config["seed"]) end
     c = Config(
             config["k"],
             config["n"],
@@ -89,6 +85,10 @@ function modify_config(config::Config; kwargs...)
     cvxhflag = get(kwargs, :cvxhflag, config.cvxhflag)
     anc_flag = get(kwargs, :anc_flag, config.anc_flag)
     stepsize_strategy = get(kwargs, :stepsize_strategy, config.stepsize_strategy)
+
+    if length(n_points) ≠ k
+        n_points = generate_n_points(n, k, seed)
+    end
 
     # Return a new Config object with updated values
     c = Config(k, n, n_points, target_tolerance, target_tolerance_opt, max_iterations, max_iterations_opt, max_print_iterations, seed, cvxhflag, anc_flag, stepsize_strategy)
@@ -176,7 +176,7 @@ function print_config(config::Config)
     println("  Seed for reproducibility (seed): ", config.seed)
     println("  Use FW's ConvexHullOracle LMOs or MathOptLMO (cvxhflag): ", config.cvxhflag)
     println("  Intersect polytopes close to first polytope's analytic center (true) or vertex (false): ", config.anc_flag)
-    println("  Stepsize strategy (`0` is line search; `1` uses short-step with L=2 specified in `product_algorithms.jl`): ", config.stepsize_strategy)
+    println("  Stepsize strategy (`0` is line search; `1` uses short-step with L=1 specified in `product_algorithms.jl`): ", config.stepsize_strategy)
     println()
 end
 
@@ -210,4 +210,10 @@ function write_config(config::Config, config_filename::AbstractString)
     mkpath(dirname(config_filename))
     YAML.write_file(config_filename, todict(config))
     return abspath(config_filename)
+end
+
+function generate_n_points(n::Integer, k::Integer, seed::Integer; upper_bound::Integer=n*2)
+    # Generate a list of k random integers in [n, upper_bound]
+    Random.seed!(seed)  # Set the seed for reproducibility
+    return [rand(n:upper_bound + 1) for _ in 1:k]
 end

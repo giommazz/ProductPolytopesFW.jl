@@ -9,6 +9,8 @@ using Printf
 
 function write_modified_config(config::Config, k::Integer, n::Integer, seed::Integer, dir::AbstractString)
     modified_config = modify_config(config, k=k, n=n, seed=seed)
+    print_config(modified_config)
+    readline()
     config_filename = joinpath(dir, "config_k$(k)_n$(n)_s$(seed).yml")
     return write_config(modified_config, config_filename)
 end
@@ -87,7 +89,7 @@ function main(dir, config, seed)
         slurm_command = `sbatch $(new_sh_slurmscript_filename) $(new_jl_experimentsscript_filename) $dir/results_linesearch_afw/ $new_config_filename`
         println("Submitting job with:\n  ", slurm_command)
         # launch command, catch any errors
-        safe_submit(slurm_command)
+        # safe_submit(slurm_command)
         println()
 
         seed += 1
@@ -99,8 +101,8 @@ end
 # ***********************************************************************
 # INSTANCE PARAMETERS FOR THE RUNS
 # ***********************************************************************
-list_k    = [2]           # number of polytopes
-list_n    = [101, 101, 101]      # dimension of each polytope
+list_k    = [5]           # number of polytopes
+list_n    = [51, 51, 51]      # dimension of each polytope
 seed = 240389               # starting seed, will be incremented in the loop
 dir = "examples"
 config = Config(joinpath(dir, "config.yml"))
