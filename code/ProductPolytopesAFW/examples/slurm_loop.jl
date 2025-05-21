@@ -9,8 +9,6 @@ using Printf
 
 function write_modified_config(config::Config, k::Integer, n::Integer, seed::Integer, dir::AbstractString)
     modified_config = modify_config(config, k=k, n=n, seed=seed)
-    print_config(modified_config)
-    readline()
     config_filename = joinpath(dir, "config_k$(k)_n$(n)_s$(seed).yml")
     return write_config(modified_config, config_filename)
 end
@@ -67,8 +65,7 @@ function main(dir, config, seed)
         
         # write new modified config "examples/config.yml", with modified parameters k, n, seed
         new_config_filename = write_modified_config(config, k, n, seed, dir)
-        println(new_config_filename)
-        
+
         # write new modified script "examples/compute_intersection_custom_full_warmup_slurm.jl", with new line "config = Config($(new_config_filename))"
         new_jl_experimentsscript_filename = new_modified_file(
             joinpath(dir, "compute_intersection_custom_full_warmup.jl"), 
@@ -102,8 +99,8 @@ end
 # INSTANCE PARAMETERS FOR THE RUNS
 # ***********************************************************************
 list_k    = [5]           # number of polytopes
-list_n    = [51, 51, 51]      # dimension of each polytope
-seed = 240389               # starting seed, will be incremented in the loop
+list_n    = [10000, 10000]      # dimension of each polytope
+seed = 344               # starting seed, will be incremented in the loop
 dir = "examples"
 config = Config(joinpath(dir, "config.yml"))
 

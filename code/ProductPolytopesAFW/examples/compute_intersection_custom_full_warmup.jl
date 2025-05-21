@@ -11,7 +11,7 @@ using Plots
 # ---------------------------------------------------------------------------------
 # MAIN FUNCTIONS
 # Solve small instance (using `config_warmup`) to "warm-up" the REPL: this compiles `ProductPolytopesAFW`, so that no compilation needed upon running `main`
-function repl_warmup(config::Config, vertices, shifted_vertices, labels, basename)
+function repl_warmup(config::Config, vertices, shifted_vertices, labels, basename_run)
 
     # Retrieve nonintersecting and intersecting LMOs from previously generated instances
     lmo_list = create_lmos(config, [vertices, shifted_vertices])
@@ -35,7 +35,7 @@ function repl_warmup(config::Config, vertices, shifted_vertices, labels, basenam
     return trajectories_ni, trajectories_i
 end
 
-function main(config::Config, vertices, shifted_vertices, opt, labels, basename)
+function main(config::Config, vertices, shifted_vertices, opt, labels, basename_run)
 
     # Retrieve nonintersecting and intersecting LMOs from previously generated instances
     lmo_list = create_lmos(config, [vertices, shifted_vertices])
@@ -145,14 +145,14 @@ println("WARMUP: Generating instances and solving them to optimum")
 println("********************************************************")
 vertices, shifted_vertices, _, fw_gap = generate_polytopes(config_warmup)
 # Optimal solution
-basename = generate_filename(config_warmup)
+basename_run = generate_filename(config_warmup)
 # Labels for the plots
 labels = ["F-BC-AFW"]
 # execute main
 println("********************************************************")
 println("WARMUP: Running FW on the instances")
 println("********************************************************")
-_, _ = repl_warmup(config_warmup, vertices, shifted_vertices, labels, basename)
+_, _ = repl_warmup(config_warmup, vertices, shifted_vertices, labels, basename_run)
 
 
 
@@ -181,7 +181,7 @@ println("********************************************************")
 println("MAIN: Generating instances and solving them to optimum")
 println("********************************************************")
 vertices, shifted_vertices, opt, fw_gap = generate_polytopes(config)
-basename = generate_filename(config)
+basename_run = generate_filename(config)
 
 # ---------------------------------------------------------------------------------
 # RUN MAIN TO SOLVE INSTANCES
@@ -189,7 +189,7 @@ println("\n\n********************************************************")
 println("MAIN: Running FW on the instances")
 println("********************************************************")
 t_start_main = time()
-trajectories_ni, trajectories_i = main(config, vertices, shifted_vertices, opt, labels, "ni_"*basename)
+trajectories_ni, trajectories_i = main(config, vertices, shifted_vertices, opt, labels, "ni_"*basename_run)
 t_end_main = time()
 println("\n\n\t\tElapsed time main: ", t_end_main - t_start_main, " seconds\n\n")
 
@@ -203,8 +203,8 @@ padded_trajectories_i, min_length_i, max_length_i = pad_log_data(trajectories_i)
 #       on some iterations, after the 8th decimal. `best_seen_solution` makes sure that, in such a case, `opt` is updated to the smallest value
 opt = best_seen_solution(padded_trajectories_ni, opt)
 # log padded data
-save_logdata_to_csv(padded_trajectories_ni, opt, max_length_ni, labels, logs_dir, "ni_"*basename)
-save_logdata_to_csv(padded_trajectories_i, max_length_i, labels, logs_dir, "i_"*basename)
+save_logdata_to_csv(padded_trajectories_ni, opt, max_length_ni, labels, logs_dir, "ni_"*basename_run)
+save_logdata_to_csv(padded_trajectories_i, max_length_i, labels, logs_dir, "i_"*basename_run)
 
 
 # ---------------------------------------------------------------------------------
@@ -223,8 +223,8 @@ cutoff_trajectories_ni_pgap = [compute_primal_gap(t, opt) for t in cutoff_trajec
 fig_ni = plot_time_only(config, cutoff_trajectories_ni_pgap, labels, yscalelog=true, xscalelog=true) # plotting function that only prints time and is customized
 fig_i  = plot_time_only(config, cutoff_trajectories_i, labels, yscalelog=true, xscalelog=true) # plotting function that only prints time and is customized
 # Decide filename
-fig_ni_filename = plots_dir*"/plot_ni_$basename"
-fig_i_filename = plots_dir*"/plot_i_$basename"
+fig_ni_filename = plots_dir*"/plot_ni_$basename_run"
+fig_i_filename = plots_dir*"/plot_i_$basename_run"
 # Plot trajectories
 # Plots.plot!(fig_ni, size=(1200, 800))  # Larger figure size
 # Plots.plot!(fig_i, size=(1200, 800))  # Larger figure size
@@ -235,8 +235,8 @@ Plots.savefig(fig_i, fig_i_filename*".pdf")
 # ---------------------------------------------------------------------------------
 # SAVE TIMES
 # Save time data in `.csv` format
-log_times(trajectories_i, labels, times_dir*"/times_i_"*basename)
-log_times(trajectories_ni, labels, times_dir*"/times_ni_"*basename)
+log_times(trajectories_i, labels, times_dir*"/times_i_"*basename_run)
+log_times(trajectories_ni, labels, times_dir*"/times_ni_"*basename_run)
 
 
 

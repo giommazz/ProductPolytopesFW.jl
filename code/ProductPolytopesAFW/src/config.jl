@@ -111,7 +111,7 @@ function validate_config(yaml_config::Dict{Any, Any})
 
     # Check for `n_points`
     if yaml_config["n_points"] != 0 && (typeof(yaml_config["n_points"]) != Vector{Int} || length(yaml_config["n_points"]) != yaml_config["k"])
-        error("Invalid configuration for 'n_points': must be 0 or a list of $(yaml_config["k"]) integers.")
+        error("Invalid configuration for 'n_points': must be 0 or a list of $(yaml_config["k"]) integers, instead found $(yaml_config["n_points"])")
     end
 
     # Check for `target_tolerance`
