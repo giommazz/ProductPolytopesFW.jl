@@ -106,22 +106,67 @@ function plot_time_only(
     return final_plot
 end
 
+"""
+    cutoff_time(trajectories::Vector{Vector{Any}})
+Input: `trajectories`, where each vector is a vector of 5-tuples: (iter, pgap, dual, dgap, time)
+Output: 
+    - min of the final times among all runs
+"""
+function cutoff_time(trajectories::Vector{Vector{Any}})
+    # Decide `cutoff_time`: ∀ Vectors in `trajectories`, extract 5th element (time) of the last tuple, then compute min among all these times
+    return minimum([last(traj)[5] for traj in trajectories])
+end
+"""
+    [Multiple dispatch] cutoff_time(logfiles::Vector{String})
+Input:
+    - `logfiles`: Vector of logfile names
+Output:
+    - `global_cutoff_time`: min cutoff time over all trajectories in all logfiles
+"""
+function cutoff_time(logfiles::Vector{String})
+    
+    # for each logfile, compute that log's cutoff time
+    global_cutoff_time = Inf
+    for file in logfiles
+        # load trajectories
+        traj_ni, _, _ = load_fw_trajectories_ni(file; wanted_fw_variants=wanted_fw_variants)
+        # find cutoff time for the current `traj_ni`
+        cutoff_time = cutoff_time(traj_ni)
+        # update global 
+        global_cutoff_time = cutoff_time < global_cutoff_time ? cutoff_time : global_cutoff_time
+    end
+    
+    return global_cutoff_time
+end
 
 
 
 
-# Input: each Vector in `trajectories` is a vector of 5-tuples: (iter, pgap, dual, dgap, time)
-# Computed: `cutoff_time` = min of the final times among all runs
-# The function returns new trajectories, truncated so that every run only contains entries where `time` ≤ `cutoff_time`
+
+"""
+    cutoff_log_shortest_time(trajectories::Vector{Vector{Any}})
+Input: `trajectories`, where each vector is a vector of 5-tuples: (iter, pgap, dual, dgap, time)
+Output: 
+    - `cutoff_time`: min of the final times among all runs
+    - `cutoff_trajectories`: truncated `trajectories`, s.t. every one only contains entries where `time` ≤ `cutoff_time`
+"""
 function cutoff_log_shortest_time(trajectories::Vector{Vector{Any}})
     
     # Decide `cutoff_time`: ∀ Vectors in `trajectories`, extract 5th element (time) of the last tuple, then compute min among all these times
-    cutoff_time = minimum([last(traj)[5] for traj in trajectories])
+    cutoff_time = cutoff_time(trajectories)
     # Create `cutoff_trajectories`, truncated to earliest finish point: ∀ Vectors in `trajectories`, cut out tuples where `time` ≥ `cutoff_time`
     cutoff_trajectories = cutoff_log_shortest_time(trajectories, cutoff_time)
     
     return cutoff_trajectories, cutoff_time
 end
+"""
+    [Multiple Dispatch] cutoff_log_shortest_time(trajectories::Vector{Vector{Any}}, cutoff_time::Float64) 
+Input:
+    - `trajectories`, where each vector is a vector of 5-tuples: (iter, pgap, dual, dgap, time)
+    - `cutoff_time`: min of the final times among all runs
+Output: 
+    - truncated `trajectories`, s.t. every one only contains entries where `time` ≤ `cutoff_time`
+"""
 function cutoff_log_shortest_time(trajectories::Vector{Vector{Any}}, cutoff_time::Float64)
     
     # Create `cutoff_trajectories`, truncated to earliest finish point: ∀ Vectors in `trajectories`, cut out tuples where `time` ≥ `cutoff_time`
@@ -130,13 +175,18 @@ end
 
 
 
+
+
 """
-    load_fw_trajectories(path::String; T=Float64)
+    load_fw_trajectories(path::String; wanted_fw_variants::Vector{String}=String[])
 
 Input:
     - .csv log at `path` of the form "iter,FW1_prim,FW1_dual,FW1_dgap,FW1_time,FW2_prim, ..."
-    - optional: a list of wanted labels, in case we only want to plot some of the logged FW variants
-Output: Vector{Vector{NTuple{5, T}}} of trajectories such that each NTuple is (iter, prim, dual, dgap, time).
+    - `wanted_fw_variants` (optional): a list of wanted labels, in case we only want to plot some of the logged FW variants
+Output:
+    - `trajectories`: Vector{Vector{Any}} of trajectories, each with entries (iter, prim, dual, dgap, time)
+    - `retrieved_fw_labels`
+    - `opt`: optimal value for that instance
 """
 function load_fw_trajectories_ni(path::String; wanted_fw_variants::Vector{String}=String[])
     
@@ -279,4 +329,85 @@ function load_fw_trajectories_i(path::String; wanted_fw_variants::Vector{String}
     end
 
     return trajectories, labels 
+end
+
+
+
+
+
+"""
+    average_over_logs(log_trajectories; fw_variants_labels::Vector{String})
+Input:
+    - `log_trajectories`: contains all different instances, each with a traj element. Each traj is Vector{Vector{Tuple()}}
+    - `fw_variants_labels`: labels of FW variants analyzed in each trajectory
+Output: 
+    - `averaged_trajectories::Vector{Vector{Any}}`: Vector containing, ∀ FW variant, a Vector of tuples avged across all logfiles,
+       sorted in ascending `iter`
+"""
+function avg_over_logs(log_trajectories::Vector{Vector{Vector{Any}}}, fw_variants_labels::Vector{String})
+    m = length(fw_variants_labels)
+    L = length(log_trajectories)
+
+    # --- 1) Build a DataFrame for each logfile j ---
+    dfs = Vector{DataFrame}(undef, L)
+    for j in 1:L
+        trajs = log_trajectories[j]  # Vector of length m
+
+        # Prepare column‐vectors
+        logfile = Int[]
+        variant = String[]
+        iter    = Int[]
+        pgap    = Float64[]
+        dual    = Float64[]
+        dgap    = Float64[]
+        time    = Float64[]
+
+        for i in 1:m
+            lbl = fw_variants_labels[i]
+            for (it, pg, du, dg, tm) in trajs[i]
+                push!(logfile, j)
+                push!(variant, lbl)
+                push!(iter,    it)
+                push!(pgap,    pg)
+                push!(dual,    du)
+                push!(dgap,    dg)
+                push!(time,    tm)
+            end
+        end
+
+        dfs[j] = DataFrame(
+            logfile = logfile,
+            variant = variant,
+            iter    = iter,
+            pgap    = pgap,
+            dual    = dual,
+            dgap    = dgap,
+            time    = time,
+        )
+    end
+
+    # --- 2) Concatenate and group‐average ---
+    bigdf = vcat(dfs...)
+    g     = groupby(bigdf, [:variant, :iter])
+    avgdf = combine(g,
+        :pgap => mean => :pgap_mean,
+        :dual => mean => :dual_mean,
+        :dgap => mean => :dgap_mean,
+        :time => mean => :time_mean
+    )
+    # avgdf columns: :variant, :iter, :pgap_mean, :dual_mean, :dgap_mean, :time_mean
+
+    # --- 3) Reconstruct into Vector{Vector{Tuple}} order by fw_variants_labels ---
+    averaged_trajectories = Vector{Vector{Tuple{Int,Float64,Float64,Float64,Float64}}}(undef, m)
+    for (i, lbl) in enumerate(fw_variants_labels)
+        sub = @view avgdf[avgdf.variant .== lbl, :]
+        sort!(sub, :iter)  # ensure increasing iteration
+        averaged_trajectories[i] = [(row.iter,
+                                     row.pgap_mean,
+                                     row.dual_mean,
+                                     row.dgap_mean,
+                                     row.time_mean) for row in eachrow(sub)]
+    end
+
+    return averaged_trajectories
 end

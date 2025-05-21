@@ -14,6 +14,7 @@ module ProductPolytopesAFW
     using GLPK, SCIP, HiGHS
     using CSV, DataFrames
     using LinearAlgebra          # brings dot and BLAS.axpy!
+    using Statistics
 
     # Plotting utilities needed to run FrankWolfe/plot_utils.jl
     include(joinpath(dirname(pathof(FrankWolfe)), "../examples/plot_utils.jl"))
@@ -40,8 +41,8 @@ module ProductPolytopesAFW
     # From `polytopes.jl`
     export generate_polytopes, compute_distance, save_polytopes, load_polytopes, generate_filename
     # From `plot_utils.jl`
-    export plot_trajectories, load_fw_trajectories_i, load_fw_trajectories_ni
+    export plot_trajectories
     # From `plotting_utils.jl`
-    export plot_time_only, cutoff_log_shortest_time, load_fw_trajectories
+    export plot_time_only, cutoff_log_shortest_time, cutoff_time, load_fw_trajectories_i, load_fw_trajectories_ni, avg_over_logs
 
 end # module ProductPolytopesAFW
