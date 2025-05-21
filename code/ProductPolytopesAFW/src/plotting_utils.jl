@@ -123,7 +123,7 @@ Input:
 Output:
     - `global_cutoff_time`: min cutoff time over all trajectories in all logfiles
 """
-function cutoff_time(logfiles::Vector{String})
+function cutoff_time(logfiles::Vector{String}, wanted_fw_variants::Vector{String})
     
     # for each logfile, compute that log's cutoff time
     global_cutoff_time = Inf

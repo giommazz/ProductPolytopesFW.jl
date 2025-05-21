@@ -12,7 +12,7 @@ using Plots
 # HELPER FUNCTIONS
 # --------------------------------------------------------------
 """
-    retrieve_logfiles_by_prefix(dir::AbstractString, prefix::AbstractString)
+    retrieve_logfiles_by_prefix(dir::String, prefix::String)
 Input: 
     - logdir: directory containing the logfiles
     - prefix: string used to search for specific logfiles
@@ -20,7 +20,7 @@ Input:
 Output: 
     - `logfiles`: Vector of filenames in `logdir` whose names start with `prefix` 
 """
-function retrieve_logfiles_by_prefix(logdir::AbstractString, prefix::AbstractString)
+function retrieve_logfiles_by_prefix(logdir::String, prefix::String)
     
     # `readdir(dir)`: read all entries (files and subdirectories) from `dir`, then
     # filter those a) starting w/given prefix, b) ending with ".csv" and c) being files (no directories)
@@ -51,16 +51,13 @@ Returns `(avg_trajs, labels)` where
 - `labels` is the human-readable names of the variants.
 """
 function average_fw_trajectories_ni(
-    logdir::AbstractString,
-    prefix::AbstractString,
+    logfiles::Vector{String},
+    prefix::String,
     wanted_fw_variants::Vector{String},
     ni_flag::Bool)
 
-    # gather the filenames
-    logfiles = retrieve_logfiles_by_prefix(logdir, prefix)
-
     # compute global cutoff time, i.e., min cutoff time over all trajectories in all logfiles
-    global_cutoff_time = cutoff_time(logfiles)    
+    global_cutoff_time = cutoff_time(logfiles, wanted_fw_variants)    
 
     # load, then get the the trajectory_ni list and the optimal value list
     loaded_results = [load_fw_trajectories_ni(logfile; wanted_fw_variants=wanted_fw_variants) for logfile in logfiles]
@@ -97,22 +94,36 @@ end
 
 
 # ---------------------------------------------------------------------------------
+# YAML PARAMETERS
+# ---------------------------------------------------------------------------------
+config = Config("examples/config.yml")
+
+
+
+
+
+# ---------------------------------------------------------------------------------
 # SCRIPT PARAMETERS
 # ---------------------------------------------------------------------------------
 prefix = "ni_k2_n10000_i1000_s"
 logdir = "examples/results_linesearch_afw/iter_logs"
-basename = "ni_k2_n20000_i1000_cvxho_anc_avg$(length(lognames))s"
-k, n = get_k_n_from_logstring(basename)
 wanted_fw_variants = ["C-BC-FW", "F-FW", "F-AFW"]
 
+# @TODO: sistema ni_flag automaticamente
 
-TODO: NIFLAG!!!
-avg_cutoff_trajectories_pgap = average_fw_trajectories_ni(logdir::AbstractString, prefix::AbstractString, wanted_fw_variants, ni_flag)
+# gather the filenames
+logfiles = retrieve_logfiles_by_prefix(logdir, prefix)
+# decide basename and modify config (needed for plot legends)
+basename_avg_plot = "ni_k2_n20000_i1000_cvxho_anc_avg$(length(logfiles))"
+k, n = get_k_n_from_logstring(basename_avg_plot)
+config = modify_config(config, k=k, n=n)
 
+# retrieve and process trajectories, then compute averages
+avg_cutoff_trajectories_pgap = average_fw_trajectories_ni(logfiles, prefix, wanted_fw_variants, true)
 
 # plot only primal and FW gap over time
 fig = plot_time_only(config, avg_cutoff_trajectories_ni_pgap, labels, yscalelog=true, xscalelog=true)
 # decide figure name
-fig_ni_filename = "examples/results_linesearch_afw/plots/plot_$(basename)_avg.pdf"
+fig_ni_filename = "examples/results_linesearch_afw/plots/plot_$(basename_avg_plot)_avg.pdf"
 # Plot trajectories and save as PDF
 Plots.savefig(fig_ni, fig_ni_filename)
