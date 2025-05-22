@@ -123,15 +123,19 @@ Input:
 Output:
     - `global_cutoff_time`: min cutoff time over all trajectories in all logfiles
 """
-function cutoff_time(logfiles::Vector{String}, wanted_fw_variants::Vector{String})
+function cutoff_time(logfiles::Vector{String}, wanted_fw_variants::Vector{String}, ni_flag::Bool)
     
     # for each logfile, compute that log's cutoff time
     global_cutoff_time = Inf
     for file in logfiles
         # load trajectories
-        traj_ni, _, _ = load_fw_trajectories_ni(file; wanted_fw_variants=wanted_fw_variants)
+        if ni_flag # non-intersecting
+            traj, _, _ = load_fw_trajectories_ni(file; wanted_fw_variants=wanted_fw_variants)
+        else # intersecting
+            traj, _ = load_fw_trajectories_i(file; wanted_fw_variants=wanted_fw_variants)
+        end
         # find cutoff time for the current `traj_ni`
-        cutoff_t = cutoff_time(traj_ni)
+        cutoff_t = cutoff_time(traj)
         # update global 
         global_cutoff_time = cutoff_t < global_cutoff_time ? cutoff_t : global_cutoff_time
     end
@@ -192,7 +196,7 @@ function load_fw_trajectories_ni(path::String; wanted_fw_variants::Vector{String
     
     # `splitext` returns (root, extension)
     ext = lowercase(splitext(path)[2])
-    @assert ext == ".csv" "Expected a .csv file"
+    @assert ext == ".csv" "Expected a .csv file" 
     @assert lowercase(split(path, "/")[end][1:3]) == "ni_" "Expected a file pertaining to an non-intersecting instance, instead found $(split(path, "/"))"
     
     # read .csv file
@@ -282,7 +286,7 @@ end
 function load_fw_trajectories_i(path::String; wanted_fw_variants::Vector{String}=String[])
     # initial basic checks
     @assert lowercase(splitext(path)[2]) == ".csv" "Expected a .csv file"
-    @assert lowercase([1:2]) == "i_" "Expected a file pertaining to an intersecting instance, instead found $(split(path, "/"))"
+    @assert lowercase(split(path, "/")[end][1:2]) == "i_" "Expected a file pertaining to an intersecting instance, instead found $(split(path, "/"))"
 
     df   = CSV.read(path, DataFrame)
     cols = names(df)
@@ -329,20 +333,6 @@ function load_fw_trajectories_i(path::String; wanted_fw_variants::Vector{String}
     end
 
     return trajectories, labels 
-end
-
-
-
-
-
-function impose_running_min!(traj)
-    min_pg = Inf
-    for i in 1:length(traj)
-        iter, pg, dual, dgap, time = traj[i]
-        min_pg = min(min_pg, pg)
-        traj[i] = (iter, min_pg, dual, dgap, time)
-    end
-    return traj
 end
 
 
@@ -416,7 +406,6 @@ function avg_over_logs(log_trajectories::Vector{Vector{Vector{Any}}}, wanted_fw_
         sort!(sub, :time_mean)
         averaged_trajectories[fw_variant_idx] = 
             [(row.iter, row.pgap_mean, row.dual_mean, row.dgap_mean, row.time_mean) for row in eachrow(sub)]
-        averaged_trajectories = impose_running_min!(averaged_trajectories[fw_variant_idx])
     end
 
     return averaged_trajectories

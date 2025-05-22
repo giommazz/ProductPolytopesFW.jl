@@ -98,7 +98,7 @@ end
 # ***********************************************************************
 # INSTANCE PARAMETERS FOR THE RUNS
 # ***********************************************************************
-list_k    = [5]           # number of polytopes
+list_k    = [3]           # number of polytopes
 list_n    = [100, 100]      # dimension of each polytope
 seed = 555               # starting seed, will be incremented in the loop
 dir = "examples"

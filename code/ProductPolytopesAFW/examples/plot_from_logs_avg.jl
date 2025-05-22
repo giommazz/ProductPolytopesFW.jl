@@ -35,23 +35,26 @@ end
 
 
 """
-    average_fw_trajectories_ni(logdir::AbstractString, prefix::AbstractString, wanted_fw_variants::Vector{String})
+    average_fw_trajectories(logdir::AbstractString, prefix::AbstractString, wanted_fw_variants::Vector{String})
 """
-function average_fw_trajectories_ni(
+function average_fw_trajectories(
     logfiles::Vector{String},
     prefix::String,
     wanted_fw_variants::Vector{String},
     ni_flag::Bool)
 
     # compute global cutoff time, i.e., min cutoff time over all trajectories in all logfiles
-    global_cutoff_time = cutoff_time(logfiles, wanted_fw_variants)    
+    global_cutoff_time = cutoff_time(logfiles, wanted_fw_variants, ni_flag)    
 
-    # load, then get the the trajectory_ni list and the optimal value list
-    loaded_results = [load_fw_trajectories_ni(logfile; wanted_fw_variants=wanted_fw_variants) for logfile in logfiles]
-    traj_all_logs = getindex.(loaded_results, 1)
+    # load, then get the the trajectories list and the optimal value list (if non-intersecting)
     if ni_flag
+        loaded_results = [load_fw_trajectories_ni(logfile; wanted_fw_variants=wanted_fw_variants) for logfile in logfiles]
         opts_all_logs = getindex.(loaded_results, 3)
+    else
+        loaded_results = [load_fw_trajectories_i(logfile; wanted_fw_variants=wanted_fw_variants) for logfile in logfiles]
     end
+
+    traj_all_logs = getindex.(loaded_results, 1)
 
     # compute cutoff trajectories based on `global_cutoff_time`
     cutoff_trajectories_all_logs = [cutoff_log_shortest_time(traj, global_cutoff_time) for traj in traj_all_logs]
@@ -94,21 +97,21 @@ config = Config("examples/config.yml")
 # ---------------------------------------------------------------------------------
 # SCRIPT PARAMETERS
 # ---------------------------------------------------------------------------------
-prefix = "ni_k2_n10000_i1000_s"
+prefix = "ni_k2_n20000_i1000"
+ni_flag = prefix[1:3] == "ni_" ? true : false
+
 logdir = "examples/results_linesearch_afw/iter_logs"
 wanted_fw_variants = ["C-BC-FW", "F-FW", "F-AFW"]
-
-# @TODO: sistema ni_flag automaticamente
 
 # gather the filenames
 logfiles = retrieve_logfiles_by_prefix(logdir, prefix)
 # decide basename and modify config (needed for plot legends)
-basename_avg_plot = "ni_k2_n20000_i1000_cvxho_anc_avg$(length(logfiles))"
+basename_avg_plot = prefix*"_cvxho_anc_avg$(length(logfiles))"
 k, n = get_k_n_from_logstring(basename_avg_plot)
 config = modify_config(config, k=k, n=n)
 
 # retrieve and process trajectories, then compute averages
-avg_cutoff_trajectories_pgap = average_fw_trajectories_ni(logfiles, prefix, wanted_fw_variants, true)
+avg_cutoff_trajectories_pgap = average_fw_trajectories(logfiles, prefix, wanted_fw_variants, ni_flag)
 
 # plot only primal and FW gap over time
 figg = plot_time_only(config, avg_cutoff_trajectories_pgap, wanted_fw_variants, yscalelog=true, xscalelog=true)
