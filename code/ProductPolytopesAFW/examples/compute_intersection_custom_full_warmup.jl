@@ -125,8 +125,10 @@ t_start_tot = time()
 # ---------------------------------------------------------------------------------
 # YAML PARAMETERS
 # ---------------------------------------------------------------------------------
+println("Main configuration")
 config = Config("examples/config.yml")
 print_config(config)
+println("Warmup configuration")
 config_warmup = modify_config(config, k=2, n=15)
 print_config(config_warmup)
 

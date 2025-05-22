@@ -36,19 +36,6 @@ end
 
 """
     average_fw_trajectories_ni(logdir::AbstractString, prefix::AbstractString, wanted_fw_variants::Vector{String})
-
-Find every “ni_*…*.csv” in `logdir` whose filename starts with `prefix`, then:
- 1. Load them with `load_fw_trajectories_ni`.
- 2. Compute the per-log cutoff time (earliest-finishing variant).
- 3. Find the global minimum of those cutoff times.
- 4. Re-truncate *every* trajectory in every log at that global cutoff.
- 5. Compute primal-gap on each truncated trajectory.
- 6. For each FW variant, average the (iter, pgap, dual, dgap, time) tuples across logs.
-
-Returns `(avg_trajs, labels)` where
-- `avg_trajs` is a `Vector` of length `length(wanted_fw_variants)`, each an
-  `Vector{NTuple{5,Float64}}` of the averaged tuples;
-- `labels` is the human-readable names of the variants.
 """
 function average_fw_trajectories_ni(
     logfiles::Vector{String},
@@ -61,9 +48,9 @@ function average_fw_trajectories_ni(
 
     # load, then get the the trajectory_ni list and the optimal value list
     loaded_results = [load_fw_trajectories_ni(logfile; wanted_fw_variants=wanted_fw_variants) for logfile in logfiles]
-    traj_all_logs = getindex.(results, 1)
+    traj_all_logs = getindex.(loaded_results, 1)
     if ni_flag
-        opts_all_logs = getindex.(results, 3)
+        opts_all_logs = getindex.(loaded_results, 3)
     end
 
     # compute cutoff trajectories based on `global_cutoff_time`
@@ -71,8 +58,13 @@ function average_fw_trajectories_ni(
 
     if ni_flag
         cutoff_trajectories_pgap_all_logs = [
-            compute_primal_gap(traj, opt) for (traj, opt) in zip(cutoff_trajectories_all_logs, opts_all_logs)
-        ]
+            # contains all updated pgaps for all of the `wanted_fw_variants` in this logfile's instance
+            [compute_primal_gap(cutoff_trajectories_all_logs[logfile_idx][fw_var], opts_all_logs[logfile_idx]) 
+                # for each FW variant
+                for fw_var in 1:length(wanted_fw_variants)]
+            # for each instance in the logfiles
+            for logfile_idx in 1:length(traj_all_logs)
+            ]
     else
         cutoff_trajectories_pgap_all_logs = cutoff_trajectories_all_logs
     end
@@ -80,7 +72,7 @@ function average_fw_trajectories_ni(
     avg_cutoff_trajectories_pgap = avg_over_logs(cutoff_trajectories_pgap_all_logs, wanted_fw_variants)
 
     # plot only primal and FW gap over time
-    figg = plot_time_only(config, cutoff_trajectories_pgap, labels, yscalelog=true, xscalelog=true)
+    figg = plot_time_only(config, avg_cutoff_trajectories_pgap, wanted_fw_variants, yscalelog=true, xscalelog=true)
     # decide figure name
     figg_filename = "examples/results_linesearch_afw/plots/plot_$(basename)avg.pdf"
     # Plot trajectories and save as PDF
@@ -97,9 +89,6 @@ end
 # YAML PARAMETERS
 # ---------------------------------------------------------------------------------
 config = Config("examples/config.yml")
-
-
-
 
 
 # ---------------------------------------------------------------------------------
@@ -122,8 +111,8 @@ config = modify_config(config, k=k, n=n)
 avg_cutoff_trajectories_pgap = average_fw_trajectories_ni(logfiles, prefix, wanted_fw_variants, true)
 
 # plot only primal and FW gap over time
-fig = plot_time_only(config, avg_cutoff_trajectories_ni_pgap, labels, yscalelog=true, xscalelog=true)
+figg = plot_time_only(config, avg_cutoff_trajectories_pgap, wanted_fw_variants, yscalelog=true, xscalelog=true)
 # decide figure name
-fig_ni_filename = "examples/results_linesearch_afw/plots/plot_$(basename_avg_plot)_avg.pdf"
+figg_filename = "examples/results_linesearch_afw/plots/plot_$(basename_avg_plot).pdf"
 # Plot trajectories and save as PDF
-Plots.savefig(fig_ni, fig_ni_filename)
+Plots.savefig(figg, figg_filename)

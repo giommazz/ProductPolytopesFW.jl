@@ -131,9 +131,9 @@ function cutoff_time(logfiles::Vector{String}, wanted_fw_variants::Vector{String
         # load trajectories
         traj_ni, _, _ = load_fw_trajectories_ni(file; wanted_fw_variants=wanted_fw_variants)
         # find cutoff time for the current `traj_ni`
-        cutoff_time = cutoff_time(traj_ni)
+        cutoff_t = cutoff_time(traj_ni)
         # update global 
-        global_cutoff_time = cutoff_time < global_cutoff_time ? cutoff_time : global_cutoff_time
+        global_cutoff_time = cutoff_t < global_cutoff_time ? cutoff_t : global_cutoff_time
     end
     
     return global_cutoff_time
@@ -193,7 +193,7 @@ function load_fw_trajectories_ni(path::String; wanted_fw_variants::Vector{String
     # `splitext` returns (root, extension)
     ext = lowercase(splitext(path)[2])
     @assert ext == ".csv" "Expected a .csv file"
-    @assert lowercase([1:3]) == "ni_" "Expected a file pertaining to an non-intersecting instance, instead found $(split(path, "/"))"
+    @assert lowercase(split(path, "/")[end][1:3]) == "ni_" "Expected a file pertaining to an non-intersecting instance, instead found $(split(path, "/"))"
     
     # read .csv file
     df = CSV.read(path, DataFrame)
@@ -280,7 +280,7 @@ end
 
 
 function load_fw_trajectories_i(path::String; wanted_fw_variants::Vector{String}=String[])
-    # ---------------- basic checks -------------------------------------------------
+    # initial basic checks
     @assert lowercase(splitext(path)[2]) == ".csv" "Expected a .csv file"
     @assert lowercase([1:2]) == "i_" "Expected a file pertaining to an intersecting instance, instead found $(split(path, "/"))"
 
@@ -291,7 +291,7 @@ function load_fw_trajectories_i(path::String; wanted_fw_variants::Vector{String}
     @assert ncols ≥ 5 "Expect at least :iter plus one 4-column FW block"
     n_variants = Int((ncols - 1) ÷ 4)
 
-    # ---------------- build human-readable labels (unchanged) ----------------------
+    # build labels
     FW_TOKENS      = ["AP","BPFW","AFW","FW","BC","C","F"]
     token_re       = Regex("($(join(sort(FW_TOKENS, by=length, rev=true), '|')))")
 
@@ -302,7 +302,7 @@ function load_fw_trajectories_i(path::String; wanted_fw_variants::Vector{String}
         push!(variant_labels, join([m.match for m in eachmatch(token_re, block_name)], "-"))
     end
 
-    # ---------------- keep only requested variants ---------------------------------
+    # keep only wanted variants
     wanted_idxs = isempty(wanted_fw_variants) ?
                   collect(1:n_variants) :
                   findall(lbl -> lbl in wanted_fw_variants, variant_labels)
@@ -311,7 +311,7 @@ function load_fw_trajectories_i(path::String; wanted_fw_variants::Vector{String}
     labels       = variant_labels[wanted_idxs]
     trajectories = [Vector{Any}(undef, nrow(df)) for _ in wanted_idxs]
 
-    # ---------------- fill trajectories --------------------------------------------
+    # populate trajectories
     for row_idx in 1:nrow(df)
         iter = Int64(df[row_idx, cols[1]])
 
@@ -335,78 +335,88 @@ end
 
 
 
+function impose_running_min!(traj)
+    min_pg = Inf
+    for i in 1:length(traj)
+        iter, pg, dual, dgap, time = traj[i]
+        min_pg = min(min_pg, pg)
+        traj[i] = (iter, min_pg, dual, dgap, time)
+    end
+    return traj
+end
+
+
+
+
+
 """
-    average_over_logs(log_trajectories; fw_variants_labels::Vector{String})
+    average_over_logs(log_trajectories; wanted_fw_variants::Vector{String})
 Input:
     - `log_trajectories`: contains all different instances, each with a traj element. Each traj is Vector{Vector{Tuple()}}
-    - `fw_variants_labels`: labels of FW variants analyzed in each trajectory
+    - `wanted_fw_variants`: labels of FW variants analyzed in each trajectory
 Output: 
     - `averaged_trajectories::Vector{Vector{Any}}`: Vector containing, ∀ FW variant, a Vector of tuples avged across all logfiles,
        sorted in ascending `iter`
 """
-function avg_over_logs(log_trajectories::Vector{Vector{Vector{Any}}}, fw_variants_labels::Vector{String})
-    m = length(fw_variants_labels)
-    L = length(log_trajectories)
+function avg_over_logs(log_trajectories::Vector{Vector{Vector{Any}}}, wanted_fw_variants::Vector{String})
+    number_fw_variants = length(wanted_fw_variants)
+    number_logfiles = length(log_trajectories)
 
-    # --- 1) Build a DataFrame for each logfile j ---
-    dfs = Vector{DataFrame}(undef, L)
-    for j in 1:L
-        trajs = log_trajectories[j]  # Vector of length m
+    # 1. build a DataFrame for each logfile `logfile_idx`
+    dfs = Vector{DataFrame}(undef, number_logfiles)
+    for logfile_idx in 1:number_logfiles
+        # all trajectories for the current instance/logfile 
+        trajectories_curr_logfile = log_trajectories[logfile_idx]
 
         # Prepare column‐vectors
-        logfile = Int[]
-        variant = String[]
-        iter    = Int[]
-        pgap    = Float64[]
-        dual    = Float64[]
-        dgap    = Float64[]
-        time    = Float64[]
+        logfile, variant, iter, pgap, dual, dgap, time = Int[], String[], Int[], Float64[], Float64[], Float64[], Float64[]
 
-        for i in 1:m
-            lbl = fw_variants_labels[i]
-            for (it, pg, du, dg, tm) in trajs[i]
-                push!(logfile, j)
+        # for each FW variant, create a 
+        for fw_variant_idx in 1:number_fw_variants
+            lbl = wanted_fw_variants[fw_variant_idx]
+            for (it, pg, du, dg, tm) in trajectories_curr_logfile[fw_variant_idx]
+                push!(logfile, logfile_idx)
                 push!(variant, lbl)
-                push!(iter,    it)
-                push!(pgap,    pg)
-                push!(dual,    du)
-                push!(dgap,    dg)
-                push!(time,    tm)
+                push!(iter, it)
+                push!(pgap, pg)
+                push!(dual, du)
+                push!(dgap, dg)
+                push!(time, tm)
             end
         end
-
-        dfs[j] = DataFrame(
+        
+        # update DataFrame for current instance/logfile
+        dfs[logfile_idx] = DataFrame(
             logfile = logfile,
             variant = variant,
-            iter    = iter,
-            pgap    = pgap,
-            dual    = dual,
-            dgap    = dgap,
-            time    = time,
+            iter = iter,
+            pgap = pgap,
+            dual = dual,
+            dgap = dgap,
+            time = time,
         )
     end
 
-    # --- 2) Concatenate and group‐average ---
+    # 2. Concatenate and group-average
     bigdf = vcat(dfs...)
-    g     = groupby(bigdf, [:variant, :iter])
+    g = groupby(bigdf, [:variant, :iter])
+    # avgdf columns will be: :variant, :iter, :pgap_mean, :dual_mean, :dgap_mean, :time_mean
     avgdf = combine(g,
         :pgap => mean => :pgap_mean,
         :dual => mean => :dual_mean,
         :dgap => mean => :dgap_mean,
         :time => mean => :time_mean
     )
-    # avgdf columns: :variant, :iter, :pgap_mean, :dual_mean, :dgap_mean, :time_mean
 
-    # --- 3) Reconstruct into Vector{Vector{Tuple}} order by fw_variants_labels ---
-    averaged_trajectories = Vector{Vector{Tuple{Int,Float64,Float64,Float64,Float64}}}(undef, m)
-    for (i, lbl) in enumerate(fw_variants_labels)
+    # 3. Translate from DataFrame to Vector{Vector{Any}}, ordered by `wanted_fw_variants`
+    averaged_trajectories = Vector{Vector{Any}}(undef, number_fw_variants) # output
+    for (fw_variant_idx, lbl) in enumerate(wanted_fw_variants)
         sub = @view avgdf[avgdf.variant .== lbl, :]
-        sort!(sub, :iter)  # ensure increasing iteration
-        averaged_trajectories[i] = [(row.iter,
-                                     row.pgap_mean,
-                                     row.dual_mean,
-                                     row.dgap_mean,
-                                     row.time_mean) for row in eachrow(sub)]
+        # sort by averaged time
+        sort!(sub, :time_mean)
+        averaged_trajectories[fw_variant_idx] = 
+            [(row.iter, row.pgap_mean, row.dual_mean, row.dgap_mean, row.time_mean) for row in eachrow(sub)]
+        averaged_trajectories = impose_running_min!(averaged_trajectories[fw_variant_idx])
     end
 
     return averaged_trajectories
