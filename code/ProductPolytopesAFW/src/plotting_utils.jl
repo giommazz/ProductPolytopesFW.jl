@@ -153,11 +153,11 @@ Output:
 function cutoff_log_shortest_time(trajectories::Vector{Vector{Any}})
     
     # Decide `cutoff_time`: ∀ Vectors in `trajectories`, extract 5th element (time) of the last tuple, then compute min among all these times
-    cutoff_time = cutoff_time(trajectories)
+    cutoff_t = cutoff_time(trajectories)
     # Create `cutoff_trajectories`, truncated to earliest finish point: ∀ Vectors in `trajectories`, cut out tuples where `time` ≥ `cutoff_time`
-    cutoff_trajectories = cutoff_log_shortest_time(trajectories, cutoff_time)
+    cutoff_trajectories = cutoff_log_shortest_time(trajectories, cutoff_t)
     
-    return cutoff_trajectories, cutoff_time
+    return cutoff_trajectories, cutoff_t
 end
 """
     [Multiple Dispatch] cutoff_log_shortest_time(trajectories::Vector{Vector{Any}}, cutoff_time::Float64) 

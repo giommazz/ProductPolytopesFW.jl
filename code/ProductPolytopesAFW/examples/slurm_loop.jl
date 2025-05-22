@@ -86,7 +86,7 @@ function main(dir, config, seed)
         slurm_command = `sbatch $(new_sh_slurmscript_filename) $(new_jl_experimentsscript_filename) $dir/results_linesearch_afw/ $new_config_filename`
         println("Submitting job with:\n  ", slurm_command)
         # launch command, catch any errors
-        safe_submit(slurm_command)
+        # safe_submit(slurm_command)
         println()
 
         seed += 1
@@ -99,8 +99,8 @@ end
 # INSTANCE PARAMETERS FOR THE RUNS
 # ***********************************************************************
 list_k    = [5]           # number of polytopes
-list_n    = [10000, 10000]      # dimension of each polytope
-seed = 344               # starting seed, will be incremented in the loop
+list_n    = [100, 100]      # dimension of each polytope
+seed = 555               # starting seed, will be incremented in the loop
 dir = "examples"
 config = Config(joinpath(dir, "config.yml"))
 
