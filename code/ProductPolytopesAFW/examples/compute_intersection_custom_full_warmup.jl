@@ -129,7 +129,7 @@ println("Main configuration")
 config = Config("examples/config.yml")
 print_config(config)
 println("Warmup configuration")
-config_warmup = modify_config(config, k=2, n=15)
+config_warmup = modify_config(config, k=2, n=55)
 print_config(config_warmup)
 
 readline()

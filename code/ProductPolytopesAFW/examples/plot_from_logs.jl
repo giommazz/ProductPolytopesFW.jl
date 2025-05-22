@@ -17,7 +17,7 @@ config = Config("examples/config.yml")
 # ---------------------------------------------------------------------------------
 # SCRIPT PARAMETERS
 # ---------------------------------------------------------------------------------
-basename = "ni_k2_n20000_i1000_s240389_cvxho_anc_t20250511_212230"# "ni_k5_n10000_i1000_s240389_cvxho_anc_t20250512_140502"# #"ni_k2_n20000_i1000_s240389_cvxho_anc_t20250511_212230"#, "ni_k10_n10000_i1000_s240389_cvxho_anc_t20250513_034433"
+basename = "i_k2_n10000_i1000_s240389_cvxho_vert_t20250513_175132" #"ni_k2_n20000_i1000_s240389_cvxho_anc_t20250511_212230"# "ni_k5_n10000_i1000_s240389_cvxho_anc_t20250512_140502"# #"ni_k2_n20000_i1000_s240389_cvxho_anc_t20250511_212230"#, "ni_k10_n10000_i1000_s240389_cvxho_anc_t20250513_034433"
 logname = basename*".csv"
 
 k, n = get_k_n_from_logstring(basename)
@@ -31,22 +31,22 @@ wanted = ["C-BC-FW", "F-FW", "F-AFW"]
 
 # ---------------------------------------------------------------------------------
 # PLOTS NON-INTERSECTING INSTANCES
-trajis_ni, labels, opt = load_fw_trajectories_ni("examples/results_linesearch_afw/iter_logs/$logname", wanted_fw_variants=wanted)
-# find `cutoff_time` of the FW variant that ends first, then cutoff all iters of all other variants happening after `cutoff_time`
-cutoff_trajectories_ni, _ = cutoff_log_shortest_time(trajis_ni)
-# compute primal gap from primal, for all nonintersecting instances
-cutoff_trajectories_ni_pgap = [compute_primal_gap(t, opt) for t in cutoff_trajectories_ni]
-# plot only primal and FW gap over time
-fig_ni = plot_time_only(config, cutoff_trajectories_ni_pgap, labels, yscalelog=true, xscalelog=true)
-# decide figure name
-fig_ni_filename = "examples/results_linesearch_afw/plots/plot_$(basename)_fromlogs.pdf"
-# Plot trajectories and save as PDF
-Plots.savefig(fig_ni, fig_ni_filename)
+# trajis_ni, labels, opt = load_fw_trajectories_ni("examples/results_linesearch_afw/iter_logs/$logname", wanted_fw_variants=wanted)
+# # find `cutoff_time` of the FW variant that ends first, then cutoff all iters of all other variants happening after `cutoff_time`
+# cutoff_trajectories_ni, _ = cutoff_log_shortest_time(trajis_ni)
+# # compute primal gap from primal, for all nonintersecting instances
+# cutoff_trajectories_ni_pgap = [compute_primal_gap(t, opt) for t in cutoff_trajectories_ni]
+# # plot only primal and FW gap over time
+# fig_ni = plot_time_only(config, cutoff_trajectories_ni_pgap, labels, yscalelog=true, xscalelog=true)
+# # decide figure name
+# fig_ni_filename = "examples/results_linesearch_afw/plots/plot_$(basename)_fromlogs.pdf"
+# # Plot trajectories and save as PDF
+# Plots.savefig(fig_ni, fig_ni_filename)
 
 # ---------------------------------------------------------------------------------
 # PLOTS INTERSECTING INSTANCES
-# trajis_i, labels = loady_i("examples/results_linesearch_afw/iter_logs/$logname", wanted_fw_variants=wanted)
-# cutoff_trajectories_i, _ = cutoff_log_shortest_time(trajis_i)
-# fig_i  = plot_time_only(config, cutoff_trajectories_i, labels, yscalelog=true, xscalelog=true)
-# fig_i_filename = "examples/results_linesearch_afw/plots/plot_$(basename)_fromlogs.pdf"
-# Plots.savefig(fig_i, fig_i_filename)
+trajis_i, labels = load_fw_trajectories_i("examples/results_linesearch_afw/iter_logs/$logname", wanted_fw_variants=wanted)
+cutoff_trajectories_i, _ = cutoff_log_shortest_time(trajis_i)
+fig_i  = plot_time_only(config, cutoff_trajectories_i, labels, yscalelog=true, xscalelog=true)
+fig_i_filename = "examples/results_linesearch_afw/plots/plot_$(basename)_fromlogs.pdf"
+Plots.savefig(fig_i, fig_i_filename)
