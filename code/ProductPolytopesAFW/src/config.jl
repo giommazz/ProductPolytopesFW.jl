@@ -75,7 +75,7 @@ end
 # Function to update Config with any number of arguments
 function modify_config(config::Config; kwargs...)
     
-    # `get(kwargs, :key, default_value)` retrieves value for `:key` from `kwargs` if it exists, o/w returns default_value
+    # `get(kwargs, :key, default_value)` retrieves value for `:key` from `kwargs` if it exists, o/w returns default_value    
     k = get(kwargs, :k, config.k)
     n = get(kwargs, :n, config.n)
     n_points = get(kwargs, :n_points, config.n_points)
@@ -89,9 +89,11 @@ function modify_config(config::Config; kwargs...)
     anc_flag = get(kwargs, :anc_flag, config.anc_flag)
     stepsize_strategy = get(kwargs, :stepsize_strategy, config.stepsize_strategy)
 
-    println(n_points)
-    readline()
-    if length(n_points) ≠ k
+    # if `n_points` was supplied...
+    if haskey(kwargs, :n_points)
+        n_points = kwargs[:n_points] # what the caller passed
+    else
+        # ...else: fall-back, generate a fresh list that matches (k, n, seed)
         n_points = generate_n_points(n, k, seed)
     end
 
