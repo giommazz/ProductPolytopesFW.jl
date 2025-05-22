@@ -44,7 +44,9 @@ Warning! Example scripts might be outdated
 - `scontrol show node=<node_name>`: shows detailed attributes about a single node
 - `scancel -u <username>`: cancel all of username jobs
 
-## Updated scripts
-- `compute_inteserction_custom_full_warmup_slurm.jl`
-- `compute_inteserction_custom_full.jl`
-- `slurm_experiments.sh`
+## Updated scripts that can be run
+- `compute_inteserction_custom_full_warmup.jl`: run experiments preceded by a "warmup" experiment, so that all algorithms can be precompiled
+- `slurm_experiments.sh`: run `compute_inteserction_custom_full_warmup.jl` on SLURM
+- `slurm_loop.jl`: creates config files and scripts necessary to run a sequence of jobs based on `compute_inteserction_custom_full_warmup.jl` on SLURM
+- `plot_from_logs.jl`: retrieves an instance from "iter_logs" and plots it
+- `plot_from_logs_avg.jl`: retrieves all instance with a common pattern from "iter_logs" (for example, all instances with k=2 and n=100000) and plots average values of the trajectories in that instance

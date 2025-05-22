@@ -51,7 +51,10 @@ function Config(yaml_file::String; kwargs...)
 
     # Handle the n_points field
     n_points = config["n_points"]
-    if n_points == 0 generate_n_points(config["n"], config["k"], config["seed"]) end
+    if n_points == 0
+        n_points = generate_n_points(config["n"], config["k"], config["seed"])
+    end
+    
     c = Config(
             config["k"],
             config["n"],
@@ -86,6 +89,8 @@ function modify_config(config::Config; kwargs...)
     anc_flag = get(kwargs, :anc_flag, config.anc_flag)
     stepsize_strategy = get(kwargs, :stepsize_strategy, config.stepsize_strategy)
 
+    println(n_points)
+    readline()
     if length(n_points) ≠ k
         n_points = generate_n_points(n, k, seed)
     end

@@ -86,7 +86,7 @@ function main(dir, config, seed)
         slurm_command = `sbatch $(new_sh_slurmscript_filename) $(new_jl_experimentsscript_filename) $dir/results_linesearch_afw/ $new_config_filename`
         println("Submitting job with:\n  ", slurm_command)
         # launch command, catch any errors
-        # safe_submit(slurm_command)
+        safe_submit(slurm_command)
         println()
 
         seed += 1
