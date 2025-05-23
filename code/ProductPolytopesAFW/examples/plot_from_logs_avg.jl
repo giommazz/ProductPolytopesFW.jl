@@ -97,7 +97,7 @@ config = Config("examples/config.yml")
 # ---------------------------------------------------------------------------------
 # SCRIPT PARAMETERS
 # ---------------------------------------------------------------------------------
-prefix = "ni_k2_n20000_i1000"
+prefix = "ni_k2_n10000_i1000"
 ni_flag = prefix[1:3] == "ni_" ? true : false
 
 logdir = "examples/results_linesearch_afw/iter_logs"
