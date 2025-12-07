@@ -1,0 +1,159 @@
+# `polytope_generation.jl`
+
+# Compute the anchor point according to `config.intersection_anchor`
+function compute_anchor(config::Config, vertices::Vector{Matrix{T}}) where T
+    if isempty(vertices)
+        error("Cannot compute anchor: no polytopes provided.")
+    end
+
+    anchor_type = config.intersection_anchor
+    rng = MersenneTwister(config.seed) # `MersenneTwister`: pseudorand num. generator, seeded for reproducible randomness with `config.seed`
+    Tvert = eltype(vertices[1]) # element type of vertex coordinates
+
+    if anchor_type == "p1_center" # Analytic center of the first polytope P₁
+        return analytic_center(vertices[1])
+    elseif anchor_type == "p1_vertex" # Random vertex of P₁
+        return random_vertex(vertices[1], rng)
+    elseif anchor_type == "p1_random" # Random convex combination of vertices of P₁
+        return random_convex_combination(vertices[1], rng)
+    elseif anchor_type == "origin" # Zero vector in Rⁿ
+        return zeros(Tvert, config.n)
+    elseif anchor_type == "global_mean" # Mean of analytic centers of all polytopes
+        return global_mean_of_centers(config, vertices)
+    elseif anchor_type == "random" # Random point in small interval [-1, 1]ⁿ (keep translations bounded + avoid huge coordinates)
+        return 2 .* rand(rng, Tvert, config.n) .- one(Tvert)
+    else
+        error("Unknown intersection anchor: $(anchor_type)")
+    end
+end
+
+# Function to generate non-overlapping bounds for multiple dimensions within [1e-03, 1e+03]
+# `margin`: ensures min distance between current polytope's UB and next polytope's LB, to create non-overlapping polytopes
+function generate_nonintersecting_bounds(config::Config; margin::Float64=10.0, stepsize::Float64=100.0, start_point::Float64=-100.0)
+    
+    bounds_list = Vector{Vector{Tuple{Float64, Float64}}}(undef, config.k)
+
+    # Generate the first bounds randomly as pairs (LB, UB), within given range
+    lower_bounds = [start_point + stepsize * rand(Float64) for _ in 1:config.n]
+    upper_bounds = [lower_bounds[d] + (stepsize - lower_bounds[d]) * rand(Float64) for d in 1:config.n]
+    bounds_list[1] = [(lower_bounds[d], upper_bounds[d]) for d in 1:config.n]
+
+    # Generate subsequent bounds while ensuring no overlap
+    for i in 2:config.k
+        # Current polytope
+        lower_bounds = [upper_bounds[d] + margin + stepsize * rand(Float64) for d in 1:config.n]
+        upper_bounds = [lower_bounds[d] + stepsize * rand(Float64) for d in 1:config.n]
+        bounds_list[i] = [(lower_bounds[d], upper_bounds[d]) for d in 1:config.n]
+    end
+    
+    return bounds_list
+end
+
+# Generate one polytope: generate one random set of vertices, within given bounds for each dimension
+function generate_polytope(config::Config, idx::Int, bounds::Vector{Tuple{T, T}}) where T
+    
+    # Check that the number of columns specified in `config.n` matches the length of `bounds`
+    if config.n != length(bounds)
+        error("Mismatch: The number of columns in `config` (config.n = $(config.n)) must match the number of elements in `bounds` (length = $(length(bounds))).")
+    end
+
+    # Initialize a matrix of zeros with the given number of points (rows) and columns
+    vertices = zeros(Float64, config.n_points[idx], config.n)
+
+    # Generate `config.n_points` vertices of size `config.n` within the bounds for each dimension
+    for i in 1:config.n_points[idx]
+        # Generate random Float64 within the given bounds for each coordinate
+        vertices[i,:] = [bounds[d][1] + (bounds[d][2] - bounds[d][1]) * rand(Float64) for d in 1:config.n]
+    end
+
+    # Only compute analytic center of P₁ 
+    if idx == 1
+        anc = analytic_center(vertices)
+    else
+        anc = Nothing
+    end
+
+    # TODO: THIS CAUSES NUMERICAL ISSUES WITH THE Polyhedra.jl LIBRARY, DON'T USE FOR NOW (relevant functions commented)
+    # Generate polytope as convex hull of given points, and remove redundant (i.e. non-vertex) points
+    #vertices = nonredundant_polytope(vertices)
+    
+    return vertices, anc
+end
+
+# Generate k nonintersecting polytopes: generate k random sets of vertices, within given bounds for each dimension
+function generate_nonintersecting_polytopes(config::Config, bounds::Vector{Vector{Tuple{T, T}}}) where T
+    
+    vertices = Vector{Matrix{T}}()
+    anc_p1 = Vector{T}()
+
+    # Generate k polytopes within the specified bounds
+    for i in 1:config.k
+        if i == 1
+            # Generate vertices and corresponding polytope
+            verts, anc_p1 = generate_polytope(config, i, bounds[i])
+        else
+            verts, _ = generate_polytope(config, i, bounds[i])
+        end
+        # Append to `vertices` and `analytic_centers`
+        push!(vertices, verts)
+    end
+    
+    nonintersecting_polytopes_lmos = create_lmos(config, vertices)
+    config_opt = modify_config(config, target_tolerance=config.target_tolerance_opt)    
+    _, _, primal, fw_gap = compute_distance(config_opt, nonintersecting_polytopes_lmos)
+
+    # Check that polytope intersection is empty
+    if approxequal(primal, 0.0)
+        error("Invalid polytopes: they should not intersect, but the total distance among them is $primal.")
+    end
+
+    return vertices, anc_p1, primal, fw_gap
+end
+
+# Function to intersect k polytopes so that their intersection contains the chosen anchor point
+function intersect_polytopes(
+    config::Config,
+    vertices::Vector{Matrix{T}}
+    ) where T
+    
+    if isempty(vertices)
+        error("Cannot intersect polytopes: no polytopes provided.")
+    end
+
+    # 1) Choose anchor according to `config.intersection_anchor`
+    anchor = compute_anchor(config, vertices)
+
+    # 2) Compute reference points for all polytopes
+    refs = compute_reference_points(config, vertices, anchor)
+
+    # 3) Shift each polytope so its reference point moves to the anchor (with stepsize = 1)
+    shifted_vertices = Vector{Matrix{T}}(undef, length(vertices))
+    anchor_from_p1 = config.intersection_anchor in ["p1_center", "p1_vertex", "p1_random"]
+
+    for i in 1:length(vertices)
+        if i == 1 && anchor_from_p1
+            # Anchor already lies in P₁; keep P₁ fixed
+            shifted_vertices[i] = vertices[i]
+        else
+            shifted_vertices[i] = shift_polytope(vertices[i], refs[i], anchor; stepsize=one(T))
+        end
+    end
+
+    return shifted_vertices
+end
+
+# Generate nonintersecting polytopes, then intersect them according to the anchor/reference-point rules
+function generate_polytopes(config::Config)
+
+    # `n_points` contains n. of vertices used to generate each polytope
+    println("Generating $(config.k) intersecting polytopes of dimension $(config.n) (n. vertices for each: $(config.n_points))")
+    
+    # Generate random, non-intersecting boxes, then a polytope in each of the boxes
+    bounds_list = generate_nonintersecting_bounds(config)
+    vertices, anc_p1, primal, fw_gap = generate_nonintersecting_polytopes(config, bounds_list)
+
+    # Intersect them according to `intersection.anchor` and `intersection.reference_point` in `config`
+    shifted_vertices = intersect_polytopes(config, vertices)
+
+    return vertices, shifted_vertices, primal, fw_gap
+end
