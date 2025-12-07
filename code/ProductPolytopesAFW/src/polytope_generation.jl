@@ -120,22 +120,43 @@ function intersect_polytopes(
         error("Cannot intersect polytopes: no polytopes provided.")
     end
 
-    # 1) Choose anchor according to `config.intersection_anchor`
-    anchor = compute_anchor(config, vertices)
-
-    # 2) Compute reference points for all polytopes
-    refs = compute_reference_points(config, vertices, anchor)
-
-    # 3) Shift each polytope so its reference point moves to the anchor (with stepsize = 1)
     shifted_vertices = Vector{Matrix{T}}(undef, length(vertices))
-    anchor_from_p1 = config.intersection_anchor in ["p1_center", "p1_vertex", "p1_random"]
 
-    for i in 1:length(vertices)
-        if i == 1 && anchor_from_p1
-            # Anchor already lies in P₁; keep P₁ fixed
-            shifted_vertices[i] = vertices[i]
-        else
-            shifted_vertices[i] = shift_polytope(vertices[i], refs[i], anchor; stepsize=one(T))
+    if config.intersection_anchor == "p1_p2_segment"
+        # Legacy scheme: use closest pair (p₁, p₂) between P₁ and P₂, and analytic center a₁ of P₁
+        V1 = vertices[1]
+        V2 = vertices[2]
+        p1, p2 = closest_pair(config, V1, V2)
+        a1 = analytic_center(V1)
+        t = config.intersection_anchor_t
+
+        # Anchor lies on the segment p₁ → a₁ (or beyond if t > 1)
+        anchor = p1 .+ t .* (a1 .- p1)
+
+        # P₁: keep fixed
+        shifted_vertices[1] = V1
+
+        # P₂: reference point is p₂ from the closest pair
+        shifted_vertices[2] = shift_polytope(V2, p2, anchor; stepsize=one(T))
+
+        # P₃,…,P_k: reference points are vertices closest to the anchor
+        for i in 3:length(vertices)
+            ref_i = closest_pair(config, anchor, vertices[i])
+            shifted_vertices[i] = shift_polytope(vertices[i], ref_i, anchor; stepsize=one(T))
+        end
+    else
+        # Generic scheme: choose anchor, then compute reference points according to config.intersection_reference_point
+        anchor = compute_anchor(config, vertices)
+        refs = compute_reference_points(config, vertices, anchor)
+        anchor_from_p1 = config.intersection_anchor in ["p1_center", "p1_vertex", "p1_random"]
+
+        for i in 1:length(vertices)
+            if i == 1 && anchor_from_p1
+                # Anchor already lies in P₁; keep P₁ fixed
+                shifted_vertices[i] = vertices[i]
+            else
+                shifted_vertices[i] = shift_polytope(vertices[i], refs[i], anchor; stepsize=one(T))
+            end
         end
     end
 

@@ -25,6 +25,8 @@ struct Config
     intersection_anchor::String
     # Reference point used for each polytope when aligning to the anchor (e.g., "center" or "vertex")
     intersection_reference_point::String
+    # Scalar parameter t used for certain anchor types (e.g., "p1_p2_segment"); non‑negative
+    intersection_anchor_t::Float64
     # stepsize strategy: `0` is line search; `1` uses short-step with given L=2 (specified in `product_algorithms.jl`)
     stepsize_strategy::Int 
 end
@@ -35,8 +37,9 @@ function Config()
     # Default intersection: anchor at analytic center of P₁, align using vertices
     default_anchor = "origin"
     default_ref    = "center"
+    default_t      = 0.0
 
-    c = Config(2, 2, [5, 5], 1e-6, 1e-08, 1000, 5000, 100, 42, true, default_anchor, default_ref, 0)
+    c = Config(2, 2, [5, 5], 1e-6, 1e-08, 1000, 5000, 100, 42, true, default_anchor, default_ref, default_t, 0)
     
     return c 
 end
@@ -61,21 +64,25 @@ function Config(yaml_file::String; kwargs...)
         n_points = generate_n_points(config["n"], config["k"], config["seed"])
     end
 
+    intersection_cfg = config["intersection"]
+    anchor_t = get(intersection_cfg, "anchor_t", 0.0)
+
     c = Config(
-            config["k"],
-            config["n"],
-            n_points,
-            config["target_tolerance"],
-            config["target_tolerance_opt"],
-            config["max_iterations"],
-            config["max_iterations_opt"],
-            config["max_print_iterations"],
-            config["seed"],
-            config["cvxhflag"],
-            config["intersection"]["anchor"],
-            config["intersection"]["reference_point"],
-            config["stepsize_strategy"]
-            )
+        config["k"],
+        config["n"],
+        n_points,
+        config["target_tolerance"],
+        config["target_tolerance_opt"],
+        config["max_iterations"],
+        config["max_iterations_opt"],
+        config["max_print_iterations"],
+        config["seed"],
+        config["cvxhflag"],
+        intersection_cfg["anchor"],
+        intersection_cfg["reference_point"],
+        anchor_t,
+        config["stepsize_strategy"],
+    )
     return c 
 end
 
@@ -95,6 +102,7 @@ function modify_config(config::Config; kwargs...)
     cvxhflag = get(kwargs, :cvxhflag, config.cvxhflag)
     intersection_anchor = get(kwargs, :intersection_anchor, config.intersection_anchor)
     intersection_reference_point = get(kwargs, :intersection_reference_point, config.intersection_reference_point)
+    intersection_anchor_t = get(kwargs, :intersection_anchor_t, config.intersection_anchor_t)
     stepsize_strategy = get(kwargs, :stepsize_strategy, config.stepsize_strategy)
 
     # if `n_points` was supplied...
@@ -119,6 +127,7 @@ function modify_config(config::Config; kwargs...)
         cvxhflag,
         intersection_anchor,
         intersection_reference_point,
+        intersection_anchor_t,
         stepsize_strategy,
     )
     
@@ -187,8 +196,14 @@ function validate_config(yaml_config::Dict{Any, Any})
     if !haskey(intersection_cfg, "anchor") || !(intersection_cfg["anchor"] isa String)
         error("Invalid or missing 'intersection.anchor': must be a string.")
     end
-    if !(intersection_cfg["anchor"] in ["p1_center", "p1_vertex", "p1_random", "origin", "global_mean", "random"])
-        error("Invalid value for 'intersection.anchor': must be one of 'p1_center', 'p1_vertex', 'origin', 'global_mean', 'random', 'p1_random'.")
+    if !(intersection_cfg["anchor"] in ["p1_center", "p1_vertex", "p1_random", "origin", "global_mean", "random", "p1_p2_segment"])
+        error("Invalid value for 'intersection.anchor': must be one of 'p1_center', 'p1_vertex', 'p1_random', 'origin', 'global_mean', 'random', 'p1_p2_segment'.")
+    end
+    # Check for `intersection.anchor_t` (optional, used only for some anchors)
+    if haskey(intersection_cfg, "anchor_t")
+        if !(intersection_cfg["anchor_t"] isa Float64) || intersection_cfg["anchor_t"] < 0.0
+            error("Invalid value for 'intersection.anchor_t': must be a non-negative float.")
+        end
     end
     # Check for `intersection.reference_point`
     if !haskey(intersection_cfg, "reference_point") || !(intersection_cfg["reference_point"] isa String)
@@ -221,6 +236,7 @@ function print_config(config::Config)
     println("  Use FW's ConvexHullOracle LMOs or MathOptLMO (cvxhflag): ", config.cvxhflag)
     println("  Intersection anchor: ", config.intersection_anchor)
     println("  Intersection reference point: ", config.intersection_reference_point)
+    println("  Intersection anchor_t: ", config.intersection_anchor_t)
     println("  Stepsize strategy (`0` is line search; `1` uses short-step with L=1 specified in `product_algorithms.jl`): ", config.stepsize_strategy)
     println()
 end
@@ -254,6 +270,7 @@ function todict(config::Config)
         "intersection" => Dict(
             "anchor" => config.intersection_anchor,
             "reference_point" => config.intersection_reference_point,
+            "anchor_t" => config.intersection_anchor_t,
         ),
         "stepsize_strategy" => config.stepsize_strategy,
     )

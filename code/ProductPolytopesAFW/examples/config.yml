@@ -26,19 +26,27 @@ cvxhflag: true
 #
 # - `intersection.anchor`: specify point in R^n where polytopes are aligned.
 #   Allowed values:
-#   - "p1_center"  : analytic center of the first polytope P₁
-#   - "p1_vertex"  : a vertex of P₁
-#   - "p1_random"  : random convex combination of vertices of P₁ (seeded by `seed`)
-#   - "origin"     : the zero vector in R
-#   - "global_mean": mean of all generated vertices across polytopes
-#   - "random"     : random point in Rⁿ (seeded by `seed`)
+#   - "p1_center"        : analytic center of the first polytope P₁
+#   - "p1_vertex"        : a vertex of P₁
+#   - "p1_random"        : random convex combination of vertices of P₁ (seeded by `seed`)
+#   - "origin"           : the zero vector in R
+#   - "global_mean"      : mean of all generated vertices across polytopes
+#   - "random"           : random point in Rⁿ (seeded by `seed`)
+#   - "p1_p2_segment"    : legacy scheme; anchor lies on the segment between the closest vertex p₁ of P₁ to P₂ and the analytic center a₁ of P₁
+#
+# - `intersection.anchor_t`: non‑negative scalar t used only when `anchor == "p1_p2_segment"`.
+#       The anchor is defined as a(t) = p₁ + t (a₁ - p₁). 
+#       t = 0   → anchor at p₁; 
+#       t = 1   → anchor at a₁;
+#       t > 1   → anchor moves beyond a₁ along the ray p₁→a₁.
 #
 # - `intersection.reference_point` specify which point of each polytope is moved onto the anchor.
 #       Allowed values:
 #         "center" : analytic center of each polytope
-#         "vertex" : vertex of each polytope closest to the chosen anchor
+#         "vertex" : vertex of each polytope closest to the chosen anchor (for P₂ under "p1_p2_segment" the closest vertex p₂ from the FW-based closest pair is used)
 intersection:
   anchor: "p1_center"
+  anchor_t: 0.0
   reference_point: "vertex"
 # stepsize strategy: `0` is line search; `1` uses short-step with L=2 (specified in `product_algorithms.jl`)
 stepsize_strategy: 0

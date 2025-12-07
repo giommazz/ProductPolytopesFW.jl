@@ -90,6 +90,22 @@ function global_mean_of_centers(config::Config, vertices::Vector{Matrix{T}}) whe
     return vec(mean(A, dims=2)) # n-element vector
 end
 
+# (Multiple Dispatch) Find closest points between two polytopes by running FW
+function closest_pair(config::Config, V1::Matrix{T}, V2::Matrix{T}) where T
+
+    # Check that both matrices have the correct number of columns
+    if size(V1, 2) != config.n || size(V2, 2) != config.n
+        error("Both point sets must have the dimension specified in `config.n`.")
+    end
+    
+    lmos = create_lmos(config, [V1, V2])
+    _, last_lmo_solution, _, _ = compute_distance(config, lmos)
+    # `last_lmo_solution` is a FrankWolfe.BlockVector
+    v1_closest, v2_closest = last_lmo_solution.blocks[1], last_lmo_solution.blocks[2]
+
+    return v1_closest, v2_closest
+end
+
 # (Multiple Dispatch) Compute a reference point for a single polytope given an anchor
 function compute_reference_point(config::Config, anchor::Vector{T}, vertices::Matrix{T}) where T
     if config.intersection_reference_point == "center"
