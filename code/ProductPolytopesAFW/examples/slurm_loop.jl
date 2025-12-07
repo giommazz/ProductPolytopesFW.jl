@@ -99,7 +99,7 @@ end
 # INSTANCE PARAMETERS FOR THE RUNS
 # ***********************************************************************
 list_k    = [3]           # number of polytopes
-list_n    = [100, 100]      # dimension of each polytope
+list_n    = [103, 207]      # dimension of each polytope
 seed = 555               # starting seed, will be incremented in the loop
 dir = "examples"
 config = Config(joinpath(dir, "config.yml"))

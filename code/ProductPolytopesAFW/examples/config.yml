@@ -22,8 +22,23 @@ max_print_iterations: 100
 seed: 240389
 # Use FrankWolfe.ConvexHullOracle LMOs (true) or FrankWolfe.MathOptLMO LMOs (false)
 cvxhflag: true
-# Intersect polytopes close to the first polytope's analytic center (true) or a vertex (false)
-# Works well (true) if you only have two polytopes
-anc_flag: true
+# Intersection parameters:
+#
+# - `intersection.anchor`: specify point in R^n where polytopes are aligned.
+#   Allowed values:
+#   - "p1_center"  : analytic center of the first polytope P₁
+#   - "p1_vertex"  : a vertex of P₁
+#   - "p1_random"  : random convex combination of vertices of P₁ (seeded by `seed`)
+#   - "origin"     : the zero vector in R
+#   - "global_mean": mean of all generated vertices across polytopes
+#   - "random"     : random point in Rⁿ (seeded by `seed`)
+#
+# - `intersection.reference_point` specify which point of each polytope is moved onto the anchor.
+#       Allowed values:
+#         "center" : analytic center of each polytope
+#         "vertex" : vertex of each polytope closest to the chosen anchor
+intersection:
+  anchor: "p1_center"
+  reference_point: "vertex"
 # stepsize strategy: `0` is line search; `1` uses short-step with L=2 (specified in `product_algorithms.jl`)
 stepsize_strategy: 0

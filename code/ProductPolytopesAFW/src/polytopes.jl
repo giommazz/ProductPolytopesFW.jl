@@ -198,8 +198,8 @@ end
 # Function to intersect two polytopes, moving the second onto the closest vertex of the first
 function intersect_polytopes(config::Config, V1::Matrix{T}, V2::Matrix{T}, anc::Vector{T}; steplength_towards_anc=.1::Float64) where T
     
-    if steplength_towards_anc < 0.0 || steplength_towards_anc > 1
-        error("Wrong 'steplength_towards_anc' given, it should be a float in [0,1]")
+    if steplength_towards_anc < 0.0
+        error("Wrong 'steplength_towards_anc' given, it should be a float ≥ 0")
     end
 
     # Find the closest pair of points between the two sets of points

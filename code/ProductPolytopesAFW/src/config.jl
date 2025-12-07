@@ -21,8 +21,10 @@ struct Config
     seed::Int
     # Use FrankWolfe.ConvexHullOracle LMOs (true) or FrankWolfe.MathOptLMO LMOs (false)
     cvxhflag::Bool
-    # Intersect polytopes close to the first polytope's analytic center (true) or a vertex
-    anc_flag::Bool
+    # Intersection anchor: point in Rⁿ where polytopes are aligned (see examples/config.yml for allowed values)
+    intersection_anchor::String
+    # Reference point used for each polytope when aligning to the anchor (e.g., "center" or "vertex")
+    intersection_reference_point::String
     # stepsize strategy: `0` is line search; `1` uses short-step with given L=2 (specified in `product_algorithms.jl`)
     stepsize_strategy::Int 
 end
@@ -30,7 +32,11 @@ end
 # Constructor with default values
 function Config()
     
-    c = Config(2, 2, [5, 5], 1e-6, 1e-08, 1000, 5000, 100, 42, true, false, 0)
+    # Default intersection: anchor at analytic center of P₁, align using vertices
+    default_anchor = "origin"
+    default_ref    = "center"
+
+    c = Config(2, 2, [5, 5], 1e-6, 1e-08, 1000, 5000, 100, 42, true, default_anchor, default_ref, 0)
     
     return c 
 end
@@ -54,7 +60,7 @@ function Config(yaml_file::String; kwargs...)
     if n_points == 0
         n_points = generate_n_points(config["n"], config["k"], config["seed"])
     end
-    
+
     c = Config(
             config["k"],
             config["n"],
@@ -66,7 +72,8 @@ function Config(yaml_file::String; kwargs...)
             config["max_print_iterations"],
             config["seed"],
             config["cvxhflag"],
-            config["anc_flag"],
+            config["intersection"]["anchor"],
+            config["intersection"]["reference_point"],
             config["stepsize_strategy"]
             )
     return c 
@@ -86,7 +93,8 @@ function modify_config(config::Config; kwargs...)
     max_print_iterations = get(kwargs, :max_iterations, config.max_print_iterations)
     seed = get(kwargs, :seed, config.seed)
     cvxhflag = get(kwargs, :cvxhflag, config.cvxhflag)
-    anc_flag = get(kwargs, :anc_flag, config.anc_flag)
+    intersection_anchor = get(kwargs, :intersection_anchor, config.intersection_anchor)
+    intersection_reference_point = get(kwargs, :intersection_reference_point, config.intersection_reference_point)
     stepsize_strategy = get(kwargs, :stepsize_strategy, config.stepsize_strategy)
 
     # if `n_points` was supplied...
@@ -98,7 +106,21 @@ function modify_config(config::Config; kwargs...)
     end
 
     # Return a new Config object with updated values
-    c = Config(k, n, n_points, target_tolerance, target_tolerance_opt, max_iterations, max_iterations_opt, max_print_iterations, seed, cvxhflag, anc_flag, stepsize_strategy)
+    c = Config(
+        k,
+        n,
+        n_points,
+        target_tolerance,
+        target_tolerance_opt,
+        max_iterations,
+        max_iterations_opt,
+        max_print_iterations,
+        seed,
+        cvxhflag,
+        intersection_anchor,
+        intersection_reference_point,
+        stepsize_strategy,
+    )
     
     return c
 end
@@ -156,9 +178,24 @@ function validate_config(yaml_config::Dict{Any, Any})
         error("Invalid value for 'cvxhflag': must be a boolean.")
     end
 
-    # Check for `anc_flag`
-    if typeof(yaml_config["anc_flag"]) != Bool
-        error("Invalid value for 'anc_flag': must be a boolean.")
+    # Check for `intersection`
+    if !haskey(yaml_config, "intersection") || !(yaml_config["intersection"] isa Dict)
+        error("Missing or invalid 'intersection' section: must be a mapping with 'anchor' and 'reference_point'.")
+    end
+    intersection_cfg = yaml_config["intersection"]
+    # Check for `intersection.anchor`
+    if !haskey(intersection_cfg, "anchor") || !(intersection_cfg["anchor"] isa String)
+        error("Invalid or missing 'intersection.anchor': must be a string.")
+    end
+    if !(intersection_cfg["anchor"] in ["p1_center", "p1_vertex", "p1_random", "origin", "global_mean", "random"])
+        error("Invalid value for 'intersection.anchor': must be one of 'p1_center', 'p1_vertex', 'origin', 'global_mean', 'random', 'p1_random'.")
+    end
+    # Check for `intersection.reference_point`
+    if !haskey(intersection_cfg, "reference_point") || !(intersection_cfg["reference_point"] isa String)
+        error("Invalid or missing 'intersection.reference_point': must be a string ('center' or 'vertex').")
+    end
+    if !(intersection_cfg["reference_point"] in ["center", "vertex"])
+        error("Invalid value for 'intersection.reference_point': must be 'center' or 'vertex'.")
     end
 
     # Check for `stepsize_strategy`
@@ -182,7 +219,8 @@ function print_config(config::Config)
     println("  How often FW iteration log is printed to screen (max_print_iterations): ", config.max_print_iterations)
     println("  Seed for reproducibility (seed): ", config.seed)
     println("  Use FW's ConvexHullOracle LMOs or MathOptLMO (cvxhflag): ", config.cvxhflag)
-    println("  Intersect polytopes close to first polytope's analytic center (true) or vertex (false): ", config.anc_flag)
+    println("  Intersection anchor: ", config.intersection_anchor)
+    println("  Intersection reference point: ", config.intersection_reference_point)
     println("  Stepsize strategy (`0` is line search; `1` uses short-step with L=1 specified in `product_algorithms.jl`): ", config.stepsize_strategy)
     println()
 end
@@ -200,14 +238,25 @@ end
 
 # turns Config objectinto dictionary that YAML.jl can serialise
 function todict(config::Config)
-    
-    config_dict = Dict{String,Any}()
-    # loop over keys
-    for field in fieldnames(Config)
-        config_dict[string(field)] = getfield(config, field)
-    end
-
-    return config_dict
+    # Note: we explicitly build the dictionary so that the YAML layout matches examples/config.yml,
+    # in particular nesting intersection settings under the "intersection" key and not exposing anc_flag.
+    return Dict{String, Any}(
+        "k" => config.k,
+        "n" => config.n,
+        "n_points" => config.n_points,
+        "target_tolerance" => config.target_tolerance,
+        "target_tolerance_opt" => config.target_tolerance_opt,
+        "max_iterations" => config.max_iterations,
+        "max_iterations_opt" => config.max_iterations_opt,
+        "max_print_iterations" => config.max_print_iterations,
+        "seed" => config.seed,
+        "cvxhflag" => config.cvxhflag,
+        "intersection" => Dict(
+            "anchor" => config.intersection_anchor,
+            "reference_point" => config.intersection_reference_point,
+        ),
+        "stepsize_strategy" => config.stepsize_strategy,
+    )
 end
     
 # Serialize `config` to YAML and store it at `config_filename`

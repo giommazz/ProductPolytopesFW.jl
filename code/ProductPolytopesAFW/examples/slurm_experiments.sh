@@ -11,7 +11,7 @@
 # Directives for the SLURM scheduler
 #SBATCH --job-name=convexfeas_polytopes_afw   # job name
 #SBATCH --time=14-00:00:00      # timelimit (format is jj-hh:mm:ss). Use `sinfo` to see node time limits
-#SBATCH --cpus-per-task=2       # reserve a certain amount of cores for this job
+#SBATCH --cpus-per-task=10      # reserve a certain amount of cores for this job
 #SBATCH --mem=480G
 #SBATCH -N1 --nodelist=htc-cmp[501-532] # choose one node from the list in the square brackets
 #SBATCH --chdir=/home/htc/giommazz/product-polytopes-afw/code/ProductPolytopesAFW/  # Navigate to dir where script you want to run is
