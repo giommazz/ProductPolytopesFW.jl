@@ -285,7 +285,7 @@ function write_config(config::Config, config_filename::AbstractString)
     return abspath(config_filename)
 end
 
-function generate_n_points(n::Integer, k::Integer, seed::Integer; upper_bound::Integer=n*2)
+function generate_n_points(n::Integer, k::Integer, seed::Integer; upper_bound::Integer=n*50)
     # Generate a list of k random integers in [n, upper_bound]
     Random.seed!(seed)  # Set the seed for reproducibility
     return [rand(n:upper_bound + 1) for _ in 1:k]

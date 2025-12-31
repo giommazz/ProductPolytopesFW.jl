@@ -32,9 +32,11 @@ function generate_filename(config::Config)
     timestamp = Dates.format(now(), "yyyymmdd_HHMMSS")
     
     oracle = config.cvxhflag ? "cvxho" : "lmo"
-    anc = config.anc_flag ? "anc" : "vert"
     seed = config.seed
-    return "k$(config.k)_n$(config.n)_i$(config.max_iterations)_s$(seed)_$(oracle)_$(anc)_t$timestamp"
+    anchor = config.intersection_anchor
+    anchor_t = config.intersection_anchor_t
+    ref = config.intersection_reference_point
+    return "k$(config.k)_n$(config.n)_i$(config.max_iterations)_s$(seed)_$(oracle)_a-$(anchor)-$(anchor_t)_ref-$(ref)_t$timestamp"
 end
 
 # Function to extract `n`, `k`, and `max_iterations` from the filename
