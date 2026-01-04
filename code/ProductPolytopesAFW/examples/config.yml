@@ -6,8 +6,11 @@ k: 2 #2, 3, 4, 5, 10
 # Dimension of the subspace in which each polytope lies
 n: 202  # 100, 500, 1000, 2000
 # list of `k` integers, each indicating the n. of points to be used to generate `k` polytopes
-# if `0` is given, n_points is generated randomly
+# if `0` is given, n_points is generated randomly using `ub_n_points`
 n_points: 0
+# Upper bound multiplier used only when `n_points: 0`:
+# for each polytope i, sample `n_points[i]` uniformly in {n+1, …, n*ub_n_points}
+ub_n_points: 100
 # epsilon-optimality threshold
 target_tolerance: 1e-07
 # epsilon-optimality threshold for finding optimal solution
@@ -26,26 +29,26 @@ cvxhflag: true
 #
 # - `intersection.anchor`: specify point in R^n where polytopes are aligned.
 #   Allowed values:
-#   - "p1_center"        : analytic center of the first polytope P₁
+#   - "p1_center"        : vertex mean (average of sampled vertices) of the first polytope P₁
 #   - "p1_vertex"        : a vertex of P₁
 #   - "p1_random"        : random convex combination of vertices of P₁ (seeded by `seed`)
 #   - "origin"           : the zero vector in R
-#   - "global_mean"      : mean of all generated vertices across polytopes
+#   - "global_mean"      : mean of per‑polytope vertex means across polytopes
 #   - "random"           : random point in Rⁿ (seeded by `seed`)
-#   - "p1_p2_segment"    : (legacy scheme) anchor lies on the segment between the closest vertex p₁ of P₁ to P₂ and the analytic center a₁ of P₁
+#   - "p1_p2_segment"    : (legacy scheme) anchor lies on the segment between the closest vertex p₁ of P₁ to P₂ and the vertex mean m₁ of P₁
 #
 # - `intersection.anchor_t`: non‑negative scalar t used only when `anchor == "p1_p2_segment"`.
-#       The anchor is defined as a(t) = p₁ + t (a₁ - p₁). 
+#       The anchor is defined as a(t) = p₁ + t (m₁ - p₁).
 #       t = 0   → anchor at p₁; 
-#       t = 1   → anchor at a₁;
-#       t > 1   → anchor moves beyond a₁ along the direction (a₁ - p₁)
+#       t = 1   → anchor at m₁;
+#       t > 1   → anchor moves beyond m₁ along the direction (m₁ - p₁)
 #
 # - `intersection.reference_point` specify which point of each polytope is moved onto the anchor.
 #       Allowed values:
-#         "center" : analytic center of each polytope
+#         "center" : vertex mean (average of sampled vertices) of each polytope
 #         "vertex" : (legacy scheme) vertex of each polytope closest to chosen anchor (for P₂ under "p1_p2_segment", closest vertex p₂ from the FW-based closest pair is used)
 intersection:
-  anchor: "global_mean"
+  anchor: "p1_center"
   anchor_t: 0.0
   reference_point: "center"
 # stepsize strategy: `0` is line search; `1` uses short-step with L=2 (specified in `product_algorithms.jl`)

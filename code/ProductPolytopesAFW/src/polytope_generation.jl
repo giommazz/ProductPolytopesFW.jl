@@ -10,15 +10,15 @@ function compute_anchor(config::Config, vertices::Vector{Matrix{T}}) where T
     rng = MersenneTwister(config.seed) # `MersenneTwister`: pseudorand num. generator, seeded for reproducible randomness with `config.seed`
     Tvert = eltype(vertices[1]) # element type of vertex coordinates
 
-    if anchor_type == "p1_center" # Analytic center of the first polytope P₁
-        return analytic_center(vertices[1])
+    if anchor_type == "p1_center" # Vertex mean of the first polytope P₁
+        return vertex_mean(vertices[1])
     elseif anchor_type == "p1_vertex" # Random vertex of P₁
         return random_vertex(vertices[1], rng)
     elseif anchor_type == "p1_random" # Random convex combination of vertices of P₁
         return random_convex_combination(vertices[1], rng)
     elseif anchor_type == "origin" # Zero vector in Rⁿ
         return zeros(Tvert, config.n)
-    elseif anchor_type == "global_mean" # Mean of analytic centers of all polytopes
+    elseif anchor_type == "global_mean" # Mean of per-polytope vertex means across all polytopes
         return global_mean_of_centers(config, vertices)
     elseif anchor_type == "random" # Random point in small interval [-1, 1]ⁿ (keep translations bounded + avoid huge coordinates)
         return 2 .* rand(rng, Tvert, config.n) .- one(Tvert)
@@ -66,9 +66,9 @@ function generate_polytope(config::Config, idx::Int, bounds::Vector{Tuple{T, T}}
         vertices[i,:] = [bounds[d][1] + (bounds[d][2] - bounds[d][1]) * rand(Float64) for d in 1:config.n]
     end
 
-    # Only compute analytic center of P₁ 
+    # Only compute vertex mean of P₁
     if idx == 1
-        anc = analytic_center(vertices)
+        anc = vertex_mean(vertices)
     else
         anc = Nothing
     end
@@ -84,17 +84,17 @@ end
 function generate_nonintersecting_polytopes(config::Config, bounds::Vector{Vector{Tuple{T, T}}}) where T
     
     vertices = Vector{Matrix{T}}()
-    anc_p1 = Vector{T}()
+    p1_vertex_mean = Vector{T}()
 
     # Generate k polytopes within the specified bounds
     for i in 1:config.k
         if i == 1
             # Generate vertices and corresponding polytope
-            verts, anc_p1 = generate_polytope(config, i, bounds[i])
+            verts, p1_vertex_mean = generate_polytope(config, i, bounds[i])
         else
             verts, _ = generate_polytope(config, i, bounds[i])
         end
-        # Append to `vertices` and `analytic_centers`
+        # Append to `vertices` and `vertex_means`
         push!(vertices, verts)
     end
     
@@ -107,7 +107,7 @@ function generate_nonintersecting_polytopes(config::Config, bounds::Vector{Vecto
         error("Invalid polytopes: they should not intersect, but the total distance among them is $primal.")
     end
 
-    return vertices, anc_p1, primal, fw_gap
+    return vertices, p1_vertex_mean, primal, fw_gap
 end
 
 # Function to intersect k polytopes so that their intersection contains the chosen anchor point
@@ -123,15 +123,15 @@ function intersect_polytopes(
     shifted_vertices = Vector{Matrix{T}}(undef, length(vertices))
 
     if config.intersection_anchor == "p1_p2_segment"
-        # Legacy scheme: use closest pair (p₁, p₂) between P₁ and P₂, and analytic center a₁ of P₁
+        # Legacy scheme: use closest pair (p₁, p₂) between P₁ and P₂, and vertex mean m₁ of P₁
         V1 = vertices[1]
         V2 = vertices[2]
         p1, p2 = closest_pair(config, V1, V2)
-        a1 = analytic_center(V1)
+        m1 = vertex_mean(V1)
         t = config.intersection_anchor_t
 
-        # Anchor lies on the segment p₁ → a₁ (or beyond if t > 1)
-        anchor = p1 .+ t .* (a1 .- p1)
+        # Anchor lies on the segment p₁ → m₁ (or beyond if t > 1)
+        anchor = p1 .+ t .* (m1 .- p1)
 
         # P₁: keep fixed
         shifted_vertices[1] = V1
@@ -171,7 +171,7 @@ function generate_polytopes(config::Config)
     
     # Generate random, non-intersecting boxes, then a polytope in each of the boxes
     bounds_list = generate_nonintersecting_bounds(config)
-    vertices, anc_p1, primal, fw_gap = generate_nonintersecting_polytopes(config, bounds_list)
+    vertices, p1_vertex_mean, primal, fw_gap = generate_nonintersecting_polytopes(config, bounds_list)
 
     # Intersect them according to `intersection.anchor` and `intersection.reference_point` in `config`
     shifted_vertices = intersect_polytopes(config, vertices)

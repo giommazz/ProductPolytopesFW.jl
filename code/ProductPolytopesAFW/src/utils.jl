@@ -33,10 +33,11 @@ function generate_filename(config::Config)
     
     oracle = config.cvxhflag ? "cvxho" : "lmo"
     seed = config.seed
+    npub = config.n * config.ub_n_points
     anchor = config.intersection_anchor
     anchor_t = config.intersection_anchor_t
     ref = config.intersection_reference_point
-    return "k$(config.k)_n$(config.n)_i$(config.max_iterations)_s$(seed)_$(oracle)_a-$(anchor)-$(anchor_t)_ref-$(ref)_t$timestamp"
+    return "k$(config.k)_n$(config.n)_npub$(npub)_i$(config.max_iterations)_s$(seed)_$(oracle)_a-$(anchor)-$(anchor_t)_ref-$(ref)_t$timestamp"
 end
 
 # Function to extract `n`, `k`, and `max_iterations` from the filename

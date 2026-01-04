@@ -33,22 +33,22 @@ function nonredundant_polytope(vertices::Matrix{T}; redundancy_flag=true::Bool) 
     return vertices
 end
 
-# Function to compute the analytic center of a given list of vertices
-function analytic_center(vertices::Matrix{T}) where T
+# Function to compute the vertex mean (average of sampled vertices) of a given list of vertices
+function vertex_mean(vertices::Matrix{T}) where T
     # Check if the matrix is empty
     if size(vertices, 1) == 0
         error("The matrix of vertices is empty.")
     end
     
-    _analytic_center = Vector{T}()
+    _vertex_mean = Vector{T}()
 
     # Sum all the vertices
     sum_vector = vec(sum(vertices, dims=1))
     
-    # Compute the analytic center by dividing by the number of vertices
-    _analytic_center = sum_vector ./ size(vertices, 1)
+    # Compute the vertex mean by dividing by the number of vertices
+    _vertex_mean = sum_vector ./ size(vertices, 1)
     
-    return _analytic_center
+    return _vertex_mean
 end
 
 # Sample a random vertex (row) from a vertex matrix (set of vertices)
@@ -80,12 +80,12 @@ function random_convex_combination(vertices::Matrix{T}, rng::AbstractRNG) where 
     return vec(combo)
 end
 
-# Compute the mean of analytic centers of all polytopes in `vertices`
+# Compute the mean of per-polytope vertex means in `vertices`
 function global_mean_of_centers(config::Config, vertices::Vector{Matrix{T}}) where T
     if isempty(vertices)
         error("Cannot compute global mean of centers: no polytopes provided.")
     end
-    centers = [analytic_center(V) for V in vertices]
+    centers = [vertex_mean(V) for V in vertices]
     A = reduce(hcat, centers) # stack k centers as columns into an nxk matrix
     return vec(mean(A, dims=2)) # n-element vector
 end
@@ -109,7 +109,7 @@ end
 # (Multiple Dispatch) Compute a reference point for a single polytope given an anchor
 function compute_reference_point(config::Config, anchor::Vector{T}, vertices::Matrix{T}) where T
     if config.intersection_reference_point == "center"
-        return analytic_center(vertices) # ignores `anchor`
+        return vertex_mean(vertices) # ignores `anchor`
     elseif config.intersection_reference_point == "vertex"
         # Closest vertex of this polytope to the anchor
         return closest_pair(config, anchor, vertices)

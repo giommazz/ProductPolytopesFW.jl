@@ -7,6 +7,8 @@ struct Config
     n::Int
     # Either 0 or a list of `k` integers, each indicating the number of points to be used to generate intersecting polytopes
     n_points::Union{Int, Vector{Int}}
+    # Upper bound multiplier used only when `n_points == 0` (auto-generate `n_points[i]` in {n+1, …, n*ub_n_points})
+    ub_n_points::Int
     # epsilon-optimality threshold
     target_tolerance::Float64
     # epsilon-optimality threshold for finding optimal solution
@@ -34,12 +36,13 @@ end
 # Constructor with default values
 function Config()
     
-    # Default intersection: anchor at analytic center of P₁, align using vertices
+    # Default intersection settings
     default_anchor = "origin"
     default_ref    = "center"
     default_t      = 0.0
+    default_ub_n_points = 10
 
-    c = Config(2, 2, [5, 5], 1e-6, 1e-08, 1000, 5000, 100, 42, true, default_anchor, default_ref, default_t, 0)
+    c = Config(2, 2, [5, 5], default_ub_n_points, 1e-6, 1e-08, 1000, 5000, 100, 42, true, default_anchor, default_ref, default_t, 0)
     
     return c 
 end
@@ -60,8 +63,9 @@ function Config(yaml_file::String; kwargs...)
 
     # Handle the n_points field
     n_points = config["n_points"]
+    ub_n_points = get(config, "ub_n_points", 10)
     if n_points == 0
-        n_points = generate_n_points(config["n"], config["k"], config["seed"])
+        n_points = generate_n_points(config["n"], config["k"], config["seed"]; ub_n_points=ub_n_points)
     end
 
     intersection_cfg = config["intersection"]
@@ -71,6 +75,7 @@ function Config(yaml_file::String; kwargs...)
         config["k"],
         config["n"],
         n_points,
+        ub_n_points,
         config["target_tolerance"],
         config["target_tolerance_opt"],
         config["max_iterations"],
@@ -93,6 +98,7 @@ function modify_config(config::Config; kwargs...)
     k = get(kwargs, :k, config.k)
     n = get(kwargs, :n, config.n)
     n_points = get(kwargs, :n_points, config.n_points)
+    ub_n_points = get(kwargs, :ub_n_points, config.ub_n_points)
     target_tolerance = get(kwargs, :target_tolerance, config.target_tolerance)
     target_tolerance_opt = get(kwargs, :target_tolerance_opt, config.target_tolerance_opt)
     max_iterations = get(kwargs, :max_iterations, config.max_iterations)
@@ -110,7 +116,7 @@ function modify_config(config::Config; kwargs...)
         n_points = kwargs[:n_points] # what the caller passed
     else
         # ...else: fall-back, generate a fresh list that matches (k, n, seed)
-        n_points = generate_n_points(n, k, seed)
+        n_points = generate_n_points(n, k, seed; ub_n_points=ub_n_points)
     end
 
     # Return a new Config object with updated values
@@ -118,6 +124,7 @@ function modify_config(config::Config; kwargs...)
         k,
         n,
         n_points,
+        ub_n_points,
         target_tolerance,
         target_tolerance_opt,
         max_iterations,
@@ -150,6 +157,13 @@ function validate_config(yaml_config::Dict{Any, Any})
     # Check for `n_points`
     if yaml_config["n_points"] != 0 && (typeof(yaml_config["n_points"]) != Vector{Int} || length(yaml_config["n_points"]) != yaml_config["k"])
         error("Invalid configuration for 'n_points': must be 0 or a list of $(yaml_config["k"]) integers, instead found $(yaml_config["n_points"])")
+    end
+
+    # Check for `ub_n_points` (optional, used only when `n_points == 0`)
+    if haskey(yaml_config, "ub_n_points")
+        if typeof(yaml_config["ub_n_points"]) != Int || yaml_config["ub_n_points"] < 1
+            error("Invalid value for 'ub_n_points': must be a positive integer.")
+        end
     end
 
     # Check for `target_tolerance`
@@ -227,6 +241,7 @@ function print_config(config::Config)
     println("  Number of polytopes (k): ", config.k)
     println("  Polytope dimension (n): ", config.n)
     println("  Number of points (n_points): ", config.n_points)
+    println("  n_points upper bound multiplier (ub_n_points): ", config.ub_n_points)
     println("  Epsilon-optimality threshold (target_tolerance): ", config.target_tolerance)
     println("  Epsilon-optimality threshold to compute optimal sols (target_tolerance_opt): ", config.target_tolerance_opt)
     println("  Number of FW iterations (max_iterations): ", config.max_iterations)
@@ -260,6 +275,7 @@ function todict(config::Config)
         "k" => config.k,
         "n" => config.n,
         "n_points" => config.n_points,
+        "ub_n_points" => config.ub_n_points,
         "target_tolerance" => config.target_tolerance,
         "target_tolerance_opt" => config.target_tolerance_opt,
         "max_iterations" => config.max_iterations,
@@ -285,8 +301,9 @@ function write_config(config::Config, config_filename::AbstractString)
     return abspath(config_filename)
 end
 
-function generate_n_points(n::Integer, k::Integer, seed::Integer; upper_bound::Integer=n*50)
-    # Generate a list of k random integers in [n, upper_bound]
+function generate_n_points(n::Integer, k::Integer, seed::Integer; ub_n_points::Integer=10)
+    # Generate a list of k random integers in {n+1, …, n*ub_n_points}
     Random.seed!(seed)  # Set the seed for reproducibility
-    return [rand(n:upper_bound + 1) for _ in 1:k]
+    upper_bound = max(n + 1, n * ub_n_points)
+    return [rand((n + 1):upper_bound) for _ in 1:k]
 end
