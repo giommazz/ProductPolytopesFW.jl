@@ -33,14 +33,15 @@ function generate_nonintersecting_bounds(config::Config; margin::Float64=10.0, s
     
     bounds_list = Vector{Vector{Tuple{Float64, Float64}}}(undef, config.k)
 
-    # Generate the first bounds randomly as pairs (LB, UB), within given range
+    # Generate bounds for P₁ randomly as pairs (LB, UB), within given range
     lower_bounds = [start_point + stepsize * rand(Float64) for _ in 1:config.n]
     upper_bounds = [lower_bounds[d] + (stepsize - lower_bounds[d]) * rand(Float64) for d in 1:config.n]
     bounds_list[1] = [(lower_bounds[d], upper_bounds[d]) for d in 1:config.n]
 
-    # Generate subsequent bounds while ensuring no overlap
+    # Generate bounds for P₂, ..., Pₖ while ensuring no overlap
     for i in 2:config.k
         # Current polytope
+        # Note that,at start of iteration `i`, `upper_bounds` contains UBs of previous polytope Pᵢ₋₁
         lower_bounds = [upper_bounds[d] + margin + stepsize * rand(Float64) for d in 1:config.n]
         upper_bounds = [lower_bounds[d] + stepsize * rand(Float64) for d in 1:config.n]
         bounds_list[i] = [(lower_bounds[d], upper_bounds[d]) for d in 1:config.n]
@@ -57,13 +58,54 @@ function generate_polytope(config::Config, idx::Int, bounds::Vector{Tuple{T, T}}
         error("Mismatch: The number of columns in `config` (config.n = $(config.n)) must match the number of elements in `bounds` (length = $(length(bounds))).")
     end
 
-    # Initialize a matrix of zeros with the given number of points (rows) and columns
+    # Initialize matrix of zeros with the given number of points (rows) and dimensions (cols)
     vertices = zeros(Float64, config.n_points[idx], config.n)
 
-    # Generate `config.n_points` vertices of size `config.n` within the bounds for each dimension
-    for i in 1:config.n_points[idx]
-        # Generate random Float64 within the given bounds for each coordinate
-        vertices[i,:] = [bounds[d][1] + (bounds[d][2] - bounds[d][1]) * rand(Float64) for d in 1:config.n]
+    if config.vertex_sampling == "box_uniform"
+        # "box_uniform": sample points uniformly inside the axis-aligned box.
+        # -> can be anisotropic across coordinates because each dimension has its own (LB, UB) range.
+        for i in 1:config.n_points[idx]
+            vertices[i, :] = [bounds[d][1] + (bounds[d][2] - bounds[d][1]) * rand(Float64) for d in 1:config.n]
+        end
+    elseif config.vertex_sampling == "sphere"
+        # "sphere": sample points on a sphere fully and strictly contained in the box.
+        # -> produces more isotropic point clouds while preserving non-intersection:
+        # -> convex hull stays fully and strictly inside its box, boxes are disjoint by construction.
+        center = [(bounds[d][1] + bounds[d][2]) / 2 for d in 1:config.n]
+        box_half_lengths = [(bounds[d][2] - bounds[d][1]) / 2 for d in 1:config.n]
+        radius = config.sphere_radius_factor * minimum(box_half_lengths)
+        for i in 1:config.n_points[idx]
+            g = randn(Float64, config.n) # random direction (Gaussian N(0,1)) for current point
+            ng = norm(g)
+            while ng == 0.0 # generate nonzero points
+                g = randn(Float64, config.n)
+                ng = norm(g)
+            end
+            # each point is guaranteed to be *strictly* inside the sphere: define the following quantities
+            # u = g/ng of unit norm;        R_i = ρ * min_d hᵢ[d];          v = cᵢ + Rᵢ * u,
+            # then
+            # |v[d] - cᵢ[d]| = Rᵢ * |u[d]| ≤ Rᵢ ≤ ρ * hᵢ[d] < hᵢ[d]
+            vertices[i, :] = center .+ (radius / ng) .* g # point on sphere of radius `radius`
+        end
+    elseif config.vertex_sampling == "ellipsoid"
+        # "ellipsoid": sample points on an axis-aligned ellipsoid fully and strictly contained in the box.
+        # -> avoids the "min side-length" collapse of the sphere construction while staying inside the box:
+        # -> v = c + ρ * (h .* u), where h are the box half-lengths and u is a random unit direction.
+        center = [(bounds[d][1] + bounds[d][2]) / 2 for d in 1:config.n]
+        box_half_lengths = [(bounds[d][2] - bounds[d][1]) / 2 for d in 1:config.n]
+        axes = config.sphere_radius_factor .* box_half_lengths
+        for i in 1:config.n_points[idx]
+            g = randn(Float64, config.n) # random direction (Gaussian N(0,1)) for current point
+            ng = norm(g)
+            while ng == 0.0 # generate nonzero points
+                g = randn(Float64, config.n)
+                ng = norm(g)
+            end
+            u = g ./ ng # random unit direction
+            vertices[i, :] = center .+ axes .* u
+        end
+    else
+        error("Unknown vertex sampling strategy: $(config.vertex_sampling)")
     end
 
     # Only compute vertex mean of P₁

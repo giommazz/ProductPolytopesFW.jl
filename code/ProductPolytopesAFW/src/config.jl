@@ -9,6 +9,10 @@ struct Config
     n_points::Union{Int, Vector{Int}}
     # Upper bound multiplier used only when `n_points == 0` (auto-generate `n_points[i]` in {n+1, …, n*ub_n_points})
     ub_n_points::Int
+    # Vertex sampling strategy used to generate polytope points/atoms (e.g., "box_uniform", "sphere", or "ellipsoid")
+    vertex_sampling::String
+    # Used only when `vertex_sampling == "sphere"` or `"ellipsoid"`: factor ρ ∈ (0, 1) controlling the inscribed sphere/ellipsoid size
+    sphere_radius_factor::Float64
     # epsilon-optimality threshold
     target_tolerance::Float64
     # epsilon-optimality threshold for finding optimal solution
@@ -37,12 +41,25 @@ end
 function Config()
     
     # Default intersection settings
-    default_anchor = "origin"
-    default_ref    = "center"
-    default_t      = 0.0
-    default_ub_n_points = 10
-
-    c = Config(2, 2, [5, 5], default_ub_n_points, 1e-6, 1e-08, 1000, 5000, 100, 42, true, default_anchor, default_ref, default_t, 0)
+    c = Config(
+        2,              # k
+        2,              # n
+        [5, 5],         # n_points
+        10,             # ub_n_points
+        "box_uniform",  # vertex_sampling
+        0.95,           # sphere_radius_factor
+        1e-6,           # target_tolerance
+        1e-08,          # target_tolerance_opt
+        1000,           # max_iterations
+        5000,           # max_iterations_opt
+        100,            # max_print_iterations
+        42,             # seed
+        true,           # cvxhflag
+        "origin",       # intersection_anchor
+        "center",       # intersection_reference_point
+        0.0,            # intersection_anchor_t
+        0,              # stepsize_strategy
+    )
     
     return c 
 end
@@ -67,6 +84,8 @@ function Config(yaml_file::String; kwargs...)
     if n_points == 0
         n_points = generate_n_points(config["n"], config["k"], config["seed"]; ub_n_points=ub_n_points)
     end
+    vertex_sampling = get(config, "vertex_sampling", "box_uniform")
+    sphere_radius_factor = get(config, "sphere_radius_factor", 0.95)
 
     intersection_cfg = config["intersection"]
     anchor_t = get(intersection_cfg, "anchor_t", 0.0)
@@ -76,6 +95,8 @@ function Config(yaml_file::String; kwargs...)
         config["n"],
         n_points,
         ub_n_points,
+        vertex_sampling,
+        sphere_radius_factor,
         config["target_tolerance"],
         config["target_tolerance_opt"],
         config["max_iterations"],
@@ -99,6 +120,8 @@ function modify_config(config::Config; kwargs...)
     n = get(kwargs, :n, config.n)
     n_points = get(kwargs, :n_points, config.n_points)
     ub_n_points = get(kwargs, :ub_n_points, config.ub_n_points)
+    vertex_sampling = get(kwargs, :vertex_sampling, config.vertex_sampling)
+    sphere_radius_factor = get(kwargs, :sphere_radius_factor, config.sphere_radius_factor)
     target_tolerance = get(kwargs, :target_tolerance, config.target_tolerance)
     target_tolerance_opt = get(kwargs, :target_tolerance_opt, config.target_tolerance_opt)
     max_iterations = get(kwargs, :max_iterations, config.max_iterations)
@@ -125,6 +148,8 @@ function modify_config(config::Config; kwargs...)
         n,
         n_points,
         ub_n_points,
+        vertex_sampling,
+        sphere_radius_factor,
         target_tolerance,
         target_tolerance_opt,
         max_iterations,
@@ -163,6 +188,20 @@ function validate_config(yaml_config::Dict{Any, Any})
     if haskey(yaml_config, "ub_n_points")
         if typeof(yaml_config["ub_n_points"]) != Int || yaml_config["ub_n_points"] < 1
             error("Invalid value for 'ub_n_points': must be a positive integer.")
+        end
+    end
+
+    # Check for `vertex_sampling` (optional)
+    vertex_sampling = get(yaml_config, "vertex_sampling", "box_uniform")
+    if !(vertex_sampling isa String) || !(vertex_sampling in ["box_uniform", "sphere", "ellipsoid"])
+        error("Invalid value for 'vertex_sampling': must be 'box_uniform', 'sphere', or 'ellipsoid'.")
+    end
+
+    # Check for `sphere_radius_factor` (optional, used only when `vertex_sampling == \"sphere\"` or \"ellipsoid\"`)
+    if vertex_sampling in ["sphere", "ellipsoid"] || haskey(yaml_config, "sphere_radius_factor")
+        sphere_radius_factor = get(yaml_config, "sphere_radius_factor", 0.95)
+        if !(sphere_radius_factor isa Float64) || sphere_radius_factor <= 0.0 || sphere_radius_factor >= 1.0
+            error("Invalid value for 'sphere_radius_factor': must be a Float64 strictly between 0 and 1.")
         end
     end
 
@@ -242,6 +281,8 @@ function print_config(config::Config)
     println("  Polytope dimension (n): ", config.n)
     println("  Number of points (n_points): ", config.n_points)
     println("  n_points upper bound multiplier (ub_n_points): ", config.ub_n_points)
+    println("  Vertex sampling strategy (vertex_sampling): ", config.vertex_sampling)
+    println("  Sphere/ellipsoid factor (sphere_radius_factor): ", config.sphere_radius_factor)
     println("  Epsilon-optimality threshold (target_tolerance): ", config.target_tolerance)
     println("  Epsilon-optimality threshold to compute optimal sols (target_tolerance_opt): ", config.target_tolerance_opt)
     println("  Number of FW iterations (max_iterations): ", config.max_iterations)
@@ -259,7 +300,7 @@ end
 function get_stepsize_strategy(stepsize_strategy::Int, L::T) where T
     
     if stepsize_strategy == 0
-        return FrankWolfe.Goldenratio(1e-09)         # simple line search
+        return FrankWolfe.Goldenratio(1e-09)    # simple line search
     elseif stepsize_strategy == 1
         return FrankWolfe.Shortstep(L)          # short step with given L
     else
@@ -276,6 +317,8 @@ function todict(config::Config)
         "n" => config.n,
         "n_points" => config.n_points,
         "ub_n_points" => config.ub_n_points,
+        "vertex_sampling" => config.vertex_sampling,
+        "sphere_radius_factor" => config.sphere_radius_factor,
         "target_tolerance" => config.target_tolerance,
         "target_tolerance_opt" => config.target_tolerance_opt,
         "max_iterations" => config.max_iterations,
