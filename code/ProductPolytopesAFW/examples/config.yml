@@ -4,7 +4,7 @@
 # Number of polytopes
 k: 2 #2, 3, 4, 5, 10 
 # Dimension of the subspace in which each polytope lies
-n: 1002  # 100, 500, 1000, 2000
+n: 303  # 100, 500, 1000, 2000
 # list of `k` integers, each indicating the n. of points to be used to generate `k` polytopes
 # if `0` is given, n_points is generated randomly using `ub_n_points`
 n_points: 0
@@ -20,7 +20,7 @@ vertex_sampling: "ellipsoid"
 # - `sphere_radius_factor` = ρ must satisfy 0 < ρ < 1 so sampled points lie strictly inside box (never on boundary).
 # - for "sphere": radius is R = ρ * min_d (UB[d]-LB[d])/2, centered at the box center.
 # - for "ellipsoid": semi-axis lengths are a[d] = ρ * (UB[d]-LB[d])/2 along each coordinate direction.
-sphere_radius_factor: 0.95
+sphere_radius_factor: 0.6
 # epsilon-optimality threshold
 target_tolerance: 1e-07
 # epsilon-optimality threshold for finding optimal solution
@@ -58,8 +58,8 @@ cvxhflag: true
 #         "center" : vertex mean (average of sampled vertices) of each polytope
 #         "vertex" : (legacy scheme) vertex of each polytope closest to chosen anchor (for P₂ under "p1_p2_segment", closest vertex p₂ from the FW-based closest pair is used)
 intersection:
-  anchor: "p1_random"
-  anchor_t: 0.0
+  anchor: "p1_p2_segment"
+  anchor_t: 0.5
   reference_point: "vertex"
 # stepsize strategy: `0` is line search; `1` uses short-step with L=2 (specified in `product_algorithms.jl`)
 stepsize_strategy: 0
