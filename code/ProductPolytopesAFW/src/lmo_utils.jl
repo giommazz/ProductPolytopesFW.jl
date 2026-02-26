@@ -8,7 +8,7 @@ function create_product_lmo(lmo_list::Vector{FrankWolfe.LinearMinimizationOracle
     return FrankWolfe.ProductLMO(lmos_tuple)
 end
 # (Multiple dispatch)
-function create_product_lmo(lmo_list::Vector{FrankWolfe.ConvexHullOracle})
+function create_product_lmo(lmo_list::Vector{FrankWolfe.ConvexHullLMO})
     
     # Convert list of LMOs to a tuple, as required by `FrankWolfe.ProductLMO`
     lmos_tuple = Tuple(lmo_list)
@@ -41,18 +41,18 @@ function find_starting_point(config::Config, prod_lmo::FrankWolfe.ProductLMO)
 end
 
 # Initialize LMOs for given sets of `vertices` k=1 polytope
-# Depending on `cvxhflag`, create either `FrankWolfe.ConvexHullOracle` (true) or `FrankWolfe.MathOptLMO` (false) objects.
+# Depending on `cvxhflag`, create either `FrankWolfe.ConvexHullLMO` (true) or `FrankWolfe.MathOptLMO` (false) objects.
 function create_lmos(config::Config, vertices::Vector{Matrix{T}}) where T
     # Initialize data structures
-    if config.cvxhflag lmo_list = Vector{FrankWolfe.ConvexHullOracle}() else lmo_list = Vector{FrankWolfe.MathOptLMO}() end
+    if config.cvxhflag lmo_list = Vector{FrankWolfe.ConvexHullLMO}() else lmo_list = Vector{FrankWolfe.MathOptLMO}() end
 
     # Create LMOs
     for v in vertices
-        if config.cvxhflag # FrankWolfe.ConvexHullOracle objects
+        if config.cvxhflag # FrankWolfe.ConvexHullLMO objects
             # Convert from Matrix{T} to Vector{Vector{T}}
             v = [v[i, :] for i in 1:size(v, 1)]
-            # Create FrankWolfe.ConvexHullOracle objects from Matrix{T}
-            lmo = FrankWolfe.ConvexHullOracle(v)
+            # Create FrankWolfe.ConvexHullLMO objects from Matrix{T}
+            lmo = FrankWolfe.ConvexHullLMO(v)
             # Update data structures
             push!(lmo_list, lmo)
         else    # FrankWolfe.MathOptLMO objects 

@@ -345,7 +345,7 @@ function write_config(config::Config, config_filename::AbstractString)
 end
 
 function generate_n_points(n::Integer, k::Integer, seed::Integer; ub_n_points::Integer=10)
-    # Generate a list of k random integers in {n+1, …, n*ub_n_points}
+    # Generate a list of k random integers in {n+1, ..., n*ub_n_points}
     Random.seed!(seed)  # Set the seed for reproducibility
     upper_bound = max(n + 1, n * ub_n_points)
     return [rand((n + 1):upper_bound) for _ in 1:k]

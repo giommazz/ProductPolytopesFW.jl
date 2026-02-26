@@ -221,7 +221,7 @@ function compute_distance(config::Config, lmo_list::Vector{FrankWolfe.LinearMini
     return last_iterate, last_lmo_vertex, primal, fw_gap
 end
 # (Multiple Dispatch) Compute distance between k polytopes, by running the FW algorithm
-function compute_distance(config::Config, lmo_list::Vector{FrankWolfe.ConvexHullOracle})
+function compute_distance(config::Config, lmo_list::Vector{FrankWolfe.ConvexHullLMO})
 
     # Redefine `config.max_iterations`
     config_opt = modify_config(config, max_iterations=config.max_iterations_opt)

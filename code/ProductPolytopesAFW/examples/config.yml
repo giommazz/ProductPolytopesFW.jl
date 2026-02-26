@@ -10,14 +10,14 @@ n: 303  # 100, 500, 1000, 2000
 n_points: 0
 # Upper bound multiplier used only when `n_points: 0`:
 # for each polytope i, sample `n_points[i]` uniformly in {n+1, …, n*ub_n_points}
-ub_n_points: 100
+ub_n_points: 1000
 # Vertex sampling strategy (how the points/atoms used for each polytope are generated):
 # - "box_uniform": (default) sample points uniformly inside each axis-aligned box (can be anisotropic across coordinates)
 # - "sphere"     : sample points on a Euclidean sphere fully contained in the box (more isotropic, but can "collapse" if one box side is small)
 # - "ellipsoid"  : sample points on an axis-aligned ellipsoid inside the box (uses all box half-lengths; isotropic in box-normalized coordinates)
-vertex_sampling: "ellipsoid"
+vertex_sampling: "box_uniform"
 # Used only when `vertex_sampling: "sphere"` or `"ellipsoid"`:
-# - `sphere_radius_factor` = ρ must satisfy 0 < ρ < 1 so sampled points lie strictly inside box (never on boundary).
+# - `sphere_radius_factor`: ρ, must satisfy 0 < ρ < 1 so sampled points lie strictly inside box (never on boundary).
 # - for "sphere": radius is R = ρ * min_d (UB[d]-LB[d])/2, centered at the box center.
 # - for "ellipsoid": semi-axis lengths are a[d] = ρ * (UB[d]-LB[d])/2 along each coordinate direction.
 sphere_radius_factor: 0.6
@@ -30,9 +30,9 @@ max_iterations: 10000
 # Number of FW iterations to compute optimal solution
 max_iterations_opt: 50000
 # How often FW iteration log is printed to screen
-max_print_iterations: 100
+max_print_iterations: 500
 # Set the seed for reproducibility
-seed: 99999999
+seed: 42
 # Use FrankWolfe.ConvexHullOracle LMOs (true) or FrankWolfe.MathOptLMO LMOs (false)
 cvxhflag: true
 # Intersection parameters:
@@ -45,9 +45,9 @@ cvxhflag: true
 #   - "origin"           : the zero vector in R
 #   - "global_mean"      : mean of per‑polytope vertex means across polytopes
 #   - "random"           : random point in Rⁿ (seeded by `seed`)
-#   - "p1_p2_segment"    : (legacy scheme) anchor lies on the segment between the closest vertex p₁ of P₁ to P₂ and the vertex mean m₁ of P₁
+#   - "p1_p2_segment"    : anchor lies on the segment between the vertex mean m₁ of P₁ and the vertex p₁ of P₁ closest to P₂
 #
-# - `intersection.anchor_t`: non‑negative scalar t used only when `anchor == "p1_p2_segment"`.
+# - `intersection.anchor_t`: nonnegative scalar t used only when `anchor == "p1_p2_segment"`.
 #       The anchor is defined as a(t) = p₁ + t (m₁ - p₁).
 #       t = 0   → anchor at p₁; 
 #       t = 1   → anchor at m₁;
@@ -56,9 +56,9 @@ cvxhflag: true
 # - `intersection.reference_point` specify which point of each polytope is moved onto the anchor.
 #       Allowed values:
 #         "center" : vertex mean (average of sampled vertices) of each polytope
-#         "vertex" : (legacy scheme) vertex of each polytope closest to chosen anchor (for P₂ under "p1_p2_segment", closest vertex p₂ from the FW-based closest pair is used)
+#         "vertex" : vertex of each polytope closest to chosen anchor (for P₂ under "p1_p2_segment", closest vertex p₂ from the FW-based closest pair is used)
 intersection:
-  anchor: "p1_p2_segment"
+  anchor: "p1_center"
   anchor_t: 0.5
   reference_point: "vertex"
 # stepsize strategy: `0` is line search; `1` uses short-step with L=2 (specified in `product_algorithms.jl`)
