@@ -65,21 +65,21 @@ config = Config("examples/config.yml")
 print_config(config)
 
 # S = {x ∈ ℝⁿ₊, ∑x ≤ right_side}
-lmo_unitsmplx = FrankWolfe.UnitSimplexOracle(5.0)
+lmo_unitsmplx = FrankWolfe.UnitSimplexLMO(5.0)
 # S = {x ∈ ℝⁿ₊, ∑x = right_side}
-lmo_probsmplx_1 = FrankWolfe.ProbabilitySimplexOracle(5.0)
-lmo_probsmplx_2 = FrankWolfe.ProbabilitySimplexOracle(6.0)
+lmo_probsmplx_1 = FrankWolfe.ProbabilitySimplexLMO(5.0)
+lmo_probsmplx_2 = FrankWolfe.ProbabilitySimplexLMO(6.0)
 bounds = generate_rand_float_vector(config)
 # Polytope similar to ℓ-∞ ball with shifted bounds, centered in midpoint of [lowerbound, upperbound] for each dimension
-lmo_infnormball_1 = FrankWolfe.ScaledBoundLInfNormBall(-ones(config.n), ones(config.n))
-lmo_infnormball_2 = FrankWolfe.ScaledBoundLInfNormBall(5*ones(config.n), 7*ones(config.n))
-lmo_infnormball_3 = FrankWolfe.ScaledBoundLInfNormBall(8*ones(config.n), 9*ones(config.n))
-lmo_infnormball_4 = FrankWolfe.ScaledBoundLInfNormBall(4*ones(config.n), 9*ones(config.n))
+lmo_infnormball_1 = FrankWolfe.BoxLMO(-ones(config.n), ones(config.n))
+lmo_infnormball_2 = FrankWolfe.BoxLMO(5*ones(config.n), 7*ones(config.n))
+lmo_infnormball_3 = FrankWolfe.BoxLMO(8*ones(config.n), 9*ones(config.n))
+lmo_infnormball_4 = FrankWolfe.BoxLMO(4*ones(config.n), 9*ones(config.n))
 # Polytope similar to ℓ₁ ball with shifted bounds, centered in midpoint of [lowerbound, upperbound] for each dimension
-lmo_onenormball_1 = FrankWolfe.ScaledBoundL1NormBall(-ones(config.n), ones(config.n))
-lmo_onenormball_2 = FrankWolfe.ScaledBoundL1NormBall(5*ones(config.n), 7*ones(config.n))
-lmo_onenormball_3 = FrankWolfe.ScaledBoundL1NormBall(6*ones(config.n), 7*ones(config.n))
-lmo_onenormball_4 = FrankWolfe.ScaledBoundL1NormBall(7*ones(config.n), 8*ones(config.n))
+lmo_onenormball_1 = FrankWolfe.DiamondLMO(-ones(config.n), ones(config.n))
+lmo_onenormball_2 = FrankWolfe.DiamondLMO(5*ones(config.n), 7*ones(config.n))
+lmo_onenormball_3 = FrankWolfe.DiamondLMO(6*ones(config.n), 7*ones(config.n))
+lmo_onenormball_4 = FrankWolfe.DiamondLMO(7*ones(config.n), 8*ones(config.n))
 
 # Setup Linear Minimization Oracles for the polytopes
 lmo_list_01 = [lmo_probsmplx_1, lmo_unitsmplx]     # intersecting

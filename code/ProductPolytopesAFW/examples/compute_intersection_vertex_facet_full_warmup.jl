@@ -1,57 +1,103 @@
-# `compute_vertex_facet_legacy_full_warmup.jl`
-# Run either within the Julia REPL as include("examples/compute_vertex_facet_legacy_full_warmup.jl")
+# `compute_intersection_vertex_facet_full_warmup.jl`
+# Run either within the Julia REPL as include("examples/compute_intersection_vertex_facet_full_warmup.jl")
 # or from linux terminal with:
-#   julia --project=. examples/compute_vertex_facet_legacy_full_warmup.jl > test.log 2>&1
+#   julia --project=. examples/compute_intersection_vertex_facet_full_warmup.jl > test.log 2>&1
 #
 # This script mirrors the structure of `compute_intersection_custom_full_warmup.jl` but builds
-# instances directly from legacy LMOs to reproduce a vertex-facet intersection geometry.
+# instances directly from legacy LMOs to reproduce a vertex-facet intersection geometry:
+#   - P₁ is a hypercube (`BoxLMO`, generalization of L∞-ball)
+#   - P₂ is a diamond (`DiamondLMO`, generalization of L₁ ball)
+#   A vertex of P₂ touches the interior of a facet of P₁
 using ProductPolytopesAFW
 using FrankWolfe
 using Plots
+using Random
 
 # ---------------------------------------------------------------------------------
-# INSTANCE GENERATION (LEGACY LMOS)
-# Build two 2-polytope instances in R^n:
+# INSTANCE GENERATION
+# Build two 2-polytope instances in Rⁿ:
 #   - non-intersecting: box vs shifted diamond
 #   - intersecting: box facet touched by one diamond vertex
 #
 # Geometry:
-#   P1 = [0,1]^n (BoxLMO)
-#   P2 = DiamondLMO with midpoint m and one vertex p on facet x1=1, others outside with x1>1
-# This guarantees P1 ∩ P2 = {p}, with p in relint({x1=1} ∩ P1).
-function build_vertex_facet_lmos(config::Config; alpha::Float64=0.2, beta::Float64=0.45, separation::Float64=0.5)
+#   P₁ = [0,1]ⁿ, `BoxLMO`
+#   P₂ = `DiamondLMO` with midpoint m and one vertex p on facet x₁=1, others outside with x₁>1
+# This guarantees P₁ ∩ P₂ = {p}, with p \in relint({x₁=1} ∩ P₁).
+"""
+    build_vertex_facet_lmos(config::Config; alpha=0.2, beta=0.45, delta=0.1, touching_point_random=true, separation=0.5)
+
+Builds two legacy-oracle instances in `Rⁿ` for `k = 2`:
+- `lmos_i`: intersecting box-diamond pair with a unique vertex-facet touch point.
+- `lmos_ni`: non-intersecting pair obtained by shifting the same diamond along `e₁`.
+
+Parameters:
+- `alpha`: how far the intersecting diamond is pushed to the right, along the normal direction to the facet `x₁`
+- `beta`: how wide the diamond is in the other coordinates (`2:n`). Keep `0 < beta < 0.5` so the touching point stays in the interior of the facet.
+- `delta`: random touching-point coordinates are sampled in `[delta, 1-delta]` on coordinates `2:n`; keep `0 < delta < 0.5`.
+- `touching_point_random`: if `true`, sample touching-point coordinates randomly; if `false`, use `0.5` on coordinates `2:n`.
+- `separation`: extra positive shift used only for the non-intersecting case, to keep a clear gap from the box.
+
+Returns `(lmos_ni, lmos_i, p_touch)`, where `p_touch` is the expected touching point.
+"""
+function build_vertex_facet_lmos(
+    config::Config;
+    alpha::Float64=0.2,
+    beta::Float64=0.45,
+    delta::Float64=0.1,
+    touching_point_random::Bool=true,
+    separation::Float64=0.5,
+)
     if config.k != 2
         error("This script is defined for k=2. Found k=$(config.k).")
     end
     if config.n < 2
-        error("This script requires n >= 2 to build a non-degenerate vertex-facet geometry.")
+        error("This script requires n ≥ 2 to build a non-degenerate vertex-facet geometry.")
     end
     if !(0.0 < beta < 0.5)
         error("`beta` must satisfy 0 < beta < 0.5 so the touching vertex lies in the relative interior of the facet.")
     end
-    if alpha <= 0.0
+    if !(0.0 < delta < 0.5)
+        error("`delta` must satisfy 0 < delta < 0.5.")
+    end
+    if alpha ≤ 0.0
         error("`alpha` must be strictly positive.")
     end
-    if separation <= 0.0
+    if separation ≤ 0.0
         error("`separation` must be strictly positive.")
     end
 
-    # P1: unit box [0,1]^n
+    # P₁: unit box [0,1]ⁿ
     lower_box = zeros(Float64, config.n)
     upper_box = ones(Float64, config.n)
     lmo_box = FrankWolfe.BoxLMO(lower_box, upper_box)
 
-    # Intersecting P2 (diamond):
-    # - midpoint m_j = 0.5 for j>=2 and m_1 = 1 + alpha
-    # - vertex v1^- = (1, 0.5, ..., 0.5) touches relint of facet {x1=1}
-    # - all other vertices have x1 > 1, hence lie outside the unit box
-    lower_i = fill(0.5 - beta, config.n)
-    upper_i = fill(0.5 + beta, config.n)
+    # Build touching point p = (1, p₂, ..., pₙ)
+    # - if touching_point_random = true, sample p₂,...,pₙ uniformly in [delta, 1-delta], seeded by config.seed
+    # - if touching_point_random = false, use p₂ = ... = pₙ = 0.5
+    touching_coordinates = if touching_point_random
+        rng = MersenneTwister(config.seed)
+        delta .+ (1.0 - 2.0 * delta) .* rand(rng, config.n - 1)
+    else
+        fill(0.5, config.n - 1)
+    end
+
+    # Intersecting P₂ (diamond):
+    # - midpoint m₁ = 1 + alpha
+    # - midpoint mⱼ = pⱼ for j≥2
+    # - vertex v₁⁻ = p \in P₂ touches relint of facet {x₁=1} (and so is also \in P₁)
+    # - all other vertices have x₁ > 1, hence lie outside the unit box
+    lower_i = zeros(Float64, config.n)
+    upper_i = zeros(Float64, config.n)
     lower_i[1] = 1.0
     upper_i[1] = 1.0 + 2.0 * alpha
+    for idx in 2:config.n
+        midpoint_coordinate = touching_coordinates[idx - 1]
+        lower_i[idx] = midpoint_coordinate - beta
+        upper_i[idx] = midpoint_coordinate + beta
+    end
     lmo_diamond_i = FrankWolfe.DiamondLMO(lower_i, upper_i)
 
-    # Non-intersecting P2: same shape translated along e1
+    # Non-intersecting P₂: same shape translated along e₁
     lower_ni = copy(lower_i)
     upper_ni = copy(upper_i)
     lower_ni[1] += separation
@@ -63,8 +109,9 @@ function build_vertex_facet_lmos(config::Config; alpha::Float64=0.2, beta::Float
     lmos_i = FrankWolfe.LinearMinimizationOracle[lmo_box, lmo_diamond_i]
 
     # The touching point (expected unique intersection for the intersecting instance)
-    p_touch = fill(0.5, config.n)
+    p_touch = Vector{Float64}(undef, config.n)
     p_touch[1] = 1.0
+    p_touch[2:end] = touching_coordinates
 
     return lmos_ni, lmos_i, p_touch
 end
@@ -140,6 +187,21 @@ warmup_n = max(2, min(config.n, 55))
 config_warmup = modify_config(config, k=2, n=warmup_n)
 print_config(config_warmup)
 
+# ---------------------------------------------------------------------------------
+# SCRIPT PARAMETERS (vertex-facet instance)
+# ---------------------------------------------------------------------------------
+vf_alpha = 0.2
+vf_beta = 0.45
+vf_delta = 0.1
+vf_touching_point_random = true
+vf_separation = 0.5
+println("Vertex-facet parameters:")
+println("  alpha: ", vf_alpha)
+println("  beta: ", vf_beta)
+println("  delta: ", vf_delta)
+println("  touching_point_random: ", vf_touching_point_random)
+println("  separation: ", vf_separation)
+
 
 # ---------------------------------------------------------------------------------
 # WARM-UP SCRIPT
@@ -149,7 +211,14 @@ println()
 println("********************************************************")
 println("WARMUP: Building legacy LMO instances")
 println("********************************************************")
-lmos_ni_warmup, lmos_i_warmup, p_touch_warmup = build_vertex_facet_lmos(config_warmup)
+lmos_ni_warmup, lmos_i_warmup, p_touch_warmup = build_vertex_facet_lmos(
+    config_warmup;
+    alpha=vf_alpha,
+    beta=vf_beta,
+    delta=vf_delta,
+    touching_point_random=vf_touching_point_random,
+    separation=vf_separation,
+)
 println("Warmup touching point p (first 5 coords): ", p_touch_warmup[1:min(5, length(p_touch_warmup))])
 
 println("********************************************************")
@@ -175,7 +244,14 @@ labels = ["C-BC-FW", "F-FW", "F-AFW"]
 println("********************************************************")
 println("MAIN: Building legacy LMO instances and solving non-intersecting optimum")
 println("********************************************************")
-lmos_ni, lmos_i, p_touch = build_vertex_facet_lmos(config)
+lmos_ni, lmos_i, p_touch = build_vertex_facet_lmos(
+    config;
+    alpha=vf_alpha,
+    beta=vf_beta,
+    delta=vf_delta,
+    touching_point_random=vf_touching_point_random,
+    separation=vf_separation,
+)
 println("Touching point p (first 10 coords): ", p_touch[1:min(10, length(p_touch))])
 opt_ni = compute_nonintersecting_opt(config, lmos_ni)
 println("Non-intersecting optimal value (distance objective): ", opt_ni)

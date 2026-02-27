@@ -1,5 +1,6 @@
 # `product_algorithms.jl`
 using FrankWolfe
+using LinearAlgebra
 
 # Implementation Away-Step for block-coordinate setting
 mutable struct AwayStep <: FrankWolfe.UpdateStep
@@ -25,8 +26,8 @@ AwayStep() = AwayStep(false, nothing, 1000, 2.0, Inf)
 AwayStep(lazy::Bool) = AwayStep(lazy, nothing, 1000, 2.0, Inf)
 
 
-# Update iterate function for AwayStep
-function FrankWolfe.update_iterate(
+# Update block iterate function for AwayStep
+function FrankWolfe.update_block_iterate(
     s::AwayStep,
     x,
     lmo,
@@ -38,16 +39,17 @@ function FrankWolfe.update_iterate(
     line_search,
     linesearch_workspace,
     memory_mode,
-    epsilon
+    epsilon,
+    d_container,
     )
 
-    d = similar(x) # initialize direction vector
+    d = d_container # direction buffer
 
     # ********************
     # Step 0: compute away vertex, "local" FW vertex and related info (`lambda`, `loc`: active set weight and index)
     _, local_v, local_v_loc, _, a_lambda, a, a_loc, _, _ = FrankWolfe.active_set_argminmax(s.active_set, gradient) # away and "local" FW vertices
-    grad_dot_x = FrankWolfe.fast_dot(gradient, x) # <∇f(xₜ), xₜ>
-    grad_dot_a = FrankWolfe.fast_dot(gradient, a) # <∇f(xₜ), aₜ>
+    grad_dot_x = dot(gradient, x) # <∇f(xₜ), xₜ>
+    grad_dot_a = dot(gradient, a) # <∇f(xₜ), aₜ>
     away_gap = grad_dot_a - grad_dot_x # <∇f(xₜ), aₜ - xₜ>
 
     # Lazy version
@@ -55,7 +57,7 @@ function FrankWolfe.update_iterate(
 
         # ********************
         # Step 1: compute step info (away vertex, local FW vertex, FW vertex)
-        grad_dot_local_v = FrankWolfe.fast_dot(gradient, local_v) # <∇f(xₜ), local_vₜ>
+        grad_dot_local_v = dot(gradient, local_v) # <∇f(xₜ), local_vₜ>
         local_gap = grad_dot_x - grad_dot_local_v
         
         # lazy FW step
@@ -83,7 +85,7 @@ function FrankWolfe.update_iterate(
                 step_type = FrankWolfe.ST_REGULAR
 
                 # Real dual gap promises enough progress
-                grad_dot_fw_vertex = FrankWolfe.fast_dot(v, gradient)
+                grad_dot_fw_vertex = dot(v, gradient)
                 dual_gap = grad_dot_x - grad_dot_fw_vertex
                 if dual_gap >= s.phi / s.lazy_tolerance
                     gamma_max = one(a_lambda)
@@ -107,7 +109,7 @@ function FrankWolfe.update_iterate(
         # ********************
         # Step 1: compute step info (away vertex, FW vertex)
         v = FrankWolfe.compute_extreme_point(lmo, gradient) # FW vertex
-        dual_gap = grad_dot_x - FrankWolfe.fast_dot(gradient, v) # <∇f(xₜ), xₜ - vₜ>
+        dual_gap = grad_dot_x - dot(gradient, v) # <∇f(xₜ), xₜ - vₜ>
 
         # FW step
         if dual_gap >= away_gap && dual_gap >= epsilon
@@ -217,7 +219,7 @@ function run_BlockCoordinateFW(
         end
     end
     
-    x, v, primal, fw_gap, trajectory_data = FrankWolfe.block_coordinate_frank_wolfe(
+    res = FrankWolfe.block_coordinate_frank_wolfe(
         convex_feasibility_objective_v2b,
         convex_feasibility_gradient_v2!,
         prod_lmo,
@@ -233,7 +235,7 @@ function run_BlockCoordinateFW(
         trajectory=true,
     );  
 
-    return x, v, primal, fw_gap, trajectory_data
+    return res.x, res.v, res.primal, res.dual_gap, res.traj_data
 end
 
 # Run BPCG over full product LMO
@@ -248,7 +250,7 @@ function run_FullFW(
 
     x0 = find_starting_point(config, prod_lmo)
 
-    x, v, primal, fw_gap, trajectory_data = FW_algorithm(
+    res = FW_algorithm(
         convex_feasibility_objective_v2b,
         convex_feasibility_gradient_v2!,
         prod_lmo,
@@ -262,7 +264,7 @@ function run_FullFW(
         trajectory=true,
     );
 
-    return x, v, primal, fw_gap, trajectory_data
+    return res.x, res.v, res.primal, res.dual_gap, res.traj_data
 end
 # (Multiple dispatch) Run Alternating Projections over product LMO
 function run_AlternatingProjections(
@@ -276,7 +278,7 @@ function run_AlternatingProjections(
         # starting point is computed on only one set (e.g. the first LMO in the product)
         x0 = FrankWolfe.compute_extreme_point(prod_lmo.lmos[1], zeros(config.n))
 
-        x, v, fw_gap, infeasible, trajectory_data = FrankWolfe.alternating_projections(
+        res = FrankWolfe.alternating_projections(
             prod_lmo,
             x0,
             epsilon=config.target_tolerance,
@@ -287,6 +289,6 @@ function run_AlternatingProjections(
             print_iter=config.max_print_iterations
         );
     
-        return x, v, fw_gap, infeasible, trajectory_data
+        return res.x, res.v, res.dual_gap, res.status != FrankWolfe.STATUS_OPTIMAL, res.traj_data
     end
 end

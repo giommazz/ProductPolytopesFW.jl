@@ -25,7 +25,7 @@ struct Config
     max_print_iterations::Int
     # Set the seed for reproducibility
     seed::Int
-    # Use FrankWolfe.ConvexHullOracle LMOs (true) or FrankWolfe.MathOptLMO LMOs (false)
+    # Use FrankWolfe.ConvexHullLMO LMOs (true) or FrankWolfe.MathOptLMO LMOs (false)
     cvxhflag::Bool
     # Intersection anchor: point in Rⁿ where polytopes are aligned (see examples/config.yml for allowed values)
     intersection_anchor::String
@@ -289,7 +289,7 @@ function print_config(config::Config)
     println("  Number of FW iterations to compute optimal solutions (max_iterations_opt): ", config.max_iterations_opt)
     println("  How often FW iteration log is printed to screen (max_print_iterations): ", config.max_print_iterations)
     println("  Seed for reproducibility (seed): ", config.seed)
-    println("  Use FW's ConvexHullOracle LMOs or MathOptLMO (cvxhflag): ", config.cvxhflag)
+    println("  Use FW's ConvexHullLMO LMOs or MathOptLMO (cvxhflag): ", config.cvxhflag)
     println("  Intersection anchor: ", config.intersection_anchor)
     println("  Intersection reference point: ", config.intersection_reference_point)
     println("  Intersection anchor_t: ", config.intersection_anchor_t)
