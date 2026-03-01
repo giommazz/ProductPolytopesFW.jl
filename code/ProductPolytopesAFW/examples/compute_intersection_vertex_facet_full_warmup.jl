@@ -22,9 +22,9 @@ using Random
 # Geometry:
 #   P₁ = [0,1]ⁿ, `BoxLMO`
 #   P₂ = `DiamondLMO` with midpoint m and one vertex p on facet x₁=1, others outside with x₁>1
-# This guarantees P₁ ∩ P₂ = {p}, with p \in relint({x₁=1} ∩ P₁).
+# This guarantees P₁ ∩ P₂ = {p}, with p ∈ relint({x₁=1} ∩ P₁).
 """
-    build_vertex_facet_lmos(config::Config; alpha=0.2, beta=0.45, delta=0.1, touching_point_random=true, separation=0.5)
+    build_vertex_facet_lmos(config::Config; alpha=0.2, beta=0.45, delta=0.1, touching_point_rnd=true, separation=0.5)
 
 Builds two legacy-oracle instances in `Rⁿ` for `k = 2`:
 - `lmos_i`: intersecting box-diamond pair with a unique vertex-facet touch point.
@@ -32,9 +32,11 @@ Builds two legacy-oracle instances in `Rⁿ` for `k = 2`:
 
 Parameters:
 - `alpha`: how far the intersecting diamond is pushed to the right, along the normal direction to the facet `x₁`
-- `beta`: how wide the diamond is in the other coordinates (`2:n`). Keep `0 < beta < 0.5` so the touching point stays in the interior of the facet.
-- `delta`: random touching-point coordinates are sampled in `[delta, 1-delta]` on coordinates `2:n`; keep `0 < delta < 0.5`.
-- `touching_point_random`: if `true`, sample touching-point coordinates randomly; if `false`, use `0.5` on coordinates `2:n`.
+- `beta`: how wide the diamond is in the coordinates `2:n`. 
+   Keep `0 < beta < 0.5` so the touching point stays in the interior of the facet.
+- `delta`: random touching-point coordinates are sampled in `[delta, 1-delta]` on coordinates `2:n`.
+   Keep `0 < delta < 0.5`.
+- `touching_point_rnd`: if `true` sample touching-point coordinates randomly, o/w use `0.5` on coordinates `2:n`
 - `separation`: extra positive shift used only for the non-intersecting case, to keep a clear gap from the box.
 
 Returns `(lmos_ni, lmos_i, p_touch)`, where `p_touch` is the expected touching point.
@@ -44,7 +46,7 @@ function build_vertex_facet_lmos(
     alpha::Float64=0.2,
     beta::Float64=0.45,
     delta::Float64=0.1,
-    touching_point_random::Bool=true,
+    touching_point_rnd::Bool=true,
     separation::Float64=0.5,
 )
     if config.k != 2
@@ -72,9 +74,9 @@ function build_vertex_facet_lmos(
     lmo_box = FrankWolfe.BoxLMO(lower_box, upper_box)
 
     # Build touching point p = (1, p₂, ..., pₙ)
-    # - if touching_point_random = true, sample p₂,...,pₙ uniformly in [delta, 1-delta], seeded by config.seed
-    # - if touching_point_random = false, use p₂ = ... = pₙ = 0.5
-    touching_coordinates = if touching_point_random
+    # - if touching_point_rnd = true, sample p₂,...,pₙ uniformly in [delta, 1-delta], seeded by `config.seed`
+    # - if touching_point_rnd = false, use p₂ = ... = pₙ = 0.5 (easy instance)
+    touching_coordinates = if touching_point_rnd
         rng = MersenneTwister(config.seed)
         delta .+ (1.0 - 2.0 * delta) .* rand(rng, config.n - 1)
     else
@@ -84,7 +86,7 @@ function build_vertex_facet_lmos(
     # Intersecting P₂ (diamond):
     # - midpoint m₁ = 1 + alpha
     # - midpoint mⱼ = pⱼ for j≥2
-    # - vertex v₁⁻ = p \in P₂ touches relint of facet {x₁=1} (and so is also \in P₁)
+    # - vertex p ∈ P₂ touches relint of facet {x₁=1} (and so is also ∈ P₁)
     # - all other vertices have x₁ > 1, hence lie outside the unit box
     lower_i = zeros(Float64, config.n)
     upper_i = zeros(Float64, config.n)
@@ -108,7 +110,7 @@ function build_vertex_facet_lmos(
     lmos_ni = FrankWolfe.LinearMinimizationOracle[lmo_box, lmo_diamond_ni]
     lmos_i = FrankWolfe.LinearMinimizationOracle[lmo_box, lmo_diamond_i]
 
-    # The touching point (expected unique intersection for the intersecting instance)
+    # The touching point (unique intersection for the intersecting instance)
     p_touch = Vector{Float64}(undef, config.n)
     p_touch[1] = 1.0
     p_touch[2:end] = touching_coordinates
@@ -136,11 +138,16 @@ function repl_warmup(config::Config, lmo_pairs::Vector{Vector{FrankWolfe.LinearM
         prod_lmo = create_product_lmo(lmos)
         _, _, _, _, _ = run_BlockCoordinateFW(config, FrankWolfe.CyclicUpdate(), FrankWolfe.FrankWolfeStep(), prod_lmo)
         _, _, _, _, _ = run_FullFW(config, FrankWolfe.frank_wolfe, prod_lmo)
-        _, _, _, _, _ = run_FullFW(config, FrankWolfe.away_frank_wolfe, prod_lmo)
+        _, _, _, _, _ = run_FullAFW(config, prod_lmo)
     end
 end
 
-function main(config::Config, lmo_pairs::Vector{Vector{FrankWolfe.LinearMinimizationOracle}}, opt_ni::Float64, labels::Vector{String})
+function main(
+    config::Config,
+    lmo_pairs::Vector{Vector{FrankWolfe.LinearMinimizationOracle}},
+    opt_ni::Float64,
+    labels::Vector{String}
+    )
     trajectories_ni, trajectories_i = [], []
 
     for (i, lmos) in enumerate(lmo_pairs)
@@ -163,7 +170,7 @@ function main(config::Config, lmo_pairs::Vector{Vector{FrankWolfe.LinearMinimiza
         push_to_trajectories!(ni_flag, td_full_fw, trajectories_ni, trajectories_i, opt_ni)
 
         println("\n\n\n ----------> Full AFW")
-        _, _, _, _, td_full_afw = run_FullFW(config, FrankWolfe.away_frank_wolfe, prod_lmo)
+        _, _, _, _, td_full_afw = run_FullAFW(config, prod_lmo)
         push_to_trajectories!(ni_flag, td_full_afw, trajectories_ni, trajectories_i, opt_ni)
     end
 
@@ -190,18 +197,26 @@ print_config(config_warmup)
 # ---------------------------------------------------------------------------------
 # SCRIPT PARAMETERS (vertex-facet instance)
 # ---------------------------------------------------------------------------------
-vf_alpha = 0.2
+vf_alpha = 0.02 #0.2
 vf_beta = 0.45
 vf_delta = 0.1
-vf_touching_point_random = true
+vf_touching_point_rnd = false # true → random point in relint of facet, o/w (1, 0.5, ..., 0.5)
 vf_separation = 0.5
 println("Vertex-facet parameters:")
 println("  alpha: ", vf_alpha)
 println("  beta: ", vf_beta)
 println("  delta: ", vf_delta)
-println("  touching_point_random: ", vf_touching_point_random)
+println("  touching_point_rnd: ", vf_touching_point_rnd)
 println("  separation: ", vf_separation)
 
+# ---------------------------------------------------------------------------------
+# FrankWolfe monkey patch (diagnostic)
+# - Override the *default* weight purge threshold used by internal AFW active-set cleanups.
+# - This is global to the Julia session; restart Julia (or set to `nothing`) to restore defaults.
+# ---------------------------------------------------------------------------------
+fw_weight_purge_default_override = 0.0
+set_fw_weight_purge_default_override!(fw_weight_purge_default_override)
+println("FrankWolfe weight purge default override (Float64): ", fw_weight_purge_default_override())
 
 # ---------------------------------------------------------------------------------
 # WARM-UP SCRIPT
@@ -216,7 +231,7 @@ lmos_ni_warmup, lmos_i_warmup, p_touch_warmup = build_vertex_facet_lmos(
     alpha=vf_alpha,
     beta=vf_beta,
     delta=vf_delta,
-    touching_point_random=vf_touching_point_random,
+    touching_point_rnd=vf_touching_point_rnd,
     separation=vf_separation,
 )
 println("Warmup touching point p (first 5 coords): ", p_touch_warmup[1:min(5, length(p_touch_warmup))])
@@ -234,7 +249,7 @@ println()
 println()
 println()
 
-results_dir = "examples/results_vertex_facet_legacy"
+results_dir = "examples/results_linesearch_vertex_facet"
 times_dir = ensure_dir(results_dir * "/times")
 logs_dir = ensure_dir(results_dir * "/iter_logs")
 plots_dir = ensure_dir(results_dir * "/plots")
@@ -249,7 +264,7 @@ lmos_ni, lmos_i, p_touch = build_vertex_facet_lmos(
     alpha=vf_alpha,
     beta=vf_beta,
     delta=vf_delta,
-    touching_point_random=vf_touching_point_random,
+    touching_point_rnd=vf_touching_point_rnd,
     separation=vf_separation,
 )
 println("Touching point p (first 10 coords): ", p_touch[1:min(10, length(p_touch))])
@@ -270,8 +285,8 @@ println("\n\n\t\tElapsed time main: ", t_end_main - t_start_main, " seconds\n\n"
 # ---------------------------------------------------------------------------------
 # PROCESS AND SAVE LOGS
 # ---------------------------------------------------------------------------------
-padded_trajectories_ni, min_length_ni, max_length_ni = pad_log_data(trajectories_ni)
-padded_trajectories_i, min_length_i, max_length_i = pad_log_data(trajectories_i)
+padded_trajectories_ni, max_length_ni, min_length_ni = pad_log_data(trajectories_ni)
+padded_trajectories_i, max_length_i, min_length_i = pad_log_data(trajectories_i)
 
 opt_ni = best_seen_solution(padded_trajectories_ni, opt_ni)
 

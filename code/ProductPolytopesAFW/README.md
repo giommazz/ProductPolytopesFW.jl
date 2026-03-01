@@ -47,7 +47,7 @@ if you want to run the script in the Julia REPL, or
     ```
     cd /ProductPolytopesAFW
     chmod +x slurm_experiments.sh
-    sbatch examples/slurm_experiments.sh examples/compute_intersection_custom_full_warmup_slurm.jl examples/results_linesearch_afw/ examples/config.yml
+    sbatch examples/slurm_experiments.sh examples/compute_intersection_custom_full_warmup_slurm.jl examples/results_linesearch_point_clouds/ examples/config.yml
     ```
 
 ### Useful commands in SLURM

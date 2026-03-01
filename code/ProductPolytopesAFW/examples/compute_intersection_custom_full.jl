@@ -66,7 +66,7 @@ function main(config::Config, path_to_results, vertices, shifted_vertices, prima
         push_to_trajectories!(ni_flag, td_full_fw, trajectories_ni, trajectories_i, opt)
 
         println("\n\n\n ----------> Full AFW")
-        _, _, _, _, td_full_afw = run_FullFW(config, FrankWolfe.away_frank_wolfe, prod_lmo)    
+        _, _, _, _, td_full_afw = run_FullAFW(config, prod_lmo)
         push_to_trajectories!(ni_flag, td_full_afw, trajectories_ni, trajectories_i, opt)
 
         # println("\n\n\n ----------> Full BPFW")
@@ -106,7 +106,7 @@ println()
 println()
 # ---------------------------------------------------------------------------------
 # PARAMETERS
-results_dir = "examples/results_linesearch_afw" # "results_shortstep", 
+results_dir = "examples/results_linesearch_point_clouds" # "results_shortstep",
 times_dir = ensure_dir(results_dir*"/times")
 logs_dir = ensure_dir(results_dir*"/iter_logs")
 plots_dir = ensure_dir(results_dir*"/plots")
@@ -135,8 +135,8 @@ println("\n\n\t\tElapsed time main: ", t_end_main - t_start_main, " seconds\n\n"
 # PROCESS AND SAVE LOGS
 # Save log data in `.csv` format
 # pad data so that all FW runs have the same number of iterations/lines
-padded_trajectories_ni, min_length_ni, max_length_ni = pad_log_data(trajectories_ni)
-padded_trajectories_i, min_length_i, max_length_i = pad_log_data(trajectories_i)
+padded_trajectories_ni, max_length_ni, min_length_ni = pad_log_data(trajectories_ni)
+padded_trajectories_i, max_length_i, min_length_i = pad_log_data(trajectories_i)
 # sometimes, for numerical reasons, since eps-optimality tolerances for "optimal" FW runs and "normal" FW runs are similar, `opt` > `primal` 
 #       on some iterations, after the 8th decimal. `best_seen_solution` makes sure that, in such a case, `opt` is updated to the smallest value
 opt = best_seen_solution(padded_trajectories_ni, opt)

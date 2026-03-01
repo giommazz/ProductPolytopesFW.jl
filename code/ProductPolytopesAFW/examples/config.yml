@@ -4,13 +4,13 @@
 # Number of polytopes
 k: 2 #2, 3, 4, 5, 10 
 # Dimension of the subspace in which each polytope lies
-n: 303  # 100, 500, 1000, 2000
+n: 1003  # 100, 500, 1000, 2000
 # list of `k` integers, each indicating the n. of points to be used to generate `k` polytopes
 # if `0` is given, n_points is generated randomly using `ub_n_points`
 n_points: 0
 # Upper bound multiplier used only when `n_points: 0`:
 # for each polytope i, sample `n_points[i]` uniformly in {n+1, …, n*ub_n_points}
-ub_n_points: 500
+ub_n_points: 100
 # Vertex sampling strategy (how the points/atoms used for each polytope are generated):
 # - "box_uniform": (default) sample points uniformly inside each axis-aligned box (can be anisotropic across coordinates)
 # - "sphere"     : sample points on a Euclidean sphere fully contained in the box (more isotropic, but can "collapse" if one box side is small)
@@ -26,9 +26,9 @@ target_tolerance: 1e-07
 # epsilon-optimality threshold for finding optimal solution
 target_tolerance_opt: 1e-08
 # Number of FW iterations
-max_iterations: 10000
+max_iterations: 5000
 # Number of FW iterations to compute optimal solution
-max_iterations_opt: 50000
+max_iterations_opt: 10000
 # How often FW iteration log is printed to screen
 max_print_iterations: 1000
 # Set the seed for reproducibility

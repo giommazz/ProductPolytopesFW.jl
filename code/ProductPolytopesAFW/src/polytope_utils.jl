@@ -101,24 +101,26 @@ function closest_pair(config::Config, V1::Matrix{T}, V2::Matrix{T}) where T
     lmos = create_lmos(config, [V1, V2])
     _, last_lmo_solution, _, _ = compute_distance(config, lmos)
     # `last_lmo_solution` is a FrankWolfe.BlockVector
-    v1_closest, v2_closest = last_lmo_solution.blocks[1], last_lmo_solution.blocks[2]
+    # Materialize as dense vectors: with matrix-backed ConvexHullLMO, blocks may be views.
+    v1_closest = Vector{T}(last_lmo_solution.blocks[1])
+    v2_closest = Vector{T}(last_lmo_solution.blocks[2])
 
     return v1_closest, v2_closest
 end
 
 # (Multiple Dispatch) Compute a reference point for a single polytope given an anchor
-function compute_reference_point(config::Config, anchor::Vector{T}, vertices::Matrix{T}) where T
+function compute_reference_point(config::Config, anchor::AbstractVector{T}, vertices::Matrix{T}) where T
     if config.intersection_reference_point == "center"
         return vertex_mean(vertices) # ignores `anchor`
     elseif config.intersection_reference_point == "vertex"
         # Closest vertex of this polytope to the anchor
         return closest_pair(config, anchor, vertices)
     else
-        error("Unknown intersection reference point: $(ref_type)")
+        error("Unknown intersection reference point: $(config.intersection_reference_point)")
     end
 end
 # (Multiple Dispatch) Compute reference points for all polytopes given an anchor
-function compute_reference_points(config::Config, vertices::Vector{Matrix{T}}, anchor::Vector{T}) where T
+function compute_reference_points(config::Config, vertices::Vector{Matrix{T}}, anchor::AbstractVector{T}) where T
     nP = length(vertices)
     refs = Vector{Vector{T}}(undef, nP) # preallocate one reference point per polytope
     for i in 1:nP
@@ -128,7 +130,12 @@ function compute_reference_points(config::Config, vertices::Vector{Matrix{T}}, a
 end
 
 # Shift a polytope so that `reference` moves towards `anchor` by a given stepsize
-function shift_polytope(vertices::Matrix{T}, reference::Vector{T}, anchor::Vector{T}; stepsize::T = one(T)) where T
+function shift_polytope(
+    vertices::Matrix{T},
+    reference::AbstractVector{T},
+    anchor::AbstractVector{T};
+    stepsize::T = one(T),
+) where T
     if size(vertices, 2) != length(reference) || length(reference) != length(anchor)
         error("Dimension mismatch: vertices have $(size(vertices, 2)) columns, but reference/anchor have lengths $(length(reference)) and $(length(anchor)).")
     end
@@ -138,7 +145,7 @@ function shift_polytope(vertices::Matrix{T}, reference::Vector{T}, anchor::Vecto
 end
 
 # (Multiple Dispatch) Here the first input is a vector (single point)
-function closest_pair(config::Config, v::Vector{T}, V2::Matrix{T}) where T
+function closest_pair(config::Config, v::AbstractVector{T}, V2::Matrix{T}) where T
     
     # Check that the vector and matrix have the correct number of columns
     if length(v) != config.n || size(V2, 2) != config.n
@@ -162,7 +169,7 @@ function closest_pair(config::Config, v::Vector{T}, V2::Matrix{T}) where T
     end
 
     # Retrieve the closest point
-    v2_closest = V2[closest_index, :]
+    v2_closest = Vector{T}(V2[closest_index, :])
 
     return v2_closest
 end

@@ -266,7 +266,143 @@ function run_FullFW(
 
     return res.x, res.v, res.primal, res.dual_gap, res.traj_data
 end
-# (Multiple dispatch) Run Alternating Projections over product LMO
+
+# Run full away-step Frank-Wolfe (AFW) over the full product LMO, exposing AFW-specific controls.
+#
+# Motivation:
+# - `run_FullFW(..., FrankWolfe.away_frank_wolfe, ...)` hides AFW keyword arguments such as
+#   `renorm_interval` and `weight_purge_threshold`, helpful for active-set management.
+# - FrankWolfe.jl's default trajectory callback for AFW may include post-processing states. For debugging
+#   we maintain our own trajectory and (by default) skip `ST_LAST` / `ST_POSTPROCESS`.
+function run_FullAFW(
+    config::Config,
+    prod_lmo::FrankWolfe.ProductLMO;
+    renorm_interval::Int=config.max_iterations + 10,
+    weight_purge_threshold::Union{Nothing,Float64}=1e-32,
+    memory_mode::FrankWolfe.MemoryEmphasis=FrankWolfe.InplaceEmphasis(),
+    callback::Union{Nothing,Function}=nothing,
+    debug_callback::Bool=false,
+    spike_factor::Float64=10.0,
+    log_postprocess::Bool=false,
+    recompute_metrics::Bool=false,
+)
+    renorm_interval >= 1 || error("`renorm_interval` must be ≥ 1, got $renorm_interval")
+    spike_factor > 1 || error("`spike_factor` must be > 1, got $spike_factor")
+
+    # L-smoothness constant used by `get_stepsize_strategy` when `stepsize_strategy == 1`.
+    L = 1
+
+    x0 = find_starting_point(config, prod_lmo)
+
+    if weight_purge_threshold === nothing
+        weight_purge_threshold = FrankWolfe.weight_purge_threshold_default(eltype(x0))
+    end
+
+    # Custom trajectory container: store (t, primal, dual, dual_gap, time) tuples.
+    traj_data = Any[]
+    grad_buf = similar(x0)
+    prev_primal = Ref{Float64}(Inf)
+
+    internal_cb = let traj_data=traj_data,
+        grad_buf=grad_buf,
+        prev_primal=prev_primal,
+        debug_callback=debug_callback,
+        spike_factor=spike_factor,
+        log_postprocess=log_postprocess,
+        recompute_metrics=recompute_metrics
+
+        function (state, active_set)
+            # Keep post-processing states out of the main trajectory by default, but allow printing them.
+            if state.step_type == FrankWolfe.ST_LAST || state.step_type == FrankWolfe.ST_POSTPROCESS
+                if log_postprocess
+                    println(
+                        "AFW postprocess: t=$(state.t) step=$(state.step_type) primal=$(state.primal) dgap=$(state.dual_gap) |AS|=$(length(active_set))",
+                    )
+                end
+                return true
+            end
+
+            # Recompute primal (always) at the current iterate `state.x`.
+            x_curr = state.x
+            primal_now = convex_feasibility_objective_v2b(x_curr)
+
+            dual_gap_now = state.dual_gap
+            if debug_callback
+                w = active_set.weights
+                wsum = sum(w)
+                wmin = minimum(w)
+                wmax = maximum(w)
+
+                spike = isfinite(prev_primal[]) && primal_now > spike_factor * prev_primal[]
+                invalid_as = !(wsum ≈ 1.0) || (wmin < -1e-12) || !isfinite(wsum) || !isfinite(wmin) || !isfinite(wmax)
+
+                # On suspicious events (or if explicitly requested), recompute gradient and FW gap at `x_curr`
+                # to keep logged primal/dual_gap consistent for diagnosis.
+                if recompute_metrics || spike || invalid_as
+                    convex_feasibility_gradient_v2!(grad_buf, x_curr)
+                    v_now = FrankWolfe.compute_extreme_point(state.lmo, grad_buf)
+                    dual_gap_now = dot(grad_buf, x_curr) - dot(grad_buf, v_now)
+                end
+
+                if spike || invalid_as
+                    println(
+                        "AFW DEBUG: t=$(state.t) step=$(state.step_type) γ=$(state.gamma) primal=$(primal_now) dgap=$(dual_gap_now) |AS|=$(length(active_set)) wsum=$(wsum) wmin=$(wmin) wmax=$(wmax)",
+                    )
+                end
+                prev_primal[] = primal_now
+            elseif recompute_metrics
+                # If debugging is disabled but a full recompute was explicitly requested, do it.
+                convex_feasibility_gradient_v2!(grad_buf, x_curr)
+                v_now = FrankWolfe.compute_extreme_point(state.lmo, grad_buf)
+                dual_gap_now = dot(grad_buf, x_curr) - dot(grad_buf, v_now)
+            end
+
+            push!(
+                traj_data,
+                (state.t, primal_now, primal_now - dual_gap_now, dual_gap_now, state.time),
+            )
+
+            return true
+        end
+    end
+
+    # If the caller passed an extra callback (e.g., for debugging / early stopping),
+    # run it after our internal trajectory logging callback.
+    cb = if callback === nothing
+        internal_cb
+    else
+        (state, active_set) -> begin
+            cont = internal_cb(state, active_set)
+            cont && callback(state, active_set)
+        end
+    end
+
+    res = FrankWolfe.away_frank_wolfe(
+        convex_feasibility_objective_v2b,
+        convex_feasibility_gradient_v2!,
+        prod_lmo,
+        x0;
+        epsilon=config.target_tolerance,
+        max_iteration=config.max_iterations,
+        line_search=get_stepsize_strategy(config.stepsize_strategy, L),
+        print_iter=config.max_print_iterations,
+        memory_mode=memory_mode,
+        verbose=true,
+        trajectory=false, # we maintain `traj_data` ourselves via `cb`
+        callback=cb,
+        renorm_interval=renorm_interval,
+        weight_purge_threshold=weight_purge_threshold,
+    )
+
+    # Return last logged values as primal/gap if available (more consistent with the logged trajectory).
+    if !isempty(traj_data)
+        last_row = traj_data[end]
+        return res.x, res.v, last_row[2], last_row[4], traj_data
+    end
+    return res.x, res.v, res.primal, res.dual_gap, traj_data
+end
+
+# Run Alternating Projections over product LMO
 function run_AlternatingProjections(
     config::Config,
     prod_lmo::FrankWolfe.ProductLMO,

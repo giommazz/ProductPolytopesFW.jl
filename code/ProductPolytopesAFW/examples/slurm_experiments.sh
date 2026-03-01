@@ -5,7 +5,7 @@
 # 2) run the following commands
 #       cd /ProductPolytopesAFW
 #       chmod +x slurm_experiments.sh
-#       sbatch examples/slurm_experiments.sh examples/compute_intersection_custom_full_warmup_slurm.jl examples/results_linesearch_afw/ examples/config.yml
+#       sbatch examples/slurm_experiments.sh examples/compute_intersection_custom_full_warmup_slurm.jl examples/results_linesearch_point_clouds/ examples/config.yml
 
 # *************************
 # Directives for the SLURM scheduler
@@ -60,7 +60,7 @@ if [[ "$config" != *.yaml && "$config" != *.yml ]]; then
 fi
 
 # Create logs directory if it doesn't already exists (`-p` option)
-logs_dir="examples/results_linesearch_afw/logs"
+logs_dir="examples/results_linesearch_point_clouds/logs"
 mkdir -p $logs_dir
 
 echo $SLURM_NODELIST    # print node on slurm
