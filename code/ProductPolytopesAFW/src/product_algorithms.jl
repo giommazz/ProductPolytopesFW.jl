@@ -277,11 +277,11 @@ end
 function run_FullAFW(
     config::Config,
     prod_lmo::FrankWolfe.ProductLMO;
-    renorm_interval::Int=config.max_iterations + 10,
-    weight_purge_threshold::Union{Nothing,Float64}=1e-32,
+    renorm_interval::Int=10000,#config.max_iterations + 10,
+    weight_purge_threshold::Union{Nothing,Float64}=0.0,
     memory_mode::FrankWolfe.MemoryEmphasis=FrankWolfe.InplaceEmphasis(),
     callback::Union{Nothing,Function}=nothing,
-    debug_callback::Bool=false,
+    debug_callback::Bool=true,
     spike_factor::Float64=10.0,
     log_postprocess::Bool=false,
     recompute_metrics::Bool=false,

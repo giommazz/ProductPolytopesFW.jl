@@ -210,12 +210,22 @@ println("  touching_point_rnd: ", vf_touching_point_rnd)
 println("  separation: ", vf_separation)
 
 # ---------------------------------------------------------------------------------
-# FrankWolfe monkey patch (diagnostic)
+# FrankWolfe patch (diagnostic)
 # - Override the *default* weight purge threshold used by internal AFW active-set cleanups.
 # - This is global to the Julia session; restart Julia (or set to `nothing`) to restore defaults.
 # ---------------------------------------------------------------------------------
-fw_weight_purge_default_override = 0.0
-set_fw_weight_purge_default_override!(fw_weight_purge_default_override)
+fw_weight_purge_default_override_value = 0.0 # set to `nothing` to restore the FrankWolfe default
+# Optional override via environment variable, to avoid editing the script for sweeps:
+#   FW_WEIGHT_PURGE_DEFAULT_OVERRIDE=0.0 julia --project=. examples/compute_intersection_vertex_facet_full_warmup.jl
+if haskey(ENV, "FW_WEIGHT_PURGE_DEFAULT_OVERRIDE")
+    s = strip(ENV["FW_WEIGHT_PURGE_DEFAULT_OVERRIDE"])
+    if isempty(s) || lowercase(s) == "nothing"
+        fw_weight_purge_default_override_value = nothing
+    else
+        fw_weight_purge_default_override_value = parse(Float64, s)
+    end
+end
+set_fw_weight_purge_default_override!(fw_weight_purge_default_override_value)
 println("FrankWolfe weight purge default override (Float64): ", fw_weight_purge_default_override())
 
 # ---------------------------------------------------------------------------------
