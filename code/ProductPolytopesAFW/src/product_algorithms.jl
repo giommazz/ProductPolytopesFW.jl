@@ -196,7 +196,7 @@ function run_BlockCoordinateFW(
     prod_lmo::FrankWolfe.ProductLMO
     )
 
-    # L-smoothness constant
+    # L-smoothness constant (used only when the chosen stepsize strategy is Shortstep).
     L = 1
     # DEBUG: notice that I couldn't use config.k because I sometimes call the function on two sets only
     x0 = find_starting_point(config, prod_lmo)
@@ -289,7 +289,7 @@ function run_FullAFW(
     renorm_interval >= 1 || error("`renorm_interval` must be ≥ 1, got $renorm_interval")
     spike_factor > 1 || error("`spike_factor` must be > 1, got $spike_factor")
 
-    # L-smoothness constant used by `get_stepsize_strategy` when `stepsize_strategy == 1`.
+    # L-smoothness constant used by `get_stepsize_strategy` only when `stepsize_strategy == 2` (Shortstep).
     L = 1
 
     x0 = find_starting_point(config, prod_lmo)

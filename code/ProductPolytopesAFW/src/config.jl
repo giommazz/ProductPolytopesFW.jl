@@ -33,7 +33,10 @@ struct Config
     intersection_reference_point::String
     # Scalar parameter t used for certain anchor types (e.g., "p1_p2_segment"); non‑negative
     intersection_anchor_t::Float64
-    # stepsize strategy: `0` is line search; `1` uses short-step with given L=2 (specified in `product_algorithms.jl`)
+    # stepsize strategy:
+    # - 0: Goldenratio line search (FrankWolfe.jl)
+    # - 1: SafeGoldenratio (same line search, safer gamma reconstruction)
+    # - 2: Shortstep with given L (specified in `product_algorithms.jl`)
     stepsize_strategy::Int 
 end
 
@@ -267,8 +270,8 @@ function validate_config(yaml_config::Dict{Any, Any})
     end
 
     # Check for `stepsize_strategy`
-    if typeof(yaml_config["stepsize_strategy"]) != Int || yaml_config["stepsize_strategy"] < 0 || yaml_config["stepsize_strategy"] > 5
-        error("Invalid value for 'stepsize_strategy': must be an integer in {0, 1, 2, 3, 4, 5}.")
+    if typeof(yaml_config["stepsize_strategy"]) != Int || !(yaml_config["stepsize_strategy"] in (0, 1, 2))
+        error("Invalid value for 'stepsize_strategy': must be an integer in {0, 1, 2}.")
     end
 end
 
@@ -293,27 +296,18 @@ function print_config(config::Config)
     println("  Intersection anchor: ", config.intersection_anchor)
     println("  Intersection reference point: ", config.intersection_reference_point)
     println("  Intersection anchor_t: ", config.intersection_anchor_t)
-    println(
-        "  Stepsize strategy (`0`: Goldenratio, `1`: Shortstep(L=1), `2`: Backtracking, `3`: Adaptive, `4`: SafeGoldenratio, `5`: QuadraticExact): ",
-        config.stepsize_strategy,
-    )
+    println("  Stepsize strategy (`0`: Goldenratio, `1`: SafeGoldenratio, `2`: Shortstep(L=1)): ", config.stepsize_strategy)
     println()
 end
 
 function get_stepsize_strategy(stepsize_strategy::Int, L::T) where T
     
     if stepsize_strategy == 0
-        return FrankWolfe.Goldenratio(1e-09)    # simple line search
+        return FrankWolfe.Goldenratio(1e-09)    # golden-section line search (approx)
     elseif stepsize_strategy == 1
-        return FrankWolfe.Shortstep(L)          # short step with given L
+        return SafeGoldenratio(1e-09)           # same line search, safer gamma reconstruction
     elseif stepsize_strategy == 2
-        return FrankWolfe.Backtracking()        # Armijo-type backtracking line search
-    elseif stepsize_strategy == 3
-        return FrankWolfe.Adaptive(verbose=false) # backtracking-based adaptive line search (usually stable)
-    elseif stepsize_strategy == 4
-        return SafeGoldenratio(1e-09)           # safer Goldenratio variant (stable gamma reconstruction)
-    elseif stepsize_strategy == 5
-        return QuadraticExactLineSearch()       # exact for homogeneous quadratic objectives
+        return FrankWolfe.Shortstep(L)          # short step with given L
     else
         error("Invalid stepsize strategy type")
     end

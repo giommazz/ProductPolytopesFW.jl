@@ -37,7 +37,7 @@ module ProductPolytopesAFW
     # From `product_algorithms_algorithms.jl`
     export run_BlockCoordinateFW, run_FullFW, run_FullAFW, run_AlternatingProjections, AwayStep
     # From `frankwolfe_patches.jl`
-    export set_fw_weight_purge_default_override!, fw_weight_purge_default_override, SafeGoldenratio, QuadraticExactLineSearch
+    export set_fw_weight_purge_default_override!, fw_weight_purge_default_override, SafeGoldenratio
     # From `utils.jl`
     export ensure_dir, unique_combinations, generate_rand_float_vector, extract_n_k_from_filename, base_name, 
         approxequal, log_times, pad_log_data, save_logdata_to_csv,

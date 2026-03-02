@@ -63,9 +63,6 @@ intersection:
   reference_point: "vertex"
 # stepsize strategy:
 # - 0: FrankWolfe.Goldenratio (golden-section line search)
-# - 1: FrankWolfe.Shortstep(L) with L=1 (specified in `product_algorithms.jl`)
-# - 2: FrankWolfe.Backtracking (Armijo-type backtracking)
-# - 3: FrankWolfe.Adaptive (adaptive backtracking)
-# - 4: ProductPolytopesAFW.SafeGoldenratio (Goldenratio with safer gamma reconstruction)
-# - 5: ProductPolytopesAFW.QuadraticExactLineSearch (exact for homogeneous quadratic objectives)
-stepsize_strategy: 5
+# - 1: ProductPolytopesAFW.SafeGoldenratio (same line search, safer gamma reconstruction)
+# - 2: FrankWolfe.Shortstep(L) with L=1 (specified in `product_algorithms.jl`)
+stepsize_strategy: 1

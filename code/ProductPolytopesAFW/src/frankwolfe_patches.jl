@@ -101,11 +101,21 @@ function FrankWolfe.perform_line_search(
     workspace::SafeGoldenratioWorkspace,
     memory_mode,
 )
+    # NOTE: This intentionally mirrors FrankWolfe.jl's `Goldenratio` bracketing logic.
+    # The only "patch" is how we reconstruct the final scalar stepsize `gamma` at the end.
+    #
+    # Why we care: in vertex-facet / strongly structured polytopes, the FW direction `d`
+    # can have some coordinates that are *very* small due to cancellations/symmetries.
+    # Reconstructing gamma via a single coordinate division (x[i]-x_min[i]) / d[i] can
+    # become numerically unstable if that chosen d[i] is tiny.
+
     # Restrict segment of search to [x, y] where y = x - gamma_max*d
     @. workspace.y = x - gamma_max * d
     @. workspace.left = x
     @. workspace.right = workspace.y
 
+    # Directional derivatives along the search direction at the endpoints.
+    # If they do not change sign, the minimizer over the segment is at an endpoint.
     dgx = dot(d, gradient)
     grad!(workspace.gradient, workspace.y)
     dgy = dot(d, workspace.gradient)
@@ -119,6 +129,8 @@ function FrankWolfe.perform_line_search(
     gold = (1 + sqrt(5)) / 2
     improv = Inf
     while improv > line_search.tol
+        # Classic golden-section shrink: maintain a bracket [left, right] and replace the
+        # "worse" side based on two interior probes.
         f_old_left = f(workspace.left)
         f_old_right = f(workspace.right)
 
@@ -136,6 +148,11 @@ function FrankWolfe.perform_line_search(
 
     # Reconstruct gamma from the final bracket using a stable formula:
     # x_min = (left + right)/2, and we want gamma s.t. x_min ≈ x - gamma*d.
+    #
+    # In exact arithmetic, x_min lies on the same line segment, so *any* nonzero coordinate
+    # would give the same gamma via (x[i]-x_min[i]) / d[i]. Numerically, though, picking
+    # a single coordinate can be disastrous when that d[i] is tiny; the projection formula
+    # below uses all coordinates and is much better conditioned.
     den = dot(d, d)
     if den <= eps(float(den))
         return zero(eltype(d))
@@ -149,6 +166,8 @@ function FrankWolfe.perform_line_search(
     if !isfinite(gamma)
         return zero(eltype(d))
     end
+    # Clamp as a final guard rail: rounding can produce a tiny negative gamma or a gamma
+    # slightly above gamma_max even if the true minimizer is within [0, gamma_max].
     return clamp(gamma, zero(gamma), gamma_max)
 end
 
