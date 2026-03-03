@@ -1,64 +1,21 @@
 # `frankwolfe_patches.jl`
-#
-# Small opt-in monkey patches / overrides for FrankWolfe.jl behavior.
-#
-# These are meant for controlled experiments and debugging. Prefer keeping them disabled by default.
-
-const FW_WEIGHT_PURGE_DEFAULT_OVERRIDE = Ref{Union{Nothing,Float64}}(nothing)
-
-"""
-    set_fw_weight_purge_default_override!(value::Union{Nothing,Float64}) -> Union{Nothing,Float64}
-
-Override the value returned by `FrankWolfe.weight_purge_threshold_default(Float64)`.
-
-Why this exists:
-- In FrankWolfe.jl, internal active-set cleanups during AFW iterations call
-  `active_set_update!(...; weight_purge_threshold=weight_purge_threshold_default(R))`.
-  Since `away_frank_wolfe` does not pass your `weight_purge_threshold` down to those calls,
-  changing `weight_purge_threshold` mostly affects the *final* cleanup, not the in-run ones.
-- Overriding the default for `Float64` lets you test whether those internal purges are the culprit.
-
-Pass `nothing` to restore FrankWolfe's original default (≈ 1e-12 for Float64).
-"""
-function set_fw_weight_purge_default_override!(value::Union{Nothing,Float64})
-    if value !== nothing && value < 0.0
-        error("`value` must be ≥ 0 or `nothing`, got $value")
-    end
-    FW_WEIGHT_PURGE_DEFAULT_OVERRIDE[] = value
-    return value
-end
-
-"""
-    fw_weight_purge_default_override() -> Union{Nothing,Float64}
-
-Return the currently configured override for `FrankWolfe.weight_purge_threshold_default(Float64)`.
-"""
-fw_weight_purge_default_override() = FW_WEIGHT_PURGE_DEFAULT_OVERRIDE[]
-
-_fw_weight_purge_default_float64() = sqrt(eps(Float64) * Base.rtoldefault(Float64))
-
-function FrankWolfe.weight_purge_threshold_default(::Type{Float64})
-    v = FW_WEIGHT_PURGE_DEFAULT_OVERRIDE[]
-    return v === nothing ? _fw_weight_purge_default_float64() : v
-end
+# Small opt-in line-search patches for FrankWolfe.jl behavior.
 
 
 # -----------------------------------------------------------------------------
 # Line Search Extensions
 # -----------------------------------------------------------------------------
-
 """
     SafeGoldenratio(tol=1e-7)
 
 Golden-section line search like `FrankWolfe.Goldenratio`, but with a numerically safer
 reconstruction of the final step size `γ`.
 
-Why this exists:
-- In FrankWolfe.jl v0.6.3, `Goldenratio` computes a bracket `[left, right]` in *primal space*
-  and then reconstructs `γ` via a single coordinate division using the *first* nonzero entry
-  of the direction `d`.
-- When `d[i]` is tiny (common with structured atoms / sparse directions), that division can be
-  ill-conditioned, producing an inaccurate `γ` (and in the worst case a negative one).
+Why:
+- In FrankWolfe.jl v0.6.3, `Goldenratio` computes bracket `[left, right]` in primal space, then 
+  reconstructs `γ` via a single-coordinate division using *1st* nonzero entry of direction `d`.
+- When `d[i]` is tiny (common with structured atoms / sparse directions), division can be
+  ill-conditioned, producing inaccurate `γ` (negative in worst case) and nonmonotone primal gap.
 
 `SafeGoldenratio` computes `γ` using all coordinates via a projection formula and clamps it to
 `[0, gamma_max]`.
@@ -101,39 +58,37 @@ function FrankWolfe.perform_line_search(
     workspace::SafeGoldenratioWorkspace,
     memory_mode,
 )
-    # NOTE: This intentionally mirrors FrankWolfe.jl's `Goldenratio` bracketing logic.
-    # The only "patch" is how we reconstruct the final scalar stepsize `gamma` at the end.
+    # Intentionally mirrors FrankWolfe.jl's `Goldenratio` bracketing logic.
+    # The "patch" is only how we reconstruct the final scalar stepsize `gamma` at the end.
     #
-    # Why we care: in vertex-facet / strongly structured polytopes, the FW direction `d`
-    # can have some coordinates that are *very* small due to cancellations/symmetries.
-    # Reconstructing gamma via a single coordinate division (x[i]-x_min[i]) / d[i] can
-    # become numerically unstable if that chosen d[i] is tiny.
+    # Why we care: FW direction `d` can have some coordinates that are *very* small (due to
+    # cancellations/symmetries) and reconstructing `gamma` via a single coordinate division
+    #   (x[i]-x_min[i]) / d[i]
+    # can become numerically unstable if chosen d[i] is tiny.
 
     # Restrict segment of search to [x, y] where y = x - gamma_max*d
     @. workspace.y = x - gamma_max * d
     @. workspace.left = x
     @. workspace.right = workspace.y
 
-    # Directional derivatives along the search direction at the endpoints.
-    # If they do not change sign, the minimizer over the segment is at an endpoint.
+    # Directional derivatives along search direction at endpoints.
+    # If they do not change sign, minimizer over segment is at an endpoint.
     dgx = dot(d, gradient)
     grad!(workspace.gradient, workspace.y)
     dgy = dot(d, workspace.gradient)
-
-    # If the minimum is at an endpoint
+    # If minimum is at an endpoint
     if dgx * dgy >= 0
         return f(workspace.y) <= f(x) ? gamma_max : zero(eltype(d))
     end
 
-    # Apply golden-section method to the segment
+    # Apply golden-section method to segment
     gold = (1 + sqrt(5)) / 2
     improv = Inf
     while improv > line_search.tol
-        # Classic golden-section shrink: maintain a bracket [left, right] and replace the
-        # "worse" side based on two interior probes.
+        # Classic golden-section shrink: maintain a bracket [left, right], replace "worse"
+        # side based on two interior probes.
         f_old_left = f(workspace.left)
         f_old_right = f(workspace.right)
-
         @. workspace.new_vec = workspace.left + (workspace.right - workspace.left) / (1 + gold)
         @. workspace.probe = workspace.new_vec + (workspace.right - workspace.new_vec) / 2
 
@@ -142,17 +97,17 @@ function FrankWolfe.perform_line_search(
         else
             workspace.right .= workspace.probe
         end
-
+        # Compute stopping criterion quantity
         improv = norm(f(workspace.right) - f_old_right) + norm(f(workspace.left) - f_old_left)
     end
 
-    # Reconstruct gamma from the final bracket using a stable formula:
-    # x_min = (left + right)/2, and we want gamma s.t. x_min ≈ x - gamma*d.
+    # Reconstruct gamma from final bracket using stable formula:
+    #   x_min = (left + right)/2, and we want gamma s.t. x_min ≈ x - gamma*d.
     #
-    # In exact arithmetic, x_min lies on the same line segment, so *any* nonzero coordinate
-    # would give the same gamma via (x[i]-x_min[i]) / d[i]. Numerically, though, picking
-    # a single coordinate can be disastrous when that d[i] is tiny; the projection formula
-    # below uses all coordinates and is much better conditioned.
+    # Arithmetically, `x_min` lies on the same line segment, so *any* nonzero coordinate
+    # would give same gamma via (x[i]-x_min[i]) / d[i]. Numerically, though, picking a single
+    # coordinate can be bad when that d[i] is tiny → projection formula below uses all 
+    # coordinates and is better conditioned
     den = dot(d, d)
     if den <= eps(float(den))
         return zero(eltype(d))
@@ -166,56 +121,9 @@ function FrankWolfe.perform_line_search(
     if !isfinite(gamma)
         return zero(eltype(d))
     end
-    # Clamp as a final guard rail: rounding can produce a tiny negative gamma or a gamma
-    # slightly above gamma_max even if the true minimizer is within [0, gamma_max].
+    # Final guard rail: clamp. Rounding can produce a tiny negative gamma or a gamma
+    # slightly above `gamma_max` even if true minimizer is ∈ [0, gamma_max].
     return clamp(gamma, zero(gamma), gamma_max)
 end
 
 Base.print(io::IO, ::SafeGoldenratio) = print(io, "SafeGoldenratio")
-
-
-"""
-    QuadraticExactLineSearch()
-
-Exact line search for *homogeneous quadratic* objectives of the form `f(z) = 0.5 * ⟨z, H z⟩`.
-
-Given the FW update `x_new = x - γ d`, this returns the exact minimizer
-`γ* = ⟨∇f(x), d⟩ / ⟨d, H d⟩`, clamped to `[0, gamma_max]`.
-
-Implementation detail:
-- For homogeneous quadratics, `⟨d, H d⟩ = 2 f(d)`, so we can compute the curvature with one call to `f(d)`.
-
-If you use this with a non-quadratic objective, the returned `γ` is not guaranteed to be optimal.
-"""
-struct QuadraticExactLineSearch <: FrankWolfe.LineSearchMethod end
-
-FrankWolfe.build_linesearch_workspace(::QuadraticExactLineSearch, x, gradient) = nothing
-
-function FrankWolfe.perform_line_search(
-    ::QuadraticExactLineSearch,
-    _,
-    f,
-    grad!,
-    gradient,
-    x,
-    d,
-    gamma_max,
-    workspace,
-    memory_mode,
-)
-    num = dot(gradient, d)
-    if num <= 0
-        return zero(num)
-    end
-    denom = 2 * f(d)
-    if denom <= eps(float(denom))
-        return zero(num)
-    end
-    gamma = num / denom
-    if !isfinite(gamma)
-        return zero(num)
-    end
-    return clamp(gamma, zero(gamma), gamma_max)
-end
-
-Base.print(io::IO, ::QuadraticExactLineSearch) = print(io, "QuadraticExact")

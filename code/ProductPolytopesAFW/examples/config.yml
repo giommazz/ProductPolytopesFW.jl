@@ -4,7 +4,7 @@
 # Number of polytopes
 k: 2 #2, 3, 4, 5, 10 
 # Dimension of the subspace in which each polytope lies
-n: 1003  # 100, 500, 1000, 2000
+n: 503  # 100, 500, 1000, 2000
 # list of `k` integers, each indicating the n. of points to be used to generate `k` polytopes
 # if `0` is given, n_points is generated randomly using `ub_n_points`
 n_points: 0
