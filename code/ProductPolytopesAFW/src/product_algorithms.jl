@@ -188,7 +188,7 @@ end
 
 
 
-# (Multiple dispatch) Run Block-Coordinate BPCG with specific update order (full, cyclic, etc.) over product LMO
+# Run Block-Coordinate BPCG with specific update order (full, cyclic, etc.) over product LMO
 function run_BlockCoordinateFW(
     config::Config,
     order::FrankWolfe.BlockCoordinateUpdateOrder, # FrankWolfe.CyclicUpdate(), FrankWolfe.FullUpdate()

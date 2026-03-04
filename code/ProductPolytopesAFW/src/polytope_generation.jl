@@ -1,6 +1,10 @@
 # `polytope_generation.jl`
 
-# Compute the anchor point according to `config.intersection_anchor`
+"""
+    compute_anchor(config, vertices)
+
+Compute the anchor point in `R^n` according to `config.intersection_anchor`.
+"""
 function compute_anchor(config::Config, vertices::Vector{Matrix{T}}) where T
     if isempty(vertices)
         error("Cannot compute anchor: no polytopes provided.")
@@ -27,8 +31,11 @@ function compute_anchor(config::Config, vertices::Vector{Matrix{T}}) where T
     end
 end
 
-# Function to generate non-overlapping bounds for multiple dimensions within [1e-03, 1e+03]
-# `margin`: ensures min distance between current polytope's UB and next polytope's LB, to create non-overlapping polytopes
+"""
+    generate_nonintersecting_bounds(config; margin=10.0, stepsize=100.0, start_point=-100.0)
+
+Generate `k` axis-aligned boxes in `R^n` with guaranteed separation (non-overlap).
+"""
 function generate_nonintersecting_bounds(config::Config; margin::Float64=10.0, stepsize::Float64=100.0, start_point::Float64=-100.0)
     
     bounds_list = Vector{Vector{Tuple{Float64, Float64}}}(undef, config.k)
@@ -50,7 +57,12 @@ function generate_nonintersecting_bounds(config::Config; margin::Float64=10.0, s
     return bounds_list
 end
 
-# Generate one polytope: generate one random set of vertices, within given bounds for each dimension
+"""
+    generate_polytope(config, idx, bounds) -> (vertices, p1_vertex_mean_or_nothing)
+
+Generate one polytope by sampling `config.n_points[idx]` points within the coordinate-wise `bounds`,
+using `config.vertex_sampling`.
+"""
 function generate_polytope(config::Config, idx::Int, bounds::Vector{Tuple{T, T}}) where T
     
     # Check that the number of columns specified in `config.n` matches the length of `bounds`
@@ -58,7 +70,7 @@ function generate_polytope(config::Config, idx::Int, bounds::Vector{Tuple{T, T}}
         error("Mismatch: The number of columns in `config` (config.n = $(config.n)) must match the number of elements in `bounds` (length = $(length(bounds))).")
     end
 
-    # Initialize matrix of zeros with the given number of points (rows) and dimensions (cols)
+    # Initialize matrix of zeros with given number of points (rows) and dimensions (cols)
     vertices = zeros(Float64, config.n_points[idx], config.n)
 
     if config.vertex_sampling == "box_uniform"
@@ -122,7 +134,12 @@ function generate_polytope(config::Config, idx::Int, bounds::Vector{Tuple{T, T}}
     return vertices, anc
 end
 
-# Generate k nonintersecting polytopes: generate k random sets of vertices, within given bounds for each dimension
+"""
+    generate_nonintersecting_polytopes(config, bounds) -> (vertices, p1_vertex_mean, primal, fw_gap)
+
+Generate `k` non-intersecting polytopes inside the provided `bounds`, then certify non-intersection by
+computing the distance objective via FW.
+"""
 function generate_nonintersecting_polytopes(config::Config, bounds::Vector{Vector{Tuple{T, T}}}) where T
     
     vertices = Vector{Matrix{T}}()
@@ -152,7 +169,11 @@ function generate_nonintersecting_polytopes(config::Config, bounds::Vector{Vecto
     return vertices, p1_vertex_mean, primal, fw_gap
 end
 
-# Function to intersect k polytopes so that their intersection contains the chosen anchor point
+"""
+    intersect_polytopes(config, vertices) -> shifted_vertices
+
+Shift the input polytopes so that their intersection contains the anchor point specified by `config`.
+"""
 function intersect_polytopes(
     config::Config,
     vertices::Vector{Matrix{T}}
@@ -205,81 +226,90 @@ function intersect_polytopes(
     return shifted_vertices
 end
 
-# Generate nonintersecting polytopes, then intersect them according to the anchor/reference-point rules
+"""
+    generate_polytopes(config) -> (vertices, shifted_vertices, primal, fw_gap)
+
+Generate `k` non-intersecting polytopes, then shift them according to the anchor/reference-point rules in
+`config` so that the shifted polytopes intersect.
+"""
 function generate_polytopes(config::Config)
 
     # `n_points` contains n. of vertices used to generate each polytope
-    println("Generating $(config.k) intersecting polytopes of dimension $(config.n) (n. vertices for each: $(config.n_points))")
+    if config.verbose
+        println("Generating $(config.k) intersecting polytopes of dimension $(config.n) (n. vertices for each: $(config.n_points))")
+    end
     
     # Generate random, non-intersecting boxes, then a polytope in each of the boxes
     bounds_list = generate_nonintersecting_bounds(config)
 
-    fmt(x::Float64) = isfinite(x) ? round(x; digits=6) : x
+    if config.verbose
+        fmt(x::Float64) = isfinite(x) ? round(x; digits=6) : x
 
-    if config.vertex_sampling == "sphere"
-        # Diagnostics: quantify how small the inscribed sphere radius is relative to the box size.
-        # For each polytope box i, let hᵢ[d] = (UBᵢ[d]-LBᵢ[d])/2 be the half-lengths, rᵢ = ρ*min_d hᵢ[d],
-        # and define shrinkᵢ = rᵢ / ‖hᵢ‖ (fraction of the box half-diagonal covered by the sphere radius).
-        rho = config.sphere_radius_factor
-        println("\nSphere sampling box stats (ρ=$(fmt(rho))) (rounded to 6 decimals):")
-        println("  Legend / definitions:")
-        println("    h[d]     = (UB[d]-LB[d])/2                         (box half-lengths)")
-        println("    h_min    = min_d h[d], h_med = median_d h[d], h_mean = mean_d h[d]")
-        println("    min/med  = h_min / h_med, max/min = max_d h[d] / h_min")
-        println("    r        = ρ * h_min                               (sphere radius)")
-        println("    |h|      = ‖h‖₂ = sqrt(∑_d h[d]^2)                 (box half-diagonal)")
-        println("    shrink   = r / |h|                                 (radius relative to box half-diagonal)")
-        println("  Values:") 
-        shrinks = Float64[]
-        for (i, b) in enumerate(bounds_list)
-            h = [(ub - lb) / 2 for (lb, ub) in b]
-            hmin = minimum(h)
-            hmed = median(h)
-            hmean = mean(h)
-            hmax = maximum(h)
-            min_over_med = hmed == 0.0 ? NaN : hmin / hmed
-            max_over_min = hmin == 0.0 ? Inf : hmax / hmin
-            r = rho * hmin
-            hd = norm(h)
-            shrink = hd == 0.0 ? NaN : r / hd
-            push!(shrinks, shrink)
-            println("  P$i: h_min=$(fmt(hmin)) h_med=$(fmt(hmed)) h_mean=$(fmt(hmean)) min/med=$(fmt(min_over_med)) max/min=$(fmt(max_over_min)) r=$(fmt(r)) shrink=$(fmt(shrink))")
+        if config.vertex_sampling == "sphere"
+            # Diagnostics: quantify how small the inscribed sphere radius is relative to the box size.
+            # For each polytope box i, let hᵢ[d] = (UBᵢ[d]-LBᵢ[d])/2 be the half-lengths, rᵢ = ρ*min_d hᵢ[d],
+            # and define shrinkᵢ = rᵢ / ‖hᵢ‖ (fraction of the box half-diagonal covered by the sphere radius).
+            rho = config.sphere_radius_factor
+            println("\nSphere sampling box stats (ρ=$(fmt(rho))) (rounded to 6 decimals):")
+            println("  Legend / definitions:")
+            println("    h[d]     = (UB[d]-LB[d])/2                         (box half-lengths)")
+            println("    h_min    = min_d h[d], h_med = median_d h[d], h_mean = mean_d h[d]")
+            println("    min/med  = h_min / h_med, max/min = max_d h[d] / h_min")
+            println("    r        = ρ * h_min                               (sphere radius)")
+            println("    |h|      = ‖h‖₂ = sqrt(∑_d h[d]^2)                 (box half-diagonal)")
+            println("    shrink   = r / |h|                                 (radius relative to box half-diagonal)")
+            println("  Values:")
+            shrinks = Float64[]
+            for (i, b) in enumerate(bounds_list)
+                h = [(ub - lb) / 2 for (lb, ub) in b]
+                hmin = minimum(h)
+                hmed = median(h)
+                hmean = mean(h)
+                hmax = maximum(h)
+                min_over_med = hmed == 0.0 ? NaN : hmin / hmed
+                max_over_min = hmin == 0.0 ? Inf : hmax / hmin
+                r = rho * hmin
+                hd = norm(h)
+                shrink = hd == 0.0 ? NaN : r / hd
+                push!(shrinks, shrink)
+                println("  P$i: h_min=$(fmt(hmin)) h_med=$(fmt(hmed)) h_mean=$(fmt(hmean)) min/med=$(fmt(min_over_med)) max/min=$(fmt(max_over_min)) r=$(fmt(r)) shrink=$(fmt(shrink))")
+            end
+            println("  shrink across polytopes: min=$(fmt(minimum(shrinks))) mean=$(fmt(mean(shrinks))) max=$(fmt(maximum(shrinks)))\n")
+        elseif config.vertex_sampling == "ellipsoid"
+            # Diagnostics: quantify how the inscribed ellipsoid compares to the box size.
+            # For each polytope box i, let hᵢ[d] = (UBᵢ[d]-LBᵢ[d])/2 be the half-lengths, and aᵢ[d] = ρ*hᵢ[d] the ellipsoid semi-axes.
+            # We report a_min = min_d aᵢ[d] and shrink_min = a_min / ‖hᵢ‖, plus shrink_diag = ‖aᵢ‖ / ‖hᵢ‖ (= ρ).
+            rho = config.sphere_radius_factor
+            println("\nEllipsoid sampling box stats (ρ=$(fmt(rho))) (rounded to 6 decimals):")
+            println("  Legend / definitions:")
+            println("    h[d]        = (UB[d]-LB[d])/2                       (box half-lengths)")
+            println("    a[d]        = ρ * h[d]                              (ellipsoid semi-axis lengths)")
+            println("    h_min/h_med/h_mean and min/med/max/min as for sphere")
+            println("    a_min       = min_d a[d] = ρ * h_min                (smallest semi-axis)")
+            println("    |h|         = ‖h‖₂ = sqrt(∑_d h[d]^2)               (box half-diagonal)")
+            println("    shrink_min  = a_min / |h|                           (smallest semi-axis relative to box half-diagonal)")
+            println("    shrink_diag = ‖a‖₂ / ‖h‖₂ = ρ                       (ellipsoid half-diagonal relative to box half-diagonal)")
+            println("  Values:")
+            shrinks_min = Float64[]
+            for (i, b) in enumerate(bounds_list)
+                h = [(ub - lb) / 2 for (lb, ub) in b]
+                hmin = minimum(h)
+                hmed = median(h)
+                hmean = mean(h)
+                hmax = maximum(h)
+                min_over_med = hmed == 0.0 ? NaN : hmin / hmed
+                max_over_min = hmin == 0.0 ? Inf : hmax / hmin
+
+                a_min = rho * hmin
+                hd = norm(h)
+                shrink_min = hd == 0.0 ? NaN : a_min / hd
+                shrink_diag = rho
+                push!(shrinks_min, shrink_min)
+
+                println("  P$i: h_min=$(fmt(hmin)) h_med=$(fmt(hmed)) h_mean=$(fmt(hmean)) min/med=$(fmt(min_over_med)) max/min=$(fmt(max_over_min)) a_min=$(fmt(a_min)) shrink_min=$(fmt(shrink_min)) shrink_diag=$(fmt(shrink_diag))")
+            end
+            println("  shrink_min across polytopes: min=$(fmt(minimum(shrinks_min))) mean=$(fmt(mean(shrinks_min))) max=$(fmt(maximum(shrinks_min)))\n")
         end
-        println("  shrink across polytopes: min=$(fmt(minimum(shrinks))) mean=$(fmt(mean(shrinks))) max=$(fmt(maximum(shrinks)))\n")
-    elseif config.vertex_sampling == "ellipsoid"
-        # Diagnostics: quantify how the inscribed ellipsoid compares to the box size.
-        # For each polytope box i, let hᵢ[d] = (UBᵢ[d]-LBᵢ[d])/2 be the half-lengths, and aᵢ[d] = ρ*hᵢ[d] the ellipsoid semi-axes.
-        # We report a_min = min_d aᵢ[d] and shrink_min = a_min / ‖hᵢ‖, plus shrink_diag = ‖aᵢ‖ / ‖hᵢ‖ (= ρ).
-        rho = config.sphere_radius_factor
-        println("\nEllipsoid sampling box stats (ρ=$(fmt(rho))) (rounded to 6 decimals):")
-        println("  Legend / definitions:")
-        println("    h[d]        = (UB[d]-LB[d])/2                       (box half-lengths)")
-        println("    a[d]        = ρ * h[d]                              (ellipsoid semi-axis lengths)")
-        println("    h_min/h_med/h_mean and min/med/max/min as for sphere")
-        println("    a_min       = min_d a[d] = ρ * h_min                (smallest semi-axis)")
-        println("    |h|         = ‖h‖₂ = sqrt(∑_d h[d]^2)               (box half-diagonal)")
-        println("    shrink_min  = a_min / |h|                           (smallest semi-axis relative to box half-diagonal)")
-        println("    shrink_diag = ‖a‖₂ / ‖h‖₂ = ρ                       (ellipsoid half-diagonal relative to box half-diagonal)")
-        println("  Values:")
-        shrinks_min = Float64[]
-        for (i, b) in enumerate(bounds_list)
-            h = [(ub - lb) / 2 for (lb, ub) in b]
-            hmin = minimum(h)
-            hmed = median(h)
-            hmean = mean(h)
-            hmax = maximum(h)
-            min_over_med = hmed == 0.0 ? NaN : hmin / hmed
-            max_over_min = hmin == 0.0 ? Inf : hmax / hmin
-
-            a_min = rho * hmin
-            hd = norm(h)
-            shrink_min = hd == 0.0 ? NaN : a_min / hd
-            shrink_diag = rho
-            push!(shrinks_min, shrink_min)
-
-            println("  P$i: h_min=$(fmt(hmin)) h_med=$(fmt(hmed)) h_mean=$(fmt(hmean)) min/med=$(fmt(min_over_med)) max/min=$(fmt(max_over_min)) a_min=$(fmt(a_min)) shrink_min=$(fmt(shrink_min)) shrink_diag=$(fmt(shrink_diag))")
-        end
-        println("  shrink_min across polytopes: min=$(fmt(minimum(shrinks_min))) mean=$(fmt(mean(shrinks_min))) max=$(fmt(maximum(shrinks_min)))\n")
     end
     vertices, p1_vertex_mean, primal, fw_gap = generate_nonintersecting_polytopes(config, bounds_list)
 

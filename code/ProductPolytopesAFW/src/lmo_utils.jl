@@ -11,12 +11,15 @@ vertices selected by the oracle. The cache uses a clock (second-chance) policy.
 mutable struct MatrixConvexHullLMO{T,MT<:AbstractMatrix{T}} <: FrankWolfe.LinearMinimizationOracle
     vertices::MT                    # Row-wise vertex table (nverts x dim)
     cache_cap::Int                  # Max number of cached materialized vertices
+    use_optimized_search::Bool      # true: GEMV-based score computation, false: row-by-row scan
     idx_to_slot::Vector{Int}        # Vertex index -> cache slot (0 means "not cached")
     slot_to_idx::Vector{Int}        # Cache slot -> vertex index (0 means "empty")
     slot_refbit::BitVector          # true: recently used, false: first candidate to be replaced
     slot_store::Vector{Vector{T}}   # Cached dense vertices
     cache_len::Int                  # Number of currently filled slots
     clock_hand::Int                 # Current pointer in clock replacement scan
+    score_work::Vector{T}           # Scratch scores for one matrix-vector product (length nverts)
+    direction_work::Vector{T}       # Scratch contiguous direction for BLAS-friendly mul!
 end
 
 const MATRIX_LMO_CACHE_TARGET_BYTES = 64 * 1024 * 1024 # 64 MiB budget per LMO cache
@@ -36,15 +39,21 @@ function _matrix_lmo_default_cache_cap(nverts::Int, dim::Int, ::Type{T}) where {
 end
 
 """
-    MatrixConvexHullLMO(vertices; cache_cap=nothing)
+    MatrixConvexHullLMO(vertices; cache_cap=nothing, use_optimized_search=true)
 
 Build a matrix-backed convex-hull LMO with a capped vertex cache.
 
 - `cache_cap = nothing`: use an automatic cap from `_matrix_lmo_default_cache_cap`.
 - `cache_cap = 0`: disable caching.
 - `cache_cap > 0`: keep at most that many materialized vertices in cache.
+- `use_optimized_search = true`: pick extreme points via GEMV (`mul!`) + argmin.
+- `use_optimized_search = false`: use row-by-row dot scan (legacy path).
 """
-function MatrixConvexHullLMO(vertices::MT; cache_cap::Union{Nothing,Int}=nothing) where {T,MT<:AbstractMatrix{T}}
+function MatrixConvexHullLMO(
+    vertices::MT;
+    cache_cap::Union{Nothing,Int}=nothing,
+    use_optimized_search::Bool=true,
+) where {T,MT<:AbstractMatrix{T}}
     nverts, dim = size(vertices)
     if nverts == 0
         error("MatrixConvexHullLMO received an empty vertex matrix.")
@@ -58,12 +67,15 @@ function MatrixConvexHullLMO(vertices::MT; cache_cap::Union{Nothing,Int}=nothing
     return MatrixConvexHullLMO{T,MT}(
         vertices,
         cap,
+        use_optimized_search,
         zeros(Int, nverts),
         zeros(Int, cap),
         falses(cap),
         Vector{Vector{T}}(undef, cap),
         0,
         1,
+        zeros(T, nverts),
+        zeros(T, dim),
     )
 end
 
@@ -149,11 +161,58 @@ Copy row `row` of matrix `V` into dense vector `dest`.
 end
 
 """
+    _best_row_index_optimized!(lmo, direction)
+
+Return the row index minimizing `<V[i,:], direction>` for `V = lmo.vertices`.
+Uses one matrix-vector product with preallocated scratch buffers.
+"""
+@inline function _best_row_index_optimized!(lmo::MatrixConvexHullLMO{T}, direction) where {T}
+    # Copy into contiguous scratch so `mul!` can use a fast path.
+    @inbounds for j in eachindex(lmo.direction_work)
+        lmo.direction_work[j] = direction[j]
+    end
+
+    # Compute all row scores in one pass: score[i] = <V[i,:], direction>.
+    LinearAlgebra.mul!(lmo.score_work, lmo.vertices, lmo.direction_work)
+
+    # Argmin on the precomputed scores.
+    best_idx = 1
+    best_val = lmo.score_work[1]
+    @inbounds for i in 2:length(lmo.score_work)
+        val = lmo.score_work[i]
+        if val < best_val
+            best_val = val
+            best_idx = i
+        end
+    end
+    return best_idx
+end
+
+"""
+    _best_row_index_rowscan(lmo, direction)
+
+Legacy row-by-row search: scan rows and evaluate one dot product per row.
+"""
+@inline function _best_row_index_rowscan(lmo::MatrixConvexHullLMO, direction)
+    V = lmo.vertices
+    best_idx = 1
+    best_val = dot(view(V, 1, :), direction)
+    @inbounds for i in 2:size(V, 1)
+        val = dot(view(V, i, :), direction)
+        if val < best_val
+            best_val = val
+            best_idx = i
+        end
+    end
+    return best_idx
+end
+
+"""
     FrankWolfe.compute_extreme_point(lmo::MatrixConvexHullLMO, direction; v=nothing, kwargs...)
 
 Return the vertex `s` in `lmo.vertices` that minimizes `<s, direction>`.
 
-- Scan matrix rows to find the best vertex index.
+- Use one matrix-vector product to score all rows and pick the best index.
 - Reuse a cached dense vertex when available.
 - If `v === nothing`, returns a dense vector (possibly the cached object).
 - If `v` is provided, writes into `v` and returns `v`.
@@ -175,16 +234,10 @@ function FrankWolfe.compute_extreme_point(
         throw(DimensionMismatch("Direction has length $(length(direction)), but vertices have dimension $dim."))
     end
 
-    # Oracle scan: find row index minimizing <v_i, direction>.
-    best_idx = 1
-    best_val = dot(view(V, 1, :), direction)
-    @inbounds for i in 2:nverts
-        val = dot(view(V, i, :), direction)
-        if val < best_val
-            best_val = val
-            best_idx = i
-        end
-    end
+    # Oracle step: choose optimized GEMV path or legacy rowscan path.
+    best_idx = lmo.use_optimized_search ?
+        _best_row_index_optimized!(lmo, direction) :
+        _best_row_index_rowscan(lmo, direction)
 
     # Try to reuse a previously materialized dense vertex.
     cached_vertex = _cache_lookup(lmo, best_idx)
@@ -303,7 +356,12 @@ function create_lmos(config::Config, vertices::Vector{Matrix{T}}) where T
     # Create LMOs
     for V in vertices
         if config.cvxhflag # Matrix-backed convex hull LMOs (memory-safe and AFW-compatible)
-            lmo = MatrixConvexHullLMO(V)
+            cache_cap = config.matrix_lmo_cache_cap == -1 ? nothing : config.matrix_lmo_cache_cap
+            lmo = MatrixConvexHullLMO(
+                V;
+                cache_cap=cache_cap,
+                use_optimized_search=config.matrix_lmo_use_optimized_search,
+            )
             # Update data structures
             push!(lmo_list, lmo)
         else    # FrankWolfe.MathOptLMO objects 

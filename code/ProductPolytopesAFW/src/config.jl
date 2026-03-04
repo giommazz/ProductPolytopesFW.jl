@@ -25,8 +25,15 @@ struct Config
     max_print_iterations::Int
     # Set the seed for reproducibility
     seed::Int
+    # Toggle diagnostic prints (e.g., in `generate_polytopes`)
+    verbose::Bool
     # Use FrankWolfe.ConvexHullLMO LMOs (true) or FrankWolfe.MathOptLMO LMOs (false)
     cvxhflag::Bool
+    # MatrixConvexHullLMO cache cap:
+    # -1 => auto cap, 0 => cache off, >0 => fixed cap
+    matrix_lmo_cache_cap::Int
+    # Use optimized extreme-point search (GEMV + argmin) inside MatrixConvexHullLMO
+    matrix_lmo_use_optimized_search::Bool
     # Intersection anchor: point in Rⁿ where polytopes are aligned (see examples/config.yml for allowed values)
     intersection_anchor::String
     # Reference point used for each polytope when aligning to the anchor (e.g., "center" or "vertex")
@@ -57,7 +64,10 @@ function Config()
         5000,           # max_iterations_opt
         100,            # max_print_iterations
         42,             # seed
+        true,           # verbose
         true,           # cvxhflag
+        -1,             # matrix_lmo_cache_cap
+        true,           # matrix_lmo_use_optimized_search
         "origin",       # intersection_anchor
         "center",       # intersection_reference_point
         0.0,            # intersection_anchor_t
@@ -89,6 +99,7 @@ function Config(yaml_file::String; kwargs...)
     end
     vertex_sampling = get(config, "vertex_sampling", "box_uniform")
     sphere_radius_factor = get(config, "sphere_radius_factor", 0.95)
+    verbose = get(config, "verbose", true)
 
     intersection_cfg = config["intersection"]
     anchor_t = get(intersection_cfg, "anchor_t", 0.0)
@@ -106,7 +117,10 @@ function Config(yaml_file::String; kwargs...)
         config["max_iterations_opt"],
         config["max_print_iterations"],
         config["seed"],
+        verbose,
         config["cvxhflag"],
+        get(config, "matrix_lmo_cache_cap", -1),
+        get(config, "matrix_lmo_use_optimized_search", true),
         intersection_cfg["anchor"],
         intersection_cfg["reference_point"],
         anchor_t,
@@ -131,7 +145,10 @@ function modify_config(config::Config; kwargs...)
     max_iterations_opt = get(kwargs, :max_iterations_opt, config.max_iterations_opt)
     max_print_iterations = get(kwargs, :max_iterations, config.max_print_iterations)
     seed = get(kwargs, :seed, config.seed)
+    verbose = get(kwargs, :verbose, config.verbose)
     cvxhflag = get(kwargs, :cvxhflag, config.cvxhflag)
+    matrix_lmo_cache_cap = get(kwargs, :matrix_lmo_cache_cap, config.matrix_lmo_cache_cap)
+    matrix_lmo_use_optimized_search = get(kwargs, :matrix_lmo_use_optimized_search, config.matrix_lmo_use_optimized_search)
     intersection_anchor = get(kwargs, :intersection_anchor, config.intersection_anchor)
     intersection_reference_point = get(kwargs, :intersection_reference_point, config.intersection_reference_point)
     intersection_anchor_t = get(kwargs, :intersection_anchor_t, config.intersection_anchor_t)
@@ -159,7 +176,10 @@ function modify_config(config::Config; kwargs...)
         max_iterations_opt,
         max_print_iterations,
         seed,
+        verbose,
         cvxhflag,
+        matrix_lmo_cache_cap,
+        matrix_lmo_use_optimized_search,
         intersection_anchor,
         intersection_reference_point,
         intersection_anchor_t,
@@ -242,6 +262,25 @@ function validate_config(yaml_config::Dict{Any, Any})
     if typeof(yaml_config["cvxhflag"]) != Bool
         error("Invalid value for 'cvxhflag': must be a boolean.")
     end
+    # Check for `verbose` (optional)
+    if haskey(yaml_config, "verbose")
+        if !(yaml_config["verbose"] isa Bool)
+            error("Invalid value for 'verbose': must be a boolean.")
+        end
+    end
+    # Check for `matrix_lmo_cache_cap` (optional)
+    if haskey(yaml_config, "matrix_lmo_cache_cap")
+        cap = yaml_config["matrix_lmo_cache_cap"]
+        if !(cap isa Int) || cap < -1
+            error("Invalid value for 'matrix_lmo_cache_cap': must be an integer >= -1.")
+        end
+    end
+    # Check for `matrix_lmo_use_optimized_search` (optional)
+    if haskey(yaml_config, "matrix_lmo_use_optimized_search")
+        if !(yaml_config["matrix_lmo_use_optimized_search"] isa Bool)
+            error("Invalid value for 'matrix_lmo_use_optimized_search': must be a boolean.")
+        end
+    end
 
     # Check for `intersection`
     if !haskey(yaml_config, "intersection") || !(yaml_config["intersection"] isa Dict)
@@ -292,7 +331,10 @@ function print_config(config::Config)
     println("  Number of FW iterations to compute optimal solutions (max_iterations_opt): ", config.max_iterations_opt)
     println("  How often FW iteration log is printed to screen (max_print_iterations): ", config.max_print_iterations)
     println("  Seed for reproducibility (seed): ", config.seed)
+    println("  Verbose diagnostics (verbose): ", config.verbose)
     println("  Use FW's ConvexHullLMO LMOs or MathOptLMO (cvxhflag): ", config.cvxhflag)
+    println("  MatrixConvexHullLMO cache cap (matrix_lmo_cache_cap): ", config.matrix_lmo_cache_cap)
+    println("  MatrixConvexHullLMO optimized search (matrix_lmo_use_optimized_search): ", config.matrix_lmo_use_optimized_search)
     println("  Intersection anchor: ", config.intersection_anchor)
     println("  Intersection reference point: ", config.intersection_reference_point)
     println("  Intersection anchor_t: ", config.intersection_anchor_t)
@@ -330,7 +372,10 @@ function todict(config::Config)
         "max_iterations_opt" => config.max_iterations_opt,
         "max_print_iterations" => config.max_print_iterations,
         "seed" => config.seed,
+        "verbose" => config.verbose,
         "cvxhflag" => config.cvxhflag,
+        "matrix_lmo_cache_cap" => config.matrix_lmo_cache_cap,
+        "matrix_lmo_use_optimized_search" => config.matrix_lmo_use_optimized_search,
         "intersection" => Dict(
             "anchor" => config.intersection_anchor,
             "reference_point" => config.intersection_reference_point,

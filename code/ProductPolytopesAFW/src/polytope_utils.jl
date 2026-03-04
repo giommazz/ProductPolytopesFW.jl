@@ -1,7 +1,12 @@
 # `polytope_utils.jl`
 
-# TODO: THIS CAUSES NUMERICAL ISSUES WITH THE Polyhedra.jl LIBRARY, DON'T USE FOR NOW (relevant functions commented)
-# Create Polyhedra.Polyhedron from list of vertices
+"""
+    polytope(vertices)
+
+Create a `Polyhedra.Polyhedron` from a list/matrix of vertices (V-representation).
+
+Note: this path has caused numerical issues with `Polyhedra.jl`/`CDDLib` in the past; use with care.
+"""
 function polytope(vertices::Matrix{T}) where T
     
     # return polyhedron(vrep(vertices), CDDLib.Library())
@@ -9,7 +14,11 @@ function polytope(vertices::Matrix{T}) where T
     # return polyhedron(vrep(vertices))
 end
 
-# (Multiple Dispatch) Create Polyhedra.Polyhedron from list of vertices
+"""
+    polytope(vertices)
+
+Multiple dispatch: build a `Polyhedra.Polyhedron` from vertices provided as a `Vector{Vector}`.
+"""
 function polytope(vertices::Vector{Vector{T}}) where T
     
     # return polyhedron(vrep(vertices), CDDLib.Library())
@@ -17,8 +26,14 @@ function polytope(vertices::Vector{Vector{T}}) where T
     # return polyhedron(vrep(vertices))
 end
 
-# TODO: THIS CAUSES NUMERICAL ISSUES WITH THE Polyhedra.jl LIBRARY, DON'T USE FOR NOW (relevant functions commented)
-# Create non-redundant Polyhedra.Polyhedron from list of vertices
+"""
+    nonredundant_polytope(vertices; redundancy_flag=true) -> Matrix
+
+Create a `Polyhedra.Polyhedron` from `vertices` and (optionally) remove redundant points, returning the
+remaining vertices as a matrix.
+
+Note: this path has caused numerical issues with `Polyhedra.jl`/`CDDLib` in the past; use with care.
+"""
 function nonredundant_polytope(vertices::Matrix{T}; redundancy_flag=true::Bool) where T
     
     # Use vertices to create object of type Polyhedra.Polyhedron 
@@ -33,7 +48,11 @@ function nonredundant_polytope(vertices::Matrix{T}; redundancy_flag=true::Bool) 
     return vertices
 end
 
-# Function to compute the vertex mean (average of sampled vertices) of a given list of vertices
+"""
+    vertex_mean(vertices) -> Vector
+
+Compute the mean of the rows of `vertices` (average sampled vertex).
+"""
 function vertex_mean(vertices::Matrix{T}) where T
     # Check if the matrix is empty
     if size(vertices, 1) == 0
@@ -42,7 +61,7 @@ function vertex_mean(vertices::Matrix{T}) where T
     
     _vertex_mean = Vector{T}()
 
-    # Sum all the vertices
+    # Sum all vertices
     sum_vector = vec(sum(vertices, dims=1))
     
     # Compute the vertex mean by dividing by the number of vertices
@@ -51,7 +70,11 @@ function vertex_mean(vertices::Matrix{T}) where T
     return _vertex_mean
 end
 
-# Sample a random vertex (row) from a vertex matrix (set of vertices)
+"""
+    random_vertex(vertices, rng) -> Vector
+
+Sample one random row from `vertices` using `rng`.
+"""
 function random_vertex(vertices::Matrix{T}, rng::AbstractRNG) where T
     nverts = size(vertices, 1)
     if nverts == 0
@@ -61,7 +84,11 @@ function random_vertex(vertices::Matrix{T}, rng::AbstractRNG) where T
     return vec(vertices[idx, :])
 end
 
-# Sample a random convex combination of the given vertices (uniform over the simplex weights)
+"""
+    random_convex_combination(vertices, rng) -> Vector
+
+Sample a random convex combination of the rows of `vertices` (weights uniform on the simplex).
+"""
 function random_convex_combination(vertices::Matrix{T}, rng::AbstractRNG) where T
     nverts = size(vertices, 1)
     if nverts == 0
@@ -80,7 +107,11 @@ function random_convex_combination(vertices::Matrix{T}, rng::AbstractRNG) where 
     return vec(combo)
 end
 
-# Compute the mean of per-polytope vertex means in `vertices`
+"""
+    global_mean_of_centers(config, vertices) -> Vector
+
+Compute the mean of per-polytope vertex means across a list of vertex matrices.
+"""
 function global_mean_of_centers(config::Config, vertices::Vector{Matrix{T}}) where T
     if isempty(vertices)
         error("Cannot compute global mean of centers: no polytopes provided.")
@@ -90,7 +121,12 @@ function global_mean_of_centers(config::Config, vertices::Vector{Matrix{T}}) whe
     return vec(mean(A, dims=2)) # n-element vector
 end
 
-# (Multiple Dispatch) Find closest points between two polytopes by running FW
+"""
+    closest_pair(config, V1, V2) -> (v1_closest, v2_closest)
+
+Multiple dispatch: find a closest pair of points between two polytopes (given by their vertices),
+by solving the distance problem with FW.
+"""
 function closest_pair(config::Config, V1::Matrix{T}, V2::Matrix{T}) where T
 
     # Check that both matrices have the correct number of columns
@@ -108,7 +144,11 @@ function closest_pair(config::Config, V1::Matrix{T}, V2::Matrix{T}) where T
     return v1_closest, v2_closest
 end
 
-# (Multiple Dispatch) Compute a reference point for a single polytope given an anchor
+"""
+    compute_reference_point(config, anchor, vertices) -> Vector
+
+Multiple dispatch: compute the reference point for one polytope given the chosen `anchor`.
+"""
 function compute_reference_point(config::Config, anchor::AbstractVector{T}, vertices::Matrix{T}) where T
     if config.intersection_reference_point == "center"
         return vertex_mean(vertices) # ignores `anchor`
@@ -119,7 +159,11 @@ function compute_reference_point(config::Config, anchor::AbstractVector{T}, vert
         error("Unknown intersection reference point: $(config.intersection_reference_point)")
     end
 end
-# (Multiple Dispatch) Compute reference points for all polytopes given an anchor
+"""
+    compute_reference_points(config, vertices, anchor) -> Vector{Vector}
+
+Multiple dispatch: compute one reference point per polytope given the chosen `anchor`.
+"""
 function compute_reference_points(config::Config, vertices::Vector{Matrix{T}}, anchor::AbstractVector{T}) where T
     nP = length(vertices)
     refs = Vector{Vector{T}}(undef, nP) # preallocate one reference point per polytope
@@ -129,7 +173,11 @@ function compute_reference_points(config::Config, vertices::Vector{Matrix{T}}, a
     return refs
 end
 
-# Shift a polytope so that `reference` moves towards `anchor` by a given stepsize
+"""
+    shift_polytope(vertices, reference, anchor; stepsize=1) -> Matrix
+
+Translate `vertices` so that `reference` moves towards `anchor` by the given `stepsize`.
+"""
 function shift_polytope(
     vertices::Matrix{T},
     reference::AbstractVector{T},
@@ -144,7 +192,11 @@ function shift_polytope(
     return vertices .+ direction'
 end
 
-# (Multiple Dispatch) Here the first input is a vector (single point)
+"""
+    closest_pair(config, v, V2) -> Vector
+
+Multiple dispatch: return the point in `V2` closest to `v` (brute-force scan).
+"""
 function closest_pair(config::Config, v::AbstractVector{T}, V2::Matrix{T}) where T
     
     # Check that the vector and matrix have the correct number of columns
@@ -174,7 +226,11 @@ function closest_pair(config::Config, v::AbstractVector{T}, V2::Matrix{T}) where
     return v2_closest
 end
 
-# Function to generate a JuMP.Model object from a Polyhedra.Polyhedron object
+"""
+    polyhedra_to_jump(config, polytope) -> JuMP.Model
+
+Convert a `Polyhedra.Polyhedron` into a `JuMP.Model` with constraint `x in polytope`.
+"""
 function polyhedra_to_jump(config::Config, polytope::Polyhedron{T}) where T
     
     model = Model(SCIP.Optimizer)
@@ -187,7 +243,11 @@ function polyhedra_to_jump(config::Config, polytope::Polyhedron{T}) where T
     return model
 end
 
-# (Multiple Dispatch) Function to generate a Vector{JuMP.Model} from a Vector{Polyhedra.Polyhedron}
+"""
+    polyhedra_to_jump(config, polytopes) -> Vector{JuMP.Model}
+
+Multiple dispatch: convert a list of `Polyhedra.Polyhedron` objects into `JuMP.Model`s.
+"""
 function polyhedra_to_jump(config::Config, polytopes::Vector{Polyhedron{T}}) where T
     
     polytopes_jump = Vector{Model()}()
@@ -198,8 +258,13 @@ function polyhedra_to_jump(config::Config, polytopes::Vector{Polyhedron{T}}) whe
     return polytopes_jump
 end
 
-# TODO: THIS CAUSES NUMERICAL ISSUES WITH THE Polyhedra.jl LIBRARY, DON'T USE FOR NOW (relevant functions commented)
-# Check that intersection of `intersecting_polytopes` is not empty
+"""
+    check_intersection(intersecting_polytopes)
+
+Check that the intersection of `intersecting_polytopes` is non-empty (prints the intersection size).
+
+Note: this path has caused numerical issues with `Polyhedra.jl`/`CDDLib` in the past; use with care.
+"""
 function check_intersection(intersecting_polytopes::Vector{Polyhedron})
     
     # Get the number of points in the intersection of all polytopes
@@ -212,7 +277,12 @@ function check_intersection(intersecting_polytopes::Vector{Polyhedron})
     @assert intersection_size ≥ 1 "There must be at least one point in the intersection of all polytopes"
 end
 
-# (Multiple Dispatch) Compute distance between k polytopes, by running the FW algorithm
+"""
+    compute_distance(config, lmo_list) -> (last_iterate, last_lmo_vertex, primal, fw_gap)
+
+Multiple dispatch: compute the distance objective between `k` polytopes by running FW with
+`config.max_iterations_opt`.
+"""
 function compute_distance(config::Config, lmo_list::Vector{FrankWolfe.LinearMinimizationOracle})
 
     # Redefine `config.max_iterations`
@@ -227,7 +297,11 @@ function compute_distance(config::Config, lmo_list::Vector{FrankWolfe.LinearMini
     
     return last_iterate, last_lmo_vertex, primal, fw_gap
 end
-# (Multiple Dispatch) Compute distance between k polytopes, by running the FW algorithm
+"""
+    compute_distance(config, lmo_list) -> (last_iterate, last_lmo_vertex, primal, fw_gap)
+
+Multiple dispatch for `Vector{FrankWolfe.ConvexHullLMO}`.
+"""
 function compute_distance(config::Config, lmo_list::Vector{FrankWolfe.ConvexHullLMO})
 
     # Redefine `config.max_iterations`
@@ -243,7 +317,11 @@ function compute_distance(config::Config, lmo_list::Vector{FrankWolfe.ConvexHull
 
     return last_iterate, last_lmo_vertex, primal, fw_gap
 end
-# (Multiple Dispatch) Compute distance between k polytopes, by running the FW algorithm
+"""
+    compute_distance(config, lmo_list) -> (last_iterate, last_lmo_vertex, primal, fw_gap)
+
+Multiple dispatch for `Vector{FrankWolfe.MathOptLMO}`.
+"""
 function compute_distance(config::Config, lmo_list::Vector{FrankWolfe.MathOptLMO})
 
     # Redefine `config.max_iterations`
@@ -259,7 +337,11 @@ function compute_distance(config::Config, lmo_list::Vector{FrankWolfe.MathOptLMO
     return last_iterate, last_lmo_vertex, primal, fw_gap
 end
 
-# Save data to given .jld2 file
+"""
+    save_polytopes(filename, vertices, shifted_vertices, primal, fw_gap)
+
+Save instance data to a `.jld2` file.
+"""
 function save_polytopes(
     filename::String,
     vertices::Vector{Matrix{T}},
@@ -272,7 +354,11 @@ function save_polytopes(
     println("Saving data to $filename")
 end
 
-# (Multiple dispatch) Automatically generated .jld2 filename
+"""
+    save_polytopes(config, vertices, shifted_vertices, primal, fw_gap) -> filename
+
+Multiple dispatch: save instance data to an auto-generated `.jld2` filename.
+"""
 function save_polytopes(
     config::Config,
     vertices::Vector{Matrix{T}},
@@ -288,7 +374,11 @@ function save_polytopes(
     return filename
 end
 
-# Load data from .jld2 file
+"""
+    load_polytopes(filename) -> (vertices, shifted_vertices, primal, fw_gap)
+
+Load instance data from a `.jld2` file.
+"""
 function load_polytopes(filename::String)
     
     f = load(filename)

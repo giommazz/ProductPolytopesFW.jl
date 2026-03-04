@@ -8,13 +8,12 @@
 """
     SafeGoldenratio(tol=1e-7)
 
-Golden-section line search like `FrankWolfe.Goldenratio`, but with a numerically safer
-reconstruction of the final step size `γ`.
+Like `FrankWolfe.Goldenratio` but with numerically safer reconstruction of final step size `γ`.
 
 Why:
-- In FrankWolfe.jl v0.6.3, `Goldenratio` computes bracket `[left, right]` in primal space, then 
-  reconstructs `γ` via a single-coordinate division using *1st* nonzero entry of direction `d`.
-- When `d[i]` is tiny (common with structured atoms / sparse directions), division can be
+- `Goldenratio` computes bracket `[left, right]` in primal space, then reconstructs `γ` via a
+  single-coordinate division using *1st* nonzero entry of direction `d`.
+  When `d[i]` is tiny (structured atoms, sparse directions, etc.), division can be
   ill-conditioned, producing inaccurate `γ` (negative in worst case) and nonmonotone primal gap.
 
 `SafeGoldenratio` computes `γ` using all coordinates via a projection formula and clamps it to
@@ -58,20 +57,13 @@ function FrankWolfe.perform_line_search(
     workspace::SafeGoldenratioWorkspace,
     memory_mode,
 )
-    # Intentionally mirrors FrankWolfe.jl's `Goldenratio` bracketing logic.
-    # The "patch" is only how we reconstruct the final scalar stepsize `gamma` at the end.
-    #
-    # Why we care: FW direction `d` can have some coordinates that are *very* small (due to
-    # cancellations/symmetries) and reconstructing `gamma` via a single coordinate division
-    #   (x[i]-x_min[i]) / d[i]
-    # can become numerically unstable if chosen d[i] is tiny.
 
     # Restrict segment of search to [x, y] where y = x - gamma_max*d
     @. workspace.y = x - gamma_max * d
     @. workspace.left = x
     @. workspace.right = workspace.y
 
-    # Directional derivatives along search direction at endpoints.
+    # Compute directional derivatives along search direction at endpoints.
     # If they do not change sign, minimizer over segment is at an endpoint.
     dgx = dot(d, gradient)
     grad!(workspace.gradient, workspace.y)
@@ -85,8 +77,7 @@ function FrankWolfe.perform_line_search(
     gold = (1 + sqrt(5)) / 2
     improv = Inf
     while improv > line_search.tol
-        # Classic golden-section shrink: maintain a bracket [left, right], replace "worse"
-        # side based on two interior probes.
+        # Maintain a bracket [left, right], replace worse side based on two interior probes (classic GoldenRatio)
         f_old_left = f(workspace.left)
         f_old_right = f(workspace.right)
         @. workspace.new_vec = workspace.left + (workspace.right - workspace.left) / (1 + gold)
@@ -101,13 +92,10 @@ function FrankWolfe.perform_line_search(
         improv = norm(f(workspace.right) - f_old_right) + norm(f(workspace.left) - f_old_left)
     end
 
-    # Reconstruct gamma from final bracket using stable formula:
+    # Reconstruct gamma from final bracket using projection formula:
     #   x_min = (left + right)/2, and we want gamma s.t. x_min ≈ x - gamma*d.
-    #
-    # Arithmetically, `x_min` lies on the same line segment, so *any* nonzero coordinate
-    # would give same gamma via (x[i]-x_min[i]) / d[i]. Numerically, though, picking a single
-    # coordinate can be bad when that d[i] is tiny → projection formula below uses all 
-    # coordinates and is better conditioned
+    # More stable: error in GoldenRatio scales as 1/|dᵢ|, error in SafeGoldenRatio scales as 1/||d||₂, and
+    #   |dᵢ| = |<d, eᵢ>| ≤ ||d||₂⋅||eᵢ||₂ = ||d||₂
     den = dot(d, d)
     if den <= eps(float(den))
         return zero(eltype(d))
@@ -121,7 +109,7 @@ function FrankWolfe.perform_line_search(
     if !isfinite(gamma)
         return zero(eltype(d))
     end
-    # Final guard rail: clamp. Rounding can produce a tiny negative gamma or a gamma
+    # Final guard rail: clamp. Rounding can produce gamma that is tiny negative or
     # slightly above `gamma_max` even if true minimizer is ∈ [0, gamma_max].
     return clamp(gamma, zero(gamma), gamma_max)
 end

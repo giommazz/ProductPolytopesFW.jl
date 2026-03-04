@@ -2,39 +2,25 @@
 #   User parameters
 # ***************************
 # Number of polytopes
-k: 2 #2, 3, 4, 5, 10 
+k: 2
 # Dimension of the subspace in which each polytope lies
-n: 503  # 100, 500, 1000, 2000
+n: 1003
 # list of `k` integers, each indicating the n. of points to be used to generate `k` polytopes
-# if `0` is given, n_points is generated randomly using `ub_n_points`
+# if `0` given, `n_points` is generated randomly using `ub_n_points`
 n_points: 0
 # Upper bound multiplier used only when `n_points: 0`:
-# for each polytope i, sample `n_points[i]` uniformly in {n+1, …, n*ub_n_points}
+# for each polytope `i`, sample `n_points[i]` uniformly in {n+1, …, n*ub_n_points}
 ub_n_points: 100
 # Vertex sampling strategy (how the points/atoms used for each polytope are generated):
 # - "box_uniform": (default) sample points uniformly inside each axis-aligned box (can be anisotropic across coordinates)
 # - "sphere"     : sample points on a Euclidean sphere fully contained in the box (more isotropic, but can "collapse" if one box side is small)
 # - "ellipsoid"  : sample points on an axis-aligned ellipsoid inside the box (uses all box half-lengths; isotropic in box-normalized coordinates)
 vertex_sampling: "sphere"
-# Used only when `vertex_sampling: "sphere"` or `"ellipsoid"`:
+# Used only when `vertex_sampling in {"sphere", "ellipsoid"}:
 # - `sphere_radius_factor`: ρ, must satisfy 0 < ρ < 1 so sampled points lie strictly inside box (never on boundary).
 # - for "sphere": radius is R = ρ * min_d (UB[d]-LB[d])/2, centered at the box center.
 # - for "ellipsoid": semi-axis lengths are a[d] = ρ * (UB[d]-LB[d])/2 along each coordinate direction.
 sphere_radius_factor: 0.9
-# epsilon-optimality threshold
-target_tolerance: 1e-07
-# epsilon-optimality threshold for finding optimal solution
-target_tolerance_opt: 1e-08
-# Number of FW iterations
-max_iterations: 5000
-# Number of FW iterations to compute optimal solution
-max_iterations_opt: 10000
-# How often FW iteration log is printed to screen
-max_print_iterations: 1000
-# Set the seed for reproducibility
-seed: 42
-# Use FrankWolfe.ConvexHullLMO LMOs (true) or FrankWolfe.MathOptLMO LMOs (false)
-cvxhflag: true
 # Intersection parameters:
 #
 # - `intersection.anchor`: specify point in R^n where polytopes are aligned.
@@ -61,6 +47,29 @@ intersection:
   anchor: "p1_p2_segment"
   anchor_t: 0.5
   reference_point: "vertex"
+# epsilon-optimality threshold
+target_tolerance: 1e-07
+# epsilon-optimality threshold for finding optimal solution (used to compute primal gap)
+target_tolerance_opt: 1e-08
+# Number of FW iterations
+max_iterations: 5000
+# Number of FW iterations to compute optimal solution (used to compute primal gap)
+max_iterations_opt: 10000
+# How often FW iteration log is printed to screen
+max_print_iterations: 1000
+# Set the seed for reproducibility
+seed: 42
+# Use ProductPolytopesAFW.MatrixConvexHullLMO LMOs (true) or FrankWolfe.MathOptLMO LMOs (false)
+cvxhflag: true
+# MatrixConvexHullLMO cache cap:
+# - -1: automatic cap (default heuristic)
+# -  0: cache disabled
+# - >0: fixed max number of cached vertices
+matrix_lmo_cache_cap: -1
+# MatrixConvexHullLMO extreme-point search:
+# - true : optimized (GEMV + argmin)
+# - false: legacy row-by-row dot scan
+matrix_lmo_use_optimized_search: true
 # stepsize strategy:
 # - 0: FrankWolfe.Goldenratio (golden-section line search)
 # - 1: ProductPolytopesAFW.SafeGoldenratio (same line search, safer gamma reconstruction)
