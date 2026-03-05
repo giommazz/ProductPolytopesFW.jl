@@ -245,7 +245,7 @@ function run_FullFW(
     prod_lmo::FrankWolfe.ProductLMO
     )
 
-    # L-smoothness constant
+    # L-smoothness constant used by `get_stepsize_strategy` only when `stepsize_strategy == 1` (Shortstep).
     L = 1
 
     x0 = find_starting_point(config, prod_lmo)
@@ -276,7 +276,7 @@ function run_FullAFW(
     prod_lmo::FrankWolfe.ProductLMO;
     memory_mode::FrankWolfe.MemoryEmphasis=FrankWolfe.InplaceEmphasis(),
 )
-    # L-smoothness constant used by `get_stepsize_strategy` only when `stepsize_strategy == 2` (Shortstep).
+    # L-smoothness constant used by `get_stepsize_strategy` only when `stepsize_strategy == 1` (Shortstep).
     L = 1
     x0 = find_starting_point(config, prod_lmo)
     traj_data = Any[]

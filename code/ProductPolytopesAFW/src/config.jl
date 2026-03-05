@@ -41,9 +41,8 @@ struct Config
     # Scalar parameter t used for certain anchor types (e.g., "p1_p2_segment"); non‑negative
     intersection_anchor_t::Float64
     # stepsize strategy:
-    # - 0: Goldenratio line search (FrankWolfe.jl)
-    # - 1: SafeGoldenratio (same line search, safer gamma reconstruction)
-    # - 2: Shortstep with given L (specified in `product_algorithms.jl`)
+    # - 0: SafeGoldenratio ("goldensearch", safer gamma reconstruction)
+    # - 1: Shortstep with given L (specified in `product_algorithms.jl`)
     stepsize_strategy::Int 
 end
 
@@ -309,8 +308,8 @@ function validate_config(yaml_config::Dict{Any, Any})
     end
 
     # Check for `stepsize_strategy`
-    if typeof(yaml_config["stepsize_strategy"]) != Int || !(yaml_config["stepsize_strategy"] in (0, 1, 2))
-        error("Invalid value for 'stepsize_strategy': must be an integer in {0, 1, 2}.")
+    if typeof(yaml_config["stepsize_strategy"]) != Int || !(yaml_config["stepsize_strategy"] in (0, 1))
+        error("Invalid value for 'stepsize_strategy': must be an integer in {0, 1}.")
     end
 end
 
@@ -338,17 +337,15 @@ function print_config(config::Config)
     println("  Intersection anchor: ", config.intersection_anchor)
     println("  Intersection reference point: ", config.intersection_reference_point)
     println("  Intersection anchor_t: ", config.intersection_anchor_t)
-    println("  Stepsize strategy (`0`: Goldenratio, `1`: SafeGoldenratio, `2`: Shortstep(L=1)): ", config.stepsize_strategy)
+    println("  Stepsize strategy (`0`: SafeGoldenratio (goldensearch), `1`: Shortstep(L=1)): ", config.stepsize_strategy)
     println()
 end
 
 function get_stepsize_strategy(stepsize_strategy::Int, L::T) where T
     
     if stepsize_strategy == 0
-        return FrankWolfe.Goldenratio(1e-09)    # golden-section line search (approx)
-    elseif stepsize_strategy == 1
         return SafeGoldenratio(1e-09)           # same line search, safer gamma reconstruction
-    elseif stepsize_strategy == 2
+    elseif stepsize_strategy == 1
         return FrankWolfe.Shortstep(L)          # short step with given L
     else
         error("Invalid stepsize strategy type")

@@ -59,6 +59,8 @@ max_iterations_opt: 10000
 max_print_iterations: 1000
 # Set the seed for reproducibility
 seed: 42
+# Toggle diagnostic prints (e.g., in `generate_polytopes`)
+verbose: true
 # Use ProductPolytopesAFW.MatrixConvexHullLMO LMOs (true) or FrankWolfe.MathOptLMO LMOs (false)
 cvxhflag: true
 # MatrixConvexHullLMO cache cap:
@@ -71,7 +73,6 @@ matrix_lmo_cache_cap: -1
 # - false: legacy row-by-row dot scan
 matrix_lmo_use_optimized_search: true
 # stepsize strategy:
-# - 0: FrankWolfe.Goldenratio (golden-section line search)
-# - 1: ProductPolytopesAFW.SafeGoldenratio (same line search, safer gamma reconstruction)
-# - 2: FrankWolfe.Shortstep(L) with L=1 (specified in `product_algorithms.jl`)
-stepsize_strategy: 1
+# - 0: ProductPolytopesAFW.SafeGoldenratio ("goldensearch", safer gamma reconstruction)
+# - 1: FrankWolfe.Shortstep(L) with L=1 (specified in `product_algorithms.jl`)
+stepsize_strategy: 0
