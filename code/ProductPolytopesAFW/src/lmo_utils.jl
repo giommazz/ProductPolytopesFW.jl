@@ -7,6 +7,10 @@ It scans rows of `vertices` without materializing `Vector{Vector}`.
 
 To reduce repeated allocations in AFW, it keeps a (capped) cache of materialized
 vertices selected by the oracle. The cache uses a clock (second-chance) policy.
+1) Note that, on convex hulls with dense vertex matrices and a lot of vertices,
+MatrixConvexHullLMO with use_optimized_search=true should be systematically faster 
+than ConvexHullLMO
+2) Also, while ConvexHullLMO is generic by design, MatrixConvexHullLMO is optimized
 """
 mutable struct MatrixConvexHullLMO{T,MT<:AbstractMatrix{T}} <: FrankWolfe.LinearMinimizationOracle
     vertices::MT                    # Row-wise vertex table (nverts x dim)
@@ -23,6 +27,35 @@ mutable struct MatrixConvexHullLMO{T,MT<:AbstractMatrix{T}} <: FrankWolfe.Linear
 end
 
 const MATRIX_LMO_CACHE_TARGET_BYTES = 64 * 1024 * 1024 # 64 MiB budget per LMO cache
+
+"""
+    CopyExtremePointLMO(lmo)
+
+Wrapper LMO that *materializes* the returned extreme point as a dense `Vector`.
+
+Why this exists:
+- `FrankWolfe.ConvexHullLMO` is often built from a list of vertex *views* (e.g. `eachrow(V)`),
+  so `compute_extreme_point` returns a `SubArray`.
+- Our FW/AFW pipelines use `FrankWolfe.BlockVector{Float64, Vector{Float64}, ...}` iterates
+  (see `find_starting_point`), so the active-set expects atoms with dense `Vector` blocks.
+
+This wrapper keeps the memory benefit of storing vertices as views, while ensuring
+type-stable atoms compatible with the active-set machinery by copying the selected
+vertex on output.
+"""
+struct CopyExtremePointLMO{L} <: FrankWolfe.LinearMinimizationOracle
+    lmo::L
+end
+
+function FrankWolfe.compute_extreme_point(
+    lmo::CopyExtremePointLMO,
+    direction;
+    v=nothing,
+    kwargs...,
+)
+    s = FrankWolfe.compute_extreme_point(lmo.lmo, direction; v=v, kwargs...)
+    return Vector(s)
+end
 
 """
     _matrix_lmo_default_cache_cap(nverts, dim, T)
@@ -344,26 +377,40 @@ end
     create_lmos(config, vertices::Vector{Matrix{T}})
 
 Create one LMO per polytope matrix in `vertices`.
-If `config.cvxhflag` is true, returns matrix-backed convex-hull LMOs;
-otherwise returns `FrankWolfe.MathOptLMO` objects built from JuMP backends.
+If `config.cvxhflag` is true, the convex-hull backend is selected by
+`config.convex_hull_backend`:
+- `"matrix"`: `MatrixConvexHullLMO`
+- `"vector"`: `FrankWolfe.ConvexHullLMO` built from row views (best effort)
+If `config.cvxhflag` is false, returns `FrankWolfe.MathOptLMO` objects
+built from JuMP backends.
 """
-# Initialize LMOs for given sets of `vertices` k=1 polytope
-# Depending on `cvxhflag`, create either `FrankWolfe.ConvexHullLMO` (true) or `FrankWolfe.MathOptLMO` (false) objects.
+# Initialize LMOs for a list of polytope vertex matrices.
 function create_lmos(config::Config, vertices::Vector{Matrix{T}}) where T
     # Initialize data structures
     if config.cvxhflag lmo_list = Vector{FrankWolfe.LinearMinimizationOracle}() else lmo_list = Vector{FrankWolfe.MathOptLMO}() end
 
     # Create LMOs
     for V in vertices
-        if config.cvxhflag # Matrix-backed convex hull LMOs (memory-safe and AFW-compatible)
-            cache_cap = config.matrix_lmo_cache_cap == -1 ? nothing : config.matrix_lmo_cache_cap
-            lmo = MatrixConvexHullLMO(
-                V;
-                cache_cap=cache_cap,
-                use_optimized_search=config.matrix_lmo_use_optimized_search,
-            )
-            # Update data structures
-            push!(lmo_list, lmo)
+        if config.cvxhflag
+            if config.convex_hull_backend == "matrix"
+                cache_cap = config.matrix_lmo_cache_cap == -1 ? nothing : config.matrix_lmo_cache_cap
+                lmo = MatrixConvexHullLMO(
+                    V;
+                    cache_cap=cache_cap,
+                    use_optimized_search=config.matrix_lmo_use_optimized_search,
+                )
+                push!(lmo_list, lmo)
+            elseif config.convex_hull_backend == "vector"
+                # Best effort for ConvexHullLMO:
+                # - store vertex *views* to avoid duplicating `V`;
+                # - but materialize each selected extreme point as a dense `Vector`,
+                #   so AFW's active set sees consistent atom types.
+                base_lmo = FrankWolfe.ConvexHullLMO(collect(eachrow(V)))
+                lmo = CopyExtremePointLMO(base_lmo)
+                push!(lmo_list, lmo)
+            else
+                error("Invalid convex_hull_backend='$(config.convex_hull_backend)'. Expected 'matrix' or 'vector'.")
+            end
         else    # FrankWolfe.MathOptLMO objects 
             # Instantiate Polyedra.Polyhedron objects
             poly = polytope(V)

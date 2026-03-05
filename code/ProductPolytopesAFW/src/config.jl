@@ -27,8 +27,12 @@ struct Config
     seed::Int
     # Toggle diagnostic prints (e.g., in `generate_polytopes`)
     verbose::Bool
-    # Use FrankWolfe.ConvexHullLMO LMOs (true) or FrankWolfe.MathOptLMO LMOs (false)
+    # Use convex-hull LMOs (true) or FrankWolfe.MathOptLMO (false)
     cvxhflag::Bool
+    # Backend used when `cvxhflag == true`:
+    # - "matrix": ProductPolytopesAFW.MatrixConvexHullLMO
+    # - "vector": FrankWolfe.ConvexHullLMO (best effort: row views, no full copy)
+    convex_hull_backend::String
     # MatrixConvexHullLMO cache cap:
     # -1 => auto cap, 0 => cache off, >0 => fixed cap
     matrix_lmo_cache_cap::Int
@@ -65,6 +69,7 @@ function Config()
         42,             # seed
         true,           # verbose
         true,           # cvxhflag
+        "matrix",       # convex_hull_backend
         -1,             # matrix_lmo_cache_cap
         true,           # matrix_lmo_use_optimized_search
         "origin",       # intersection_anchor
@@ -118,6 +123,7 @@ function Config(yaml_file::String; kwargs...)
         config["seed"],
         verbose,
         config["cvxhflag"],
+        get(config, "convex_hull_backend", "matrix"),
         get(config, "matrix_lmo_cache_cap", -1),
         get(config, "matrix_lmo_use_optimized_search", true),
         intersection_cfg["anchor"],
@@ -146,6 +152,7 @@ function modify_config(config::Config; kwargs...)
     seed = get(kwargs, :seed, config.seed)
     verbose = get(kwargs, :verbose, config.verbose)
     cvxhflag = get(kwargs, :cvxhflag, config.cvxhflag)
+    convex_hull_backend = get(kwargs, :convex_hull_backend, config.convex_hull_backend)
     matrix_lmo_cache_cap = get(kwargs, :matrix_lmo_cache_cap, config.matrix_lmo_cache_cap)
     matrix_lmo_use_optimized_search = get(kwargs, :matrix_lmo_use_optimized_search, config.matrix_lmo_use_optimized_search)
     intersection_anchor = get(kwargs, :intersection_anchor, config.intersection_anchor)
@@ -177,6 +184,7 @@ function modify_config(config::Config; kwargs...)
         seed,
         verbose,
         cvxhflag,
+        convex_hull_backend,
         matrix_lmo_cache_cap,
         matrix_lmo_use_optimized_search,
         intersection_anchor,
@@ -261,6 +269,13 @@ function validate_config(yaml_config::Dict{Any, Any})
     if typeof(yaml_config["cvxhflag"]) != Bool
         error("Invalid value for 'cvxhflag': must be a boolean.")
     end
+    # Check for `convex_hull_backend` (optional; only used when `cvxhflag == true`)
+    if haskey(yaml_config, "convex_hull_backend")
+        backend = yaml_config["convex_hull_backend"]
+        if !(backend isa String) || !(backend in ("matrix", "vector"))
+            error("Invalid value for 'convex_hull_backend': must be either 'matrix' or 'vector'.")
+        end
+    end
     # Check for `verbose` (optional)
     if haskey(yaml_config, "verbose")
         if !(yaml_config["verbose"] isa Bool)
@@ -331,7 +346,8 @@ function print_config(config::Config)
     println("  How often FW iteration log is printed to screen (max_print_iterations): ", config.max_print_iterations)
     println("  Seed for reproducibility (seed): ", config.seed)
     println("  Verbose diagnostics (verbose): ", config.verbose)
-    println("  Use FW's ConvexHullLMO LMOs or MathOptLMO (cvxhflag): ", config.cvxhflag)
+    println("  Use convex-hull LMOs or MathOptLMO (cvxhflag): ", config.cvxhflag)
+    println("  Convex-hull backend (convex_hull_backend): ", config.convex_hull_backend)
     println("  MatrixConvexHullLMO cache cap (matrix_lmo_cache_cap): ", config.matrix_lmo_cache_cap)
     println("  MatrixConvexHullLMO optimized search (matrix_lmo_use_optimized_search): ", config.matrix_lmo_use_optimized_search)
     println("  Intersection anchor: ", config.intersection_anchor)
@@ -371,6 +387,7 @@ function todict(config::Config)
         "seed" => config.seed,
         "verbose" => config.verbose,
         "cvxhflag" => config.cvxhflag,
+        "convex_hull_backend" => config.convex_hull_backend,
         "matrix_lmo_cache_cap" => config.matrix_lmo_cache_cap,
         "matrix_lmo_use_optimized_search" => config.matrix_lmo_use_optimized_search,
         "intersection" => Dict(

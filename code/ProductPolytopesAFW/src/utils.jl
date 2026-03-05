@@ -45,7 +45,11 @@ Generate a run/results basename encoding the main configuration parameters plus 
 function generate_filename(config::Config)
     timestamp = Dates.format(now(), "yyyymmdd_HHMMSS")
     
-    oracle = config.cvxhflag ? "cvxho" : "lmo"
+    oracle = if config.cvxhflag
+        config.convex_hull_backend == "matrix" ? "cvxho-mat" : "cvxho-vec"
+    else
+        "lmo"
+    end
     seed = config.seed
     npub = config.n * config.ub_n_points
     sampling = if config.vertex_sampling == "box_uniform"
