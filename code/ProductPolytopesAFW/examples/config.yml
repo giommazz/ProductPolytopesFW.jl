@@ -4,7 +4,7 @@
 # Number of polytopes
 k: 2
 # Dimension of the subspace in which each polytope lies
-n: 1003
+n: 2003
 # list of `k` integers, each indicating the n. of points to be used to generate `k` polytopes
 # if `0` given, `n_points` is generated randomly using `ub_n_points`
 n_points: 0
@@ -15,7 +15,7 @@ ub_n_points: 100
 # - "box_uniform": (default) sample points uniformly inside each axis-aligned box (can be anisotropic across coordinates)
 # - "sphere"     : sample points on a Euclidean sphere fully contained in the box (more isotropic, but can "collapse" if one box side is small)
 # - "ellipsoid"  : sample points on an axis-aligned ellipsoid inside the box (uses all box half-lengths; isotropic in box-normalized coordinates)
-vertex_sampling: "sphere"
+vertex_sampling: "ellipsoid"
 # Used only when `vertex_sampling in {"sphere", "ellipsoid"}:
 # - `sphere_radius_factor`: ρ, must satisfy 0 < ρ < 1 so sampled points lie strictly inside box (never on boundary).
 # - for "sphere": radius is R = ρ * min_d (UB[d]-LB[d])/2, centered at the box center.
@@ -61,8 +61,12 @@ max_print_iterations: 1000
 seed: 42
 # Toggle diagnostic prints (e.g., in `generate_polytopes`)
 verbose: true
-# Use ProductPolytopesAFW.MatrixConvexHullLMO LMOs (true) or FrankWolfe.MathOptLMO LMOs (false)
+# Use convex-hull LMOs (true) or FrankWolfe.MathOptLMO (false)
 cvxhflag: true
+# Convex-hull backend used when `cvxhflag: true`:
+# - "matrix": ProductPolytopesAFW.MatrixConvexHullLMO
+# - "vector": FrankWolfe.ConvexHullLMO (best effort: row views, no full matrix copy)
+convex_hull_backend: "matrix"
 # MatrixConvexHullLMO cache cap:
 # - -1: automatic cap (default heuristic)
 # -  0: cache disabled

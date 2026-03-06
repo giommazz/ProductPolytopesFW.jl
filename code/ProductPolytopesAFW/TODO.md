@@ -78,22 +78,6 @@ Use Dirichlet-distributed convex weights with `alpha > 1` to produce more balanc
 
 
 
-## Vertex-Facet Instances (Sebastian Suggestion) with Structured LMOs
-### Why
-FW often identifies the active/optimal face asymptotically, while AFW can identify it in finite time under suitable
-### Idea
-Design instances to expose support/face identification differences. For example, for `k = 2`:
-- `P1` is a box/hypercube
-- `P2` is a simplex (small convex hull) with one vertex touching the relative interior of facet of `P1`, and other vertices outside along the facet normal.
-### Implementation sketch
-1. Extend config to declare polytope type per block (example: `polytope_types: ["box", "cvxhull"]`).
-2. Add a dedicated generator family for this construction.
-3. Integrate it with current experiment scripts (`compute_intersection_custom_full_warmup`, SLURM scripts).
-4. Distinguish this family in plot/file naming.
-5. Potential files: `examples/config.yml`, `src/config.jl`, `src/lmo_utils.jl`, `src/polytope_generation.jl`, `src/utils.jl`, `examples/compute_intersection_custom_full_warmup.jl`.
-
-
-
 ## Support Mixed Legacy/Convex-Hull Polytopes
 ### Why
 Legacy LMOs can reduce runtime wrt ConvexHullLMO

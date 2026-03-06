@@ -3,27 +3,36 @@
     MatrixConvexHullLMO(vertices; cache_cap=nothing)
 
 Memory-efficient convex-hull LMO backed by a vertex matrix.
-It scans rows of `vertices` without materializing `Vector{Vector}`.
 
-To reduce repeated allocations in AFW, it keeps a (capped) cache of materialized
-vertices selected by the oracle. The cache uses a clock (second-chance) policy.
-1) Note that, on convex hulls with dense vertex matrices and a lot of vertices,
+Vertices are stored row-wise in a matrix of size (`nverts x dim`), each row is one candidate atom.
+Using a matrix representation is advantageous to use BLAS operations and handle Vector{Vector}.
+
+Given a direction and a vertex matrix, LMO searches over rows/vertices and returns dense Vector
+while reusing cache and buffers to reduce reallocations and time. 
+
+The (capped) vertex cache stores dense copies of vertices recently selected by the LMO, so repeated queries 
+can reuse them instead of copying the same row from the matrix again (reduce reallocations).
+Clock (second-chance) policy → when cache is full, cycle over cache slots:
+- if a slot was not used recently, it is reused immediately;
+- if it was used recently, it gets one extra chance and is skipped once.
+
+Note that, on convex hulls with dense vertex matrices and a lot of vertices,
 MatrixConvexHullLMO with use_optimized_search=true should be systematically faster 
-than ConvexHullLMO
-2) Also, while ConvexHullLMO is generic by design, MatrixConvexHullLMO is optimized
+than ConvexHullLMO (which is generic by design)
+
 """
 mutable struct MatrixConvexHullLMO{T,MT<:AbstractMatrix{T}} <: FrankWolfe.LinearMinimizationOracle
     vertices::MT                    # Row-wise vertex table (nverts x dim)
     cache_cap::Int                  # Max number of cached materialized vertices
-    use_optimized_search::Bool      # true: GEMV-based score computation, false: row-by-row scan
+    use_optimized_search::Bool      # true: efficient GEMV-based score computation, false: row-by-row scan
     idx_to_slot::Vector{Int}        # Vertex index -> cache slot (0 means "not cached")
     slot_to_idx::Vector{Int}        # Cache slot -> vertex index (0 means "empty")
-    slot_refbit::BitVector          # true: recently used, false: first candidate to be replaced
+    slot_refbit::BitVector          # true: recently referenced/used, false: first candidate to be replaced
     slot_store::Vector{Vector{T}}   # Cached dense vertices
     cache_len::Int                  # Number of currently filled slots
     clock_hand::Int                 # Current pointer in clock replacement scan
-    score_work::Vector{T}           # Scratch scores for one matrix-vector product (length nverts)
-    direction_work::Vector{T}       # Scratch contiguous direction for BLAS-friendly mul!
+    score_work::Vector{T}           # Temporary buffer, scratch scores for one matrix-vector product (length nverts)
+    direction_work::Vector{T}       # Temporary buffer, scratch contiguous direction for BLAS-friendly mul!
 end
 
 const MATRIX_LMO_CACHE_TARGET_BYTES = 64 * 1024 * 1024 # 64 MiB budget per LMO cache
@@ -31,17 +40,17 @@ const MATRIX_LMO_CACHE_TARGET_BYTES = 64 * 1024 * 1024 # 64 MiB budget per LMO c
 """
     CopyExtremePointLMO(lmo)
 
-Wrapper LMO that *materializes* the returned extreme point as a dense `Vector`.
+Wrapper LMO that "materializes" the returned extreme point as a dense `Vector`.
 
-Why this exists:
-- `FrankWolfe.ConvexHullLMO` is often built from a list of vertex *views* (e.g. `eachrow(V)`),
+Why:
+- `FrankWolfe.ConvexHullLMO` is often built from a list of vertex "views" (e.g. `eachrow(V)`),
   so `compute_extreme_point` returns a `SubArray`.
-- Our FW/AFW pipelines use `FrankWolfe.BlockVector{Float64, Vector{Float64}, ...}` iterates
-  (see `find_starting_point`), so the active-set expects atoms with dense `Vector` blocks.
+- If using `FrankWolfe.BlockVector{Float64, Vector{Float64}, ...}` iterates
+  (see `find_starting_point`), the active-set expects atoms with dense `Vector` blocks.
 
 This wrapper keeps the memory benefit of storing vertices as views, while ensuring
-type-stable atoms compatible with the active-set machinery by copying the selected
-vertex on output.
+type-stable atoms compatible with the active-set machinery of ConvexHullLMO, by copying 
+the selected vertex on output.
 """
 struct CopyExtremePointLMO{L} <: FrankWolfe.LinearMinimizationOracle
     lmo::L
@@ -67,6 +76,7 @@ function _matrix_lmo_default_cache_cap(nverts::Int, dim::Int, ::Type{T}) where {
     # Approximate bytes needed to store one dense vertex.
     bytes_per_vertex = max(dim * sizeof(T), 1)
     # Fit as many vertices as possible into the configured budget.
+    # `÷` is integer division (quotient), so the cap is an integer count of vertices.
     raw_cap = MATRIX_LMO_CACHE_TARGET_BYTES ÷ bytes_per_vertex
     return clamp(raw_cap, 32, nverts)
 end
@@ -117,7 +127,10 @@ end
 
 Choose one cache slot to reuse when the cache is full.
 Clock rule: if a slot was used recently (`refbit=true`), clear its flag and
-skip it once; pick the first slot with `refbit=false`.
+skip it once, pick the first slot with `refbit=false`.
+
+`refbit` means "recently referenced": true if the slot was touched recently,
+false if it has not been used since the previous clock pass.
 """
 @inline function _clock_pick_slot_to_replace!(lmo::MatrixConvexHullLMO)
     # Second-chance policy:
@@ -137,7 +150,7 @@ end
 """
     _cache_lookup(lmo, idx)
 
-Return cached dense vertex for `idx` if present; otherwise `nothing`.
+Return cached dense vertex for `idx` if present, otherwise `nothing`.
 If `idx` is already in cache, mark its slot as recently used.
 """
 @inline function _cache_lookup(lmo::MatrixConvexHullLMO{T}, idx::Int) where {T}
@@ -153,8 +166,10 @@ end
 """
     _cache_insert!(lmo, idx, vertex)
 
-Insert/update cached materialized `vertex` for row index `idx`.
-If the cache is full, reuse one older slot chosen by the clock rule.
+Insert/update cached materialized `vertex` for row index `idx` into cache.
+If the cache is full, reuse one older slot chosen by the "clock rule":
+scan cache slots in a circular order and take the first one that was not
+referenced recently.
 """
 @inline function _cache_insert!(lmo::MatrixConvexHullLMO{T}, idx::Int, vertex::Vector{T}) where {T}
     # Fast path: cache disabled.
@@ -196,11 +211,12 @@ end
 """
     _best_row_index_optimized!(lmo, direction)
 
+Uses one matrix-vector product with preallocated buffers.
 Return the row index minimizing `<V[i,:], direction>` for `V = lmo.vertices`.
-Uses one matrix-vector product with preallocated scratch buffers.
 """
 @inline function _best_row_index_optimized!(lmo::MatrixConvexHullLMO{T}, direction) where {T}
-    # Copy into contiguous scratch so `mul!` can use a fast path.
+    # Copy `direction` into preallocated contiguous temp (reusable) buffer
+    # → `mul!` can use fast path and avoid fresh allocations.
     @inbounds for j in eachindex(lmo.direction_work)
         lmo.direction_work[j] = direction[j]
     end
@@ -224,7 +240,7 @@ end
 """
     _best_row_index_rowscan(lmo, direction)
 
-Legacy row-by-row search: scan rows and evaluate one dot product per row.
+Row-by-row search: scan rows and evaluate one dot product per row.
 """
 @inline function _best_row_index_rowscan(lmo::MatrixConvexHullLMO, direction)
     V = lmo.vertices
@@ -267,9 +283,11 @@ function FrankWolfe.compute_extreme_point(
         throw(DimensionMismatch("Direction has length $(length(direction)), but vertices have dimension $dim."))
     end
 
-    # Oracle step: choose optimized GEMV path or legacy rowscan path.
+    # Find the index of the best vertex in the atom matrix.
     best_idx = lmo.use_optimized_search ?
+        # Score all rows efficiently at once via matrix-vector multiplication.
         _best_row_index_optimized!(lmo, direction) :
+        # Inspect rows one by one with explicit dot products (less efficient)
         _best_row_index_rowscan(lmo, direction)
 
     # Try to reuse a previously materialized dense vertex.
@@ -279,15 +297,15 @@ function FrankWolfe.compute_extreme_point(
     end
 
     # Return dense vectors so all atoms share the same block type in AFW active sets.
-    if cached_vertex === nothing
+    if cached_vertex === nothing # vertex is not stored in cache yet
+        # No output buffer (to write new extreme point) given: materialize once and cache it.
         if v === nothing
-            # No output buffer: materialize once and cache it.
             new_vertex = Vector{T}(undef, dim)
             _copy_row!(new_vertex, V, best_idx)
             _cache_insert!(lmo, best_idx, new_vertex)
             return new_vertex
         end
-        # Buffer path: fill caller buffer, and cache a dedicated copy.
+        # Fill given buffer (`v != nothing`), and cache a dedicated copy.
         _copy_row!(v, V, best_idx)
         _cache_insert!(lmo, best_idx, copy(v))
         return v
@@ -330,7 +348,6 @@ function create_product_lmo(lmo_list::Vector{FrankWolfe.ConvexHullLMO})
     # Create and return a ProductLMO object
     return FrankWolfe.ProductLMO(lmos_tuple)
 end
-
 """
     create_product_lmo(lmo_list::Vector{FrankWolfe.MathOptLMO})
 
