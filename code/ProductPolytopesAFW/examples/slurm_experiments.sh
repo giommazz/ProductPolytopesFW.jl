@@ -8,8 +8,8 @@
 #     examples/config.yml
 
 # *************************
-# Directives for the SLURM scheduler
-#SBATCH --job-name=convexfeas_polytopes_afw   # job name
+# Directives for SLURM scheduler
+#SBATCH --job-name=prod_polytope_intersect_fw   # job name
 #SBATCH --time=14-00:00:00      # timelimit (format is jj-hh:mm:ss). Use `sinfo` to see node time limits
 #SBATCH --cpus-per-task=10      # reserve a certain amount of cores for this job
 #SBATCH --mem=480G
