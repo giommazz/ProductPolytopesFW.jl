@@ -1,6 +1,9 @@
 TODO list:
-- implement deeper intersection, by moving polytopes towards the average of convex hull vertices? Maybe use https://github.com/JuliaPolyhedra/jl/blob/8c131a6cc883c541922a8b8efe835932e8b2593f/src/center.jl#L7
-
+- check last code added
+- debug new intersection code
+- redact LaTex document according to reviewers' comments. In particular, refactor Section 6 to make it more clear, describe new procedures to compute intersection and add new plots
+- reproduce old intersection method "shift once towards p1, then shift twice towards a1"
+- talk about pyramidal width of optimal face, and check paper by Elias
 
 # Making changes to the `FrankWolfe.jl` on your local machine and publishing them in the official package.
 

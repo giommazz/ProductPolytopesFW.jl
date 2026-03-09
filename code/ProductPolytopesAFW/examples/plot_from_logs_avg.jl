@@ -77,7 +77,7 @@ function average_fw_trajectories(
     # plot only primal and FW gap over time
     figg = plot_time_only(config, avg_cutoff_trajectories_pgap, wanted_fw_variants, yscalelog=true, xscalelog=true)
     # decide figure name
-    figg_filename = "examples/results_linesearch_afw/plots/plot_$(basename)avg.pdf"
+    figg_filename = "examples/results_linesearch_point_clouds/plots/plot_$(basename)avg.pdf"
     # Plot trajectories and save as PDF
     Plots.savefig(figg, figg_filename)
 
@@ -100,7 +100,7 @@ config = Config("examples/config.yml")
 prefix = "ni_k2_n10000_i1000"
 ni_flag = prefix[1:3] == "ni_" ? true : false
 
-logdir = "examples/results_linesearch_afw/iter_logs"
+logdir = "examples/results_linesearch_point_clouds/iter_logs"
 wanted_fw_variants = ["C-BC-FW", "F-FW", "F-AFW"]
 
 # gather the filenames
@@ -116,6 +116,6 @@ avg_cutoff_trajectories_pgap = average_fw_trajectories(logfiles, prefix, wanted_
 # plot only primal and FW gap over time
 figg = plot_time_only(config, avg_cutoff_trajectories_pgap, wanted_fw_variants, yscalelog=true, xscalelog=true)
 # decide figure name
-figg_filename = "examples/results_linesearch_afw/plots/plot_$(basename_avg_plot).pdf"
+figg_filename = "examples/results_linesearch_point_clouds/plots/plot_$(basename_avg_plot).pdf"
 # Plot trajectories and save as PDF
 Plots.savefig(figg, figg_filename)

@@ -1,68 +1,109 @@
-# Package setup and installation
+# ProductPolytopesAFW
 
-To set up the Julia environment necessary to run the experiments, follow these steps:
+Julia package and experiment scripts for Frank-Wolfe variants on product polytope feasibility instances.
 
-1. Clone this repository and navigate to the `code/ProductPolytopesAFW` directory
-2. Start Julia and activate the local environment
+## Setup
+
 ```bash
-cd product-polytopes-afw/code/ProductPolytopesAFW
-julia --project=. 
-```
-3. Install and lock the exact package versions
-```julia
-] instantiate
+cd code/ProductPolytopesAFW
+julia --project=. -e 'using Pkg; Pkg.instantiate(); Pkg.precompile()'
 ```
 
+The repository currently targets Julia `1.12` (`Project.toml` compat).
 
-# Running experiments
+## Configuration
 
-To run the algorithms
+All experiment parameters live in `examples/config.yml`.
 
-## Generate instances, save them as `.jld` files and run FW on them
-*Warning: these scripts might be outdated!*
-0. Decide experimental parameters in `examples/config.yml`
-1. `1.1_generate_polytopes.jl` script: generate instances, find optimal solutions, then save instances to `.jld2` files
-2. `1.2_compute_intersection_custom_instances.jl` script: test several FW variants on those instances
+## Current experiment scripts
 
-## Recommended workflow
-    ```bash
-    cd ProductPolytopesAFW
-    ```
-Then
-0. Set experimental parameters in `examples/config.yml`
-1. Run either 
-    ```
-    julia --project=.
-    include("examples/compute_intersection_custom_full_warmup.jl")
-    ```
-if you want to run the script in the Julia REPL, or 
-    ```bash
-    julia --project=. examples/compute_intersection_custom_full_warmup.jl > <your_output_logfile>.log 2>&1
-    ```
+### Point-cloud workflow
+
+Runs experiments on polytopes generated from sampled point clouds and solved with convex-hull LMOs.
+Supports multiple instance-generation and intersection settings via `examples/config.yml`.
+
+```bash
+mkdir -p examples/results_linesearch_point_clouds/terminal_logs
+julia --project=. examples/compute_intersection_point_clouds_full_warmup.jl 2>&1 | tee examples/results_linesearch_point_clouds/terminal_logs/run_$(date +%Y%m%d_%H%M%S).log
+```
+
+### Vertex-facet workflow
+
+Runs the vertex-facet geometry where one vertex of a generalized `\ell_1` ball (diamond) touches a facet of a generalized `\ell_\infty` box.
+
+```bash
+mkdir -p examples/results_linesearch_vertex_facet/terminal_logs
+julia --project=. examples/compute_intersection_vertex_facet_full_warmup.jl 2>&1 | tee examples/results_linesearch_vertex_facet/terminal_logs/run_$(date +%Y%m%d_%H%M%S).log
+```
+
+### Plotting from saved logs
+
+```bash
+julia --project=. examples/plot_from_logs.jl
+julia --project=. examples/plot_from_logs_avg.jl
+```
+
+## Profiling and backend benchmarking
+
+To profile wall time and memory of one run:
+
+```bash
+/usr/bin/time -v julia --project=. examples/compute_intersection_point_clouds_full_warmup.jl 2>&1 | tee examples/results_bench_cvxh_backend/terminal_example.log
+```
+
+To compare convex-hull backends, run the same script while changing in `examples/config.yml`:
+- `convex_hull_backend: "matrix"` vs `"vector"`
+- `matrix_lmo_use_optimized_search: true/false` (matrix backend only)
+- `matrix_lmo_cache_cap: -1/0/>0` (matrix backend only)
+
+Then extract a compact summary from terminal logs:
+
+```bash
+for f in examples/results_bench_cvxh_backend/terminal_*.log; do
+  echo "== $f =="
+  grep -E "Elapsed time main:|Maximum resident set size|Exit status:" "$f"
+done
+```
 
 ## SLURM
-0. Decide experimental parameters in `examples/config.yml`
-1. make sure to set the 'SBATCH' parameters in the SLURM script in compliance with your SLURM server constraints
-2. run the following commands
-    ```
-    cd /ProductPolytopesAFW
-    chmod +x slurm_experiments.sh
-    sbatch examples/slurm_experiments.sh examples/compute_intersection_custom_full_warmup_slurm.jl examples/results_linesearch_afw/ examples/config.yml
-    ```
 
-### Useful commands in SLURM
-- `sacct -j <job_id>`: info status of one job
-- `sacct -u <username>`: info status on all jobs of a user
-- `sinfo -l`: general info about partitions and nodes 
-- `sinfo -N -o "%N %P"`: nodes and assigned partition
-- `sinfo -N -o "%N %m"`: nodes and assigned RAM
-- `sinfo -N -l"`: info about nodes
-- `scontrol show node=<node_name>`: shows detailed attributes about a single node
-- `scancel -u <username>`: cancel all of username jobs
+- `examples/slurm_experiments.sh`: submit one run with explicit script + results folder + config.
+- `examples/slurm_loop.jl`: generate per-run configs/scripts and submit a `(k, n)` grid.
 
-## Updated and working scripts that can be run
-- `compute_inteserction_custom_full_warmup.jl`: run experiments preceded by a "warmup" experiment, so that all algorithms can be precompiled
-- `slurm_experiments.sh`: run `compute_inteserction_custom_full_warmup.jl` on SLURM
-- `slurm_loop.jl`: creates config files and scripts necessary to run a sequence of jobs based on `compute_inteserction_custom_full_warmup.jl` on SLURM
-- `plot_from_logs.jl`: retrieves an instance from "iter_logs" and plots it
-- `plot_from_logs_avg.jl`: retrieves all instance with a common pattern from "iter_logs" (for example, all instances with k=2 and n=100000) and plots average values of the trajectories in that instance
+Single submission:
+
+```bash
+sbatch examples/slurm_experiments.sh examples/compute_intersection_point_clouds_full_warmup.jl examples/results_linesearch_point_clouds examples/config.yml
+```
+
+Vertex-facet submission:
+
+```bash
+sbatch examples/slurm_experiments.sh examples/compute_intersection_vertex_facet_full_warmup.jl examples/results_linesearch_vertex_facet examples/config.yml
+```
+
+Grid submission (dry-run first, then real submit):
+
+```bash
+julia --project=. examples/slurm_loop.jl examples/compute_intersection_point_clouds_full_warmup.jl examples/results_linesearch_point_clouds examples/config.yml 2,3 103,207 555 --dry-run
+julia --project=. examples/slurm_loop.jl examples/compute_intersection_point_clouds_full_warmup.jl examples/results_linesearch_point_clouds examples/config.yml 2,3 103,207 555
+```
+
+Notes:
+- `slurm_loop.jl` overrides `--cpus-per-task` per job as `k`.
+- Set `JULIA_BIN=/path/to/julia` if the cluster does not expose `julia` in `PATH`.
+- Adjust `SBATCH` directives in `examples/slurm_experiments.sh` to match your cluster.
+
+## Testing
+
+Run the full deterministic test suite:
+
+```bash
+julia --project=. -e 'using Pkg; Pkg.test()'
+```
+
+Optional direct invocation:
+
+```bash
+julia --project=. test/runtests.jl
+```

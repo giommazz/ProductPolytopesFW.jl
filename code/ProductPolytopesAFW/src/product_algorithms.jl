@@ -1,11 +1,11 @@
 # `product_algorithms.jl`
 using FrankWolfe
+using LinearAlgebra
 
 # Implementation Away-Step for block-coordinate setting
 mutable struct AwayStep <: FrankWolfe.UpdateStep
     lazy::Bool
     active_set::Union{FrankWolfe.AbstractActiveSet, Nothing}
-    renorm_interval::Int
     lazy_tolerance::Float64
     # used to decide if moving towards FW vertex or away vertex in the lazy case
     phi::Float64
@@ -14,19 +14,20 @@ end
 # Copy an AwayStep object with active set if it exists
 function Base.copy(obj::AwayStep)
     if obj.active_set === nothing
-        return AwayStep(obj.lazy, nothing, obj.renorm_interval, obj.lazy_tolerance, obj.phi)
+        return AwayStep(obj.lazy, nothing, obj.lazy_tolerance, obj.phi)
     else
-        return AwayStep(obj.lazy, copy(obj.active_set), obj.renorm_interval, obj.lazy_tolerance, obj.phi)
+        return AwayStep(obj.lazy, copy(obj.active_set), obj.lazy_tolerance, obj.phi)
     end
 end
 
 # Constructors
-AwayStep() = AwayStep(false, nothing, 1000, 2.0, Inf)
-AwayStep(lazy::Bool) = AwayStep(lazy, nothing, 1000, 2.0, Inf)
+AwayStep() = AwayStep(false, nothing, 2.0, Inf)
+AwayStep(lazy::Bool) = AwayStep(lazy, nothing, 2.0, Inf)
+const AWAYSTEP_RENORM_INTERVAL = 1000
 
 
-# Update iterate function for AwayStep
-function FrankWolfe.update_iterate(
+# Update block iterate function for AwayStep
+function FrankWolfe.update_block_iterate(
     s::AwayStep,
     x,
     lmo,
@@ -38,16 +39,17 @@ function FrankWolfe.update_iterate(
     line_search,
     linesearch_workspace,
     memory_mode,
-    epsilon
+    epsilon,
+    d_container,
     )
 
-    d = similar(x) # initialize direction vector
+    d = d_container # direction buffer
 
     # ********************
     # Step 0: compute away vertex, "local" FW vertex and related info (`lambda`, `loc`: active set weight and index)
     _, local_v, local_v_loc, _, a_lambda, a, a_loc, _, _ = FrankWolfe.active_set_argminmax(s.active_set, gradient) # away and "local" FW vertices
-    grad_dot_x = FrankWolfe.fast_dot(gradient, x) # <∇f(xₜ), xₜ>
-    grad_dot_a = FrankWolfe.fast_dot(gradient, a) # <∇f(xₜ), aₜ>
+    grad_dot_x = dot(gradient, x) # <∇f(xₜ), xₜ>
+    grad_dot_a = dot(gradient, a) # <∇f(xₜ), aₜ>
     away_gap = grad_dot_a - grad_dot_x # <∇f(xₜ), aₜ - xₜ>
 
     # Lazy version
@@ -55,7 +57,7 @@ function FrankWolfe.update_iterate(
 
         # ********************
         # Step 1: compute step info (away vertex, local FW vertex, FW vertex)
-        grad_dot_local_v = FrankWolfe.fast_dot(gradient, local_v) # <∇f(xₜ), local_vₜ>
+        grad_dot_local_v = dot(gradient, local_v) # <∇f(xₜ), local_vₜ>
         local_gap = grad_dot_x - grad_dot_local_v
         
         # lazy FW step
@@ -83,7 +85,7 @@ function FrankWolfe.update_iterate(
                 step_type = FrankWolfe.ST_REGULAR
 
                 # Real dual gap promises enough progress
-                grad_dot_fw_vertex = FrankWolfe.fast_dot(v, gradient)
+                grad_dot_fw_vertex = dot(v, gradient)
                 dual_gap = grad_dot_x - grad_dot_fw_vertex
                 if dual_gap >= s.phi / s.lazy_tolerance
                     gamma_max = one(a_lambda)
@@ -107,7 +109,7 @@ function FrankWolfe.update_iterate(
         # ********************
         # Step 1: compute step info (away vertex, FW vertex)
         v = FrankWolfe.compute_extreme_point(lmo, gradient) # FW vertex
-        dual_gap = grad_dot_x - FrankWolfe.fast_dot(gradient, v) # <∇f(xₜ), xₜ - vₜ>
+        dual_gap = grad_dot_x - dot(gradient, v) # <∇f(xₜ), xₜ - vₜ>
 
         # FW step
         if dual_gap >= away_gap && dual_gap >= epsilon
@@ -163,8 +165,8 @@ function FrankWolfe.update_iterate(
         step_type = gamma ≈ gamma_max ? FrankWolfe.ST_DROP : step_type
 
         # Update active set
-        # Every `renorm_interval` iterations: remove atoms w/small weight from active set, then renormalize weights to sum up to 1
-        renorm = mod(t, s.renorm_interval) == 0
+        # Every `AWAYSTEP_RENORM_INTERVAL` iterations: remove tiny-weight atoms, then renormalize.
+        renorm = mod(t, AWAYSTEP_RENORM_INTERVAL) == 0
         if away_step_taken # active set update when away step
             # `renorm` always true when `away_step_take` == true
             FrankWolfe.active_set_update!(s.active_set, -gamma, vertex_taken, true, index) # `vertex_taken` is `a`
@@ -173,7 +175,7 @@ function FrankWolfe.update_iterate(
         end
     end
     
-    if mod(t, s.renorm_interval) == 0
+    if mod(t, AWAYSTEP_RENORM_INTERVAL) == 0
         FrankWolfe.active_set_renormalize!(s.active_set)
     end
 
@@ -186,7 +188,7 @@ end
 
 
 
-# (Multiple dispatch) Run Block-Coordinate BPCG with specific update order (full, cyclic, etc.) over product LMO
+# Run Block-Coordinate BPCG with specific update order (full, cyclic, etc.) over product LMO
 function run_BlockCoordinateFW(
     config::Config,
     order::FrankWolfe.BlockCoordinateUpdateOrder, # FrankWolfe.CyclicUpdate(), FrankWolfe.FullUpdate()
@@ -194,7 +196,7 @@ function run_BlockCoordinateFW(
     prod_lmo::FrankWolfe.ProductLMO
     )
 
-    # L-smoothness constant
+    # L-smoothness constant (used only when the chosen stepsize strategy is Shortstep).
     L = 1
     # DEBUG: notice that I couldn't use config.k because I sometimes call the function on two sets only
     x0 = find_starting_point(config, prod_lmo)
@@ -217,7 +219,7 @@ function run_BlockCoordinateFW(
         end
     end
     
-    x, v, primal, fw_gap, trajectory_data = FrankWolfe.block_coordinate_frank_wolfe(
+    res = FrankWolfe.block_coordinate_frank_wolfe(
         convex_feasibility_objective_v2b,
         convex_feasibility_gradient_v2!,
         prod_lmo,
@@ -233,7 +235,7 @@ function run_BlockCoordinateFW(
         trajectory=true,
     );  
 
-    return x, v, primal, fw_gap, trajectory_data
+    return res.x, res.v, res.primal, res.dual_gap, res.traj_data
 end
 
 # Run BPCG over full product LMO
@@ -243,12 +245,12 @@ function run_FullFW(
     prod_lmo::FrankWolfe.ProductLMO
     )
 
-    # L-smoothness constant
+    # L-smoothness constant used by `get_stepsize_strategy` only when `stepsize_strategy == 1` (Shortstep).
     L = 1
 
     x0 = find_starting_point(config, prod_lmo)
 
-    x, v, primal, fw_gap, trajectory_data = FW_algorithm(
+    res = FW_algorithm(
         convex_feasibility_objective_v2b,
         convex_feasibility_gradient_v2!,
         prod_lmo,
@@ -262,9 +264,57 @@ function run_FullFW(
         trajectory=true,
     );
 
-    return x, v, primal, fw_gap, trajectory_data
+    return res.x, res.v, res.primal, res.dual_gap, res.traj_data
 end
-# (Multiple dispatch) Run Alternating Projections over product LMO
+
+# Run full away-step Frank-Wolfe (AFW) over the full product LMO.
+#
+# We keep a local trajectory callback so we can exclude post-processing states
+# (`ST_LAST` / `ST_POSTPROCESS`) from logs used by plotting utilities.
+function run_FullAFW(
+    config::Config,
+    prod_lmo::FrankWolfe.ProductLMO;
+    memory_mode::FrankWolfe.MemoryEmphasis=FrankWolfe.InplaceEmphasis(),
+)
+    # L-smoothness constant used by `get_stepsize_strategy` only when `stepsize_strategy == 1` (Shortstep).
+    L = 1
+    x0 = find_starting_point(config, prod_lmo)
+    traj_data = Any[]
+    internal_cb = let traj_data=traj_data
+        function (state, active_set)
+            if state.step_type != FrankWolfe.ST_LAST && state.step_type != FrankWolfe.ST_POSTPROCESS
+                push!(
+                    traj_data,
+                    (state.t, state.primal, state.primal - state.dual_gap, state.dual_gap, state.time),
+                )
+            end
+            return true
+        end
+    end
+
+    res = FrankWolfe.away_frank_wolfe(
+        convex_feasibility_objective_v2b,
+        convex_feasibility_gradient_v2!,
+        prod_lmo,
+        x0;
+        epsilon=config.target_tolerance,
+        max_iteration=config.max_iterations,
+        line_search=get_stepsize_strategy(config.stepsize_strategy, L),
+        print_iter=config.max_print_iterations,
+        memory_mode=memory_mode,
+        verbose=true,
+        trajectory=false, # we maintain `traj_data` ourselves via `internal_cb`
+        callback=internal_cb,
+    )
+
+    if !isempty(traj_data)
+        last_row = traj_data[end]
+        return res.x, res.v, last_row[2], last_row[4], traj_data
+    end
+    return res.x, res.v, res.primal, res.dual_gap, traj_data
+end
+
+# Run Alternating Projections over product LMO
 function run_AlternatingProjections(
     config::Config,
     prod_lmo::FrankWolfe.ProductLMO,
@@ -276,7 +326,7 @@ function run_AlternatingProjections(
         # starting point is computed on only one set (e.g. the first LMO in the product)
         x0 = FrankWolfe.compute_extreme_point(prod_lmo.lmos[1], zeros(config.n))
 
-        x, v, fw_gap, infeasible, trajectory_data = FrankWolfe.alternating_projections(
+        res = FrankWolfe.alternating_projections(
             prod_lmo,
             x0,
             epsilon=config.target_tolerance,
@@ -287,6 +337,6 @@ function run_AlternatingProjections(
             print_iter=config.max_print_iterations
         );
     
-        return x, v, fw_gap, infeasible, trajectory_data
+        return res.x, res.v, res.dual_gap, res.status != FrankWolfe.STATUS_OPTIMAL, res.traj_data
     end
 end

@@ -283,6 +283,12 @@ end
 
 
 
+"""
+    load_fw_trajectories_i(path; wanted_fw_variants=String[]) -> (trajectories, labels)
+
+Load FW trajectories for an intersecting instance from a `.csv` log file. Optionally filter by
+`wanted_fw_variants`.
+"""
 function load_fw_trajectories_i(path::String; wanted_fw_variants::Vector{String}=String[])
     # initial basic checks
     @assert lowercase(splitext(path)[2]) == ".csv" "Expected a .csv file"
