@@ -79,6 +79,7 @@ function generate_polytope(config::Config, idx::Int, bounds::Vector{Tuple{T, T}}
         for i in 1:config.n_points[idx]
             vertices[i, :] = [bounds[d][1] + (bounds[d][2] - bounds[d][1]) * rand(Float64) for d in 1:config.n]
         end
+
     elseif config.vertex_sampling == "sphere"
         # "sphere": sample points on a sphere fully and strictly contained in the box.
         # -> produces more isotropic point clouds while preserving non-intersection:
@@ -99,6 +100,7 @@ function generate_polytope(config::Config, idx::Int, bounds::Vector{Tuple{T, T}}
             # |v[d] - cᵢ[d]| = Rᵢ * |u[d]| ≤ Rᵢ ≤ ρ * hᵢ[d] < hᵢ[d]
             vertices[i, :] = center .+ (radius / ng) .* g # point on sphere of radius `radius`
         end
+
     elseif config.vertex_sampling == "ellipsoid"
         # "ellipsoid": sample points on an axis-aligned ellipsoid fully and strictly contained in the box.
         # -> avoids the "min side-length" collapse of the sphere construction while staying inside the box:
@@ -207,6 +209,7 @@ function intersect_polytopes(
             ref_i = closest_pair(config, anchor, vertices[i])
             shifted_vertices[i] = shift_polytope(vertices[i], ref_i, anchor; stepsize=one(T))
         end
+    
     else
         # Generic scheme: choose anchor, then compute reference points according to config.intersection_reference_point
         anchor = compute_anchor(config, vertices)

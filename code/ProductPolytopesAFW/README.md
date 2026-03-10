@@ -20,7 +20,7 @@ All experiment parameters live in `examples/config.yml`.
 ### Point-cloud workflow
 
 Runs experiments on polytopes generated from sampled point clouds and solved with convex-hull LMOs.
-Supports multiple instance-generation and intersection settings via `examples/config.yml`.
+Supports multiple instance-generation and intersection settings via `examples/config.yml`: modify this file to generate+solve different instances
 
 ```bash
 mkdir -p examples/results_linesearch_point_clouds/terminal_logs
@@ -29,7 +29,8 @@ julia --project=. examples/compute_intersection_point_clouds_full_warmup.jl 2>&1
 
 ### Vertex-facet workflow
 
-Runs the vertex-facet geometry where one vertex of a generalized `\ell_1` ball (diamond) touches a facet of a generalized `\ell_\infty` box.
+Runs experiments on polytope instances with vertex-facet geometry, where one vertex of a generalized `\ell_1` ball (diamond) touches a facet of a generalized `\ell_\infty` box.
+Modify main parameters in `compute_intersection_vertex_facet_full_warmup.jl` to generate+solve different instances
 
 ```bash
 mkdir -p examples/results_linesearch_vertex_facet/terminal_logs
@@ -52,9 +53,9 @@ To profile wall time and memory of one run:
 ```
 
 To compare convex-hull backends, run the same script while changing in `examples/config.yml`:
-- `convex_hull_backend: "matrix"` vs `"vector"`
-- `matrix_lmo_use_optimized_search: true/false` (matrix backend only)
-- `matrix_lmo_cache_cap: -1/0/>0` (matrix backend only)
+- `convex_hull_backend: "matrix"`(this package's `ProductPolytopesAFW.MatrixConvexHullLMO`) vs `"vector"` (`FrankWolfe.ConvexHullLMO`)
+- `matrix_lmo_use_optimized_search: true/false` (only for matrix backend)
+- `matrix_lmo_cache_cap: -1/0/>0` (only for matrix backend)
 
 Then extract a compact summary from terminal logs:
 
@@ -66,23 +67,24 @@ done
 ```
 
 ## SLURM
+Run experiments on slurm via
 
 - `examples/slurm_experiments.sh`: submit one run with explicit script + results folder + config.
 - `examples/slurm_loop.jl`: generate per-run configs/scripts and submit a `(k, n)` grid.
 
-Single submission:
+Single submission for point-cloud-type instances:
 
 ```bash
 sbatch examples/slurm_experiments.sh examples/compute_intersection_point_clouds_full_warmup.jl examples/results_linesearch_point_clouds examples/config.yml
 ```
 
-Vertex-facet submission:
+Single submission for vertex-facet-type instances:
 
 ```bash
 sbatch examples/slurm_experiments.sh examples/compute_intersection_vertex_facet_full_warmup.jl examples/results_linesearch_vertex_facet examples/config.yml
 ```
 
-Grid submission (dry-run first, then real submit):
+Grid submission example command for point-cloud-type instances (with dry-run first):
 
 ```bash
 julia --project=. examples/slurm_loop.jl examples/compute_intersection_point_clouds_full_warmup.jl examples/results_linesearch_point_clouds examples/config.yml 2,3 103,207 555 --dry-run

@@ -5,7 +5,7 @@
 
 Create a `Polyhedra.Polyhedron` from a list/matrix of vertices (V-representation).
 
-Note: this path has caused numerical issues with `Polyhedra.jl`/`CDDLib` in the past; use with care.
+Note: this path has caused numerical issues with `Polyhedra.jl`/`CDDLib` in the past, use with care.
 """
 function polytope(vertices::Matrix{T}) where T
     
@@ -87,7 +87,7 @@ end
 """
     random_convex_combination(vertices, rng) -> Vector
 
-Sample a random convex combination of the rows of `vertices` (weights uniform on the simplex).
+Sample a random convex combination of the (rows of) `vertices` (weights uniform on the simplex).
 """
 function random_convex_combination(vertices::Matrix{T}, rng::AbstractRNG) where T
     nverts = size(vertices, 1)
@@ -145,54 +145,6 @@ function closest_pair(config::Config, V1::Matrix{T}, V2::Matrix{T}) where T
 end
 
 """
-    compute_reference_point(config, anchor, vertices) -> Vector
-
-Multiple dispatch: compute the reference point for one polytope given the chosen `anchor`.
-"""
-function compute_reference_point(config::Config, anchor::AbstractVector{T}, vertices::Matrix{T}) where T
-    if config.intersection_reference_point == "center"
-        return vertex_mean(vertices) # ignores `anchor`
-    elseif config.intersection_reference_point == "vertex"
-        # Closest vertex of this polytope to the anchor
-        return closest_pair(config, anchor, vertices)
-    else
-        error("Unknown intersection reference point: $(config.intersection_reference_point)")
-    end
-end
-"""
-    compute_reference_points(config, vertices, anchor) -> Vector{Vector}
-
-Multiple dispatch: compute one reference point per polytope given the chosen `anchor`.
-"""
-function compute_reference_points(config::Config, vertices::Vector{Matrix{T}}, anchor::AbstractVector{T}) where T
-    nP = length(vertices)
-    refs = Vector{Vector{T}}(undef, nP) # preallocate one reference point per polytope
-    for i in 1:nP
-        refs[i] = compute_reference_point(config, anchor, vertices[i])
-    end
-    return refs
-end
-
-"""
-    shift_polytope(vertices, reference, anchor; stepsize=1) -> Matrix
-
-Translate `vertices` so that `reference` moves towards `anchor` by the given `stepsize`.
-"""
-function shift_polytope(
-    vertices::Matrix{T},
-    reference::AbstractVector{T},
-    anchor::AbstractVector{T};
-    stepsize::T = one(T),
-) where T
-    if size(vertices, 2) != length(reference) || length(reference) != length(anchor)
-        error("Dimension mismatch: vertices have $(size(vertices, 2)) columns, but reference/anchor have lengths $(length(reference)) and $(length(anchor)).")
-    end
-    # Translation direction; with stepsize = 1, `anchor` lies in the shifted polytope
-    direction = stepsize * (anchor .- reference)
-    return vertices .+ direction'
-end
-
-"""
     closest_pair(config, v, V2) -> Vector
 
 Multiple dispatch: return the point in `V2` closest to `v` (brute-force scan).
@@ -224,6 +176,54 @@ function closest_pair(config::Config, v::AbstractVector{T}, V2::Matrix{T}) where
     v2_closest = Vector{T}(V2[closest_index, :])
 
     return v2_closest
+end
+
+"""
+    compute_reference_point(config, anchor, vertices) -> Vector
+
+Multiple dispatch: compute the reference point for one polytope given the chosen `anchor`.
+"""
+function compute_reference_point(config::Config, anchor::AbstractVector{T}, vertices::Matrix{T}) where T
+    if config.intersection_reference_point == "center"
+        return vertex_mean(vertices) # ignores `anchor`
+    elseif config.intersection_reference_point == "vertex"
+        # Closest vertex of this polytope to the anchor
+        return closest_pair(config, anchor, vertices)
+    else
+        error("Unknown intersection reference point: $(config.intersection_reference_point)")
+    end
+end
+"""
+    compute_reference_points(config, vertices, anchor) -> Vector{Vector}
+
+Compute one reference point per polytope given the chosen `anchor`.
+"""
+function compute_reference_points(config::Config, vertices::Vector{Matrix{T}}, anchor::AbstractVector{T}) where T
+    nP = length(vertices)
+    refs = Vector{Vector{T}}(undef, nP) # preallocate one reference point per polytope
+    for i in 1:nP
+        refs[i] = compute_reference_point(config, anchor, vertices[i])
+    end
+    return refs
+end
+
+"""
+    shift_polytope(vertices, reference, anchor; stepsize=1) -> Matrix
+
+Translate `vertices` so that `reference` moves towards `anchor` by the given `stepsize`.
+"""
+function shift_polytope(
+    vertices::Matrix{T},
+    reference::AbstractVector{T},
+    anchor::AbstractVector{T};
+    stepsize::T = one(T),
+) where T
+    if size(vertices, 2) != length(reference) || length(reference) != length(anchor)
+        error("Dimension mismatch: vertices have $(size(vertices, 2)) columns, but reference/anchor have lengths $(length(reference)) and $(length(anchor)).")
+    end
+    # Translation direction; with stepsize = 1, `anchor` lies in the shifted polytope
+    direction = stepsize * (anchor .- reference)
+    return vertices .+ direction'
 end
 
 """
@@ -280,60 +280,19 @@ end
 """
     compute_distance(config, lmo_list) -> (last_iterate, last_lmo_vertex, primal, fw_gap)
 
-Multiple dispatch: compute the distance objective between `k` polytopes by running FW with
-`config.max_iterations_opt`.
+Compute the distance objective between the polytopes represented by `lmo_list`
+by running block-coordinate Frank-Wolfe with `AwayStep()` for
+`config.max_iterations_opt` iterations.
 """
-function compute_distance(config::Config, lmo_list::Vector{FrankWolfe.LinearMinimizationOracle})
-
-    # Redefine `config.max_iterations`
+function compute_distance(config::Config, lmo_list::AbstractVector{L}) where {L<:FrankWolfe.LinearMinimizationOracle}
     config_opt = modify_config(config, max_iterations=config.max_iterations_opt)
-
-    # Create FrankWolfe.ProductLMO from list of LMOs
     prod_lmo = create_product_lmo(lmo_list)
-
-    # Run Block-coordinate BPCG with CyclicUpdate
-    # last_iterate, last_lmo_vertex, primal, fw_gap, _ = run_BlockCoordinateFW(config_opt, FrankWolfe.CyclicUpdate(), FrankWolfe.BPCGStep(), prod_lmo)
-    last_iterate, last_lmo_vertex, primal, fw_gap, _ = run_BlockCoordinateFW(config_opt, FrankWolfe.CyclicUpdate(), AwayStep(), prod_lmo)
-    
-    return last_iterate, last_lmo_vertex, primal, fw_gap
-end
-"""
-    compute_distance(config, lmo_list) -> (last_iterate, last_lmo_vertex, primal, fw_gap)
-
-Multiple dispatch for `Vector{FrankWolfe.ConvexHullLMO}`.
-"""
-function compute_distance(config::Config, lmo_list::Vector{FrankWolfe.ConvexHullLMO})
-
-    # Redefine `config.max_iterations`
-    config_opt = modify_config(config, max_iterations=config.max_iterations_opt)
-
-    # Create FrankWolfe.ProductLMO from list of LMOs
-    prod_lmo = create_product_lmo(lmo_list)
-
-    # Run Block-coordinate BPCG with CyclicUpdate
-    # last_iterate, last_lmo_vertex, primal, fw_gap, _ = run_BlockCoordinateFW(config_opt, FrankWolfe.CyclicUpdate(), FrankWolfe.BPCGStep(), prod_lmo)
-    last_iterate, last_lmo_vertex, primal, fw_gap, _ = run_BlockCoordinateFW(config_opt, FrankWolfe.CyclicUpdate(), AwayStep(), prod_lmo)
-
-
-    return last_iterate, last_lmo_vertex, primal, fw_gap
-end
-"""
-    compute_distance(config, lmo_list) -> (last_iterate, last_lmo_vertex, primal, fw_gap)
-
-Multiple dispatch for `Vector{FrankWolfe.MathOptLMO}`.
-"""
-function compute_distance(config::Config, lmo_list::Vector{FrankWolfe.MathOptLMO})
-
-    # Redefine `config.max_iterations`
-    config_opt = modify_config(config, max_iterations=config.max_iterations_opt)
-
-    # Create FrankWolfe.ProductLMO from list of LMOs
-    prod_lmo = create_product_lmo(lmo_list)
-
-    # Run Block-coordinate BPCG with CyclicUpdate
-    # last_iterate, last_lmo_vertex, primal, fw_gap, _ = run_BlockCoordinateFW(config_opt, FrankWolfe.CyclicUpdate(), FrankWolfe.BPCGStep(), prod_lmo)
-    last_iterate, last_lmo_vertex, primal, fw_gap, _ = run_BlockCoordinateFW(config_opt, FrankWolfe.CyclicUpdate(), AwayStep(), prod_lmo)
-
+    last_iterate, last_lmo_vertex, primal, fw_gap, _ = run_BlockCoordinateFW(
+        config_opt,
+        FrankWolfe.CyclicUpdate(),
+        AwayStep(),
+        prod_lmo,
+    )
     return last_iterate, last_lmo_vertex, primal, fw_gap
 end
 

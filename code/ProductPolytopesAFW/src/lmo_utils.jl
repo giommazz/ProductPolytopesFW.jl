@@ -321,45 +321,12 @@ function FrankWolfe.compute_extreme_point(
 end
 
 """
-    create_product_lmo(lmo_list::Vector{FrankWolfe.LinearMinimizationOracle})
+    create_product_lmo(lmo_list::AbstractVector{L}) where {L<:FrankWolfe.LinearMinimizationOracle}
 
-Build and return a `FrankWolfe.ProductLMO` from a list of generic LMOs.
+Build and return a `FrankWolfe.ProductLMO` from a list of LMOs.
 """
-function create_product_lmo(lmo_list::Vector{FrankWolfe.LinearMinimizationOracle})
-    
-    # Convert list of LMOs to a tuple, as required by `FrankWolfe.ProductLMO`
+function create_product_lmo(lmo_list::AbstractVector{L}) where {L<:FrankWolfe.LinearMinimizationOracle}
     lmos_tuple = Tuple(lmo_list)
-    
-    # Create and return a ProductLMO object
-    return FrankWolfe.ProductLMO(lmos_tuple)
-end
-
-"""
-    create_product_lmo(lmo_list::Vector{FrankWolfe.ConvexHullLMO})
-
-Build and return a `FrankWolfe.ProductLMO` from a list of `ConvexHullLMO`s.
-"""
-# (Multiple dispatch)
-function create_product_lmo(lmo_list::Vector{FrankWolfe.ConvexHullLMO})
-    
-    # Convert list of LMOs to a tuple, as required by `FrankWolfe.ProductLMO`
-    lmos_tuple = Tuple(lmo_list)
-    
-    # Create and return a ProductLMO object
-    return FrankWolfe.ProductLMO(lmos_tuple)
-end
-"""
-    create_product_lmo(lmo_list::Vector{FrankWolfe.MathOptLMO})
-
-Build and return a `FrankWolfe.ProductLMO` from a list of `MathOptLMO`s.
-"""
-# (Multiple dispatch)
-function create_product_lmo(lmo_list::Vector{FrankWolfe.MathOptLMO})
-    
-    # Convert list of LMOs to a tuple, as required by `FrankWolfe.ProductLMO`
-    lmos_tuple = Tuple(lmo_list)
-    
-    # Create and return a ProductLMO object
     return FrankWolfe.ProductLMO(lmos_tuple)
 end
 

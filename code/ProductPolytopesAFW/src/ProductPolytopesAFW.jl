@@ -1,7 +1,7 @@
 # `ProductPolytopesAFW.jl`
 module ProductPolytopesAFW
     using FrankWolfe
-    using Plots           # Plotting utilities needed to run FrankWolfe/plot_utils.jl
+    using Plots                 # Plotting utilities needed to run FrankWolfe/plot_utils.jl
     using Random
     using Combinatorics
     using YAML
@@ -13,7 +13,7 @@ module ProductPolytopesAFW
     using Dates
     using GLPK, SCIP, HiGHS
     using CSV, DataFrames
-    using LinearAlgebra          # brings dot and BLAS.axpy!
+    using LinearAlgebra         # brings dot and BLAS.axpy!
     using Statistics
 
     # Plotting utilities needed to run FrankWolfe/plot_utils.jl

@@ -25,6 +25,12 @@ end
 
 SafeGoldenratio() = SafeGoldenratio(1e-7)
 
+"""
+    SafeGoldenratioWorkspace{XT,GT}
+
+Workspace used by `SafeGoldenratio` to avoid repeated allocations during
+line-search evaluations.
+"""
 struct SafeGoldenratioWorkspace{XT,GT}
     y::XT
     left::XT
@@ -34,6 +40,11 @@ struct SafeGoldenratioWorkspace{XT,GT}
     gradient::GT
 end
 
+"""
+    FrankWolfe.build_linesearch_workspace(::SafeGoldenratio, x, gradient)
+
+Allocate the reusable workspace needed by `SafeGoldenratio` for one line-search run.
+"""
 function FrankWolfe.build_linesearch_workspace(::SafeGoldenratio, x::XT, gradient::GT) where {XT,GT}
     return SafeGoldenratioWorkspace{XT,GT}(
         similar(x),
@@ -45,6 +56,11 @@ function FrankWolfe.build_linesearch_workspace(::SafeGoldenratio, x::XT, gradien
     )
 end
 
+"""
+    FrankWolfe.perform_line_search(line_search::SafeGoldenratio, ..., workspace, memory_mode)
+
+Run the safeguarded golden-section line search and return a step size clamped to `[0, gamma_max]`.
+"""
 function FrankWolfe.perform_line_search(
     line_search::SafeGoldenratio,
     _,

@@ -88,16 +88,9 @@ function convex_feasibility_objective_v2b(x::FrankWolfe.BlockVector)
     return 0.5/k * (k*s_norm - dot(s_vec, s_vec))
 end
 
-
-
-
-
-
 # ------------------------------------------------------
 # GRADIENT FUNCTION IMPLEMENTATIONS
 # ------------------------------------------------------
-
-
 """
 Compute v1-gradient:
     ∇ⁱf(x) = 1/k [ (k-1)xⁱ - ∑_{j ≠ i}xʲ ].

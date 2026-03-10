@@ -2,7 +2,12 @@
 using FrankWolfe
 using LinearAlgebra
 
-# Implementation Away-Step for block-coordinate setting
+"""
+    AwayStep <: FrankWolfe.UpdateStep
+
+Update step for block-coordinate away-step Frank-Wolfe.
+Stores lazy-step settings and an optional active set used by update rule.
+"""
 mutable struct AwayStep <: FrankWolfe.UpdateStep
     lazy::Bool
     active_set::Union{FrankWolfe.AbstractActiveSet, Nothing}
@@ -11,7 +16,11 @@ mutable struct AwayStep <: FrankWolfe.UpdateStep
     phi::Float64
 end
 
-# Copy an AwayStep object with active set if it exists
+"""
+    Base.copy(obj::AwayStep)
+
+Copy an `AwayStep` instance, cloning the active set when present.
+"""
 function Base.copy(obj::AwayStep)
     if obj.active_set === nothing
         return AwayStep(obj.lazy, nothing, obj.lazy_tolerance, obj.phi)
@@ -26,7 +35,12 @@ AwayStep(lazy::Bool) = AwayStep(lazy, nothing, 2.0, Inf)
 const AWAYSTEP_RENORM_INTERVAL = 1000
 
 
-# Update block iterate function for AwayStep
+"""
+    FrankWolfe.update_block_iterate(...)
+
+Block update rule for [`AwayStep`](@ref) in the block-coordinate setting.
+Implements both lazy and non-lazy away/FW decisions and updates active set.
+"""
 function FrankWolfe.update_block_iterate(
     s::AwayStep,
     x,
@@ -188,7 +202,12 @@ end
 
 
 
-# Run Block-Coordinate BPCG with specific update order (full, cyclic, etc.) over product LMO
+"""
+    run_BlockCoordinateFW(config, order, update_step, prod_lmo)
+
+Run block-coordinate Frank-Wolfe on a product LMO with user-specified block
+update order and update step (for example FW, BPCG, or AwayStep).
+"""
 function run_BlockCoordinateFW(
     config::Config,
     order::FrankWolfe.BlockCoordinateUpdateOrder, # FrankWolfe.CyclicUpdate(), FrankWolfe.FullUpdate()
@@ -198,22 +217,19 @@ function run_BlockCoordinateFW(
 
     # L-smoothness constant (used only when the chosen stepsize strategy is Shortstep).
     L = 1
-    # DEBUG: notice that I couldn't use config.k because I sometimes call the function on two sets only
+    # Use the actual number of blocks in `prod_lmo`; some auxiliary calls may use fewer blocks than `config.k`.
     x0 = find_starting_point(config, prod_lmo)
     n_blocks = length(prod_lmo.lmos) 
 
     line_search = get_stepsize_strategy(config.stepsize_strategy, L)
     
-    # DEBUG: for some reason I had to actually convert the stuff below into a Tuple...which doesn't seem to be necessary in the block_coordinate_algorithms.jl in the package...
+    # Create one update-step instance per block.
     if update_step isa FrankWolfe.UpdateStep
         update_step = Tuple(copy(update_step) for _ in 1:n_blocks)
     end
-    if line_search isa FrankWolfe.LineSearchMethod
-        line_search = Tuple(line_search for _ in 1:n_blocks)
-    end
 
     for (i, s) in enumerate(update_step)
-        # DEBUG: here I used `!(s isa FrankWolfeStep)` bc I am sure that vanillaFW doesn't use an active set. But I don't know which other updatesteps DON'T use an active set..
+        # `AwayStep` needs a block-local active set, `FrankWolfeStep` does not.
         if !(s isa FrankWolfe.FrankWolfeStep) && s.active_set === nothing
             s.active_set = FrankWolfe.ActiveSet([(1.0, copy(x0.blocks[i]))])
         end
@@ -238,7 +254,12 @@ function run_BlockCoordinateFW(
     return res.x, res.v, res.primal, res.dual_gap, res.traj_data
 end
 
-# Run BPCG over full product LMO
+"""
+    run_FullFW(config, FW_algorithm, prod_lmo)
+
+Run a full-update Frank-Wolfe-style algorithm over the full product LMO.
+The concrete algorithm is provided by `FW_algorithm`.
+"""
 function run_FullFW(
     config::Config,
     FW_algorithm::Function,
@@ -246,6 +267,7 @@ function run_FullFW(
     )
 
     # L-smoothness constant used by `get_stepsize_strategy` only when `stepsize_strategy == 1` (Shortstep).
+    # set to 1 because our problem's L is 1
     L = 1
 
     x0 = find_starting_point(config, prod_lmo)
@@ -267,10 +289,13 @@ function run_FullFW(
     return res.x, res.v, res.primal, res.dual_gap, res.traj_data
 end
 
-# Run full away-step Frank-Wolfe (AFW) over the full product LMO.
-#
-# We keep a local trajectory callback so we can exclude post-processing states
-# (`ST_LAST` / `ST_POSTPROCESS`) from logs used by plotting utilities.
+"""
+    run_FullAFW(config, prod_lmo; memory_mode=FrankWolfe.InplaceEmphasis())
+
+Run full away-step Frank-Wolfe (AFW) over the full product LMO.
+Keeps a local trajectory callback to exclude post-processing states
+(`ST_LAST` / `ST_POSTPROCESS`) from plotting logs.
+"""
 function run_FullAFW(
     config::Config,
     prod_lmo::FrankWolfe.ProductLMO;
@@ -314,7 +339,11 @@ function run_FullAFW(
     return res.x, res.v, res.primal, res.dual_gap, traj_data
 end
 
-# Run Alternating Projections over product LMO
+"""
+    run_AlternatingProjections(config, prod_lmo, ap_flag)
+
+Run alternating projections over a product LMO when `ap_flag` is `true`.
+"""
 function run_AlternatingProjections(
     config::Config,
     prod_lmo::FrankWolfe.ProductLMO,

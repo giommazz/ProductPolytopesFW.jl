@@ -1,4 +1,9 @@
 # `config.jl`
+"""
+    Config
+
+Configuration object for instance generation, algorithm settings, and logging.
+"""
 struct Config
     
     # Number of polytopes
@@ -50,7 +55,11 @@ struct Config
     stepsize_strategy::Int 
 end
 
-# Constructor with default values
+"""
+    Config()
+
+Construct a `Config` with the package default values.
+"""
 function Config()
     
     # Default intersection settings
@@ -81,8 +90,12 @@ function Config()
     return c 
 end
 
-# Constructor from YAML file and possibly set values
-# Can be called, for eaxmple, as Config(<yaml_filename>) or Config(<yaml_filename>; n=n, k=k)
+"""
+    Config(yaml_file::String; kwargs...)
+
+Construct a `Config` from a YAML file, optionally overriding selected fields via
+keyword arguments.
+"""
 function Config(yaml_file::String; kwargs...)
     
     # Load and validate configuration from YAML file
@@ -134,7 +147,11 @@ function Config(yaml_file::String; kwargs...)
     return c 
 end
 
-# Function to update Config with any number of arguments
+"""
+    modify_config(config::Config; kwargs...)
+
+Return a new `Config` obtained from `config` after applying the supplied keyword overrides.
+"""
 function modify_config(config::Config; kwargs...)
     
     # `get(kwargs, :key, default_value)` retrieves value for `:key` from `kwargs` if it exists, o/w returns default_value    
@@ -196,7 +213,11 @@ function modify_config(config::Config; kwargs...)
     return c
 end
 
-# Validation checks (for YAML file dict)
+"""
+    validate_config(yaml_config::Dict{Any, Any})
+
+Validate a YAML configuration dictionary and throw an error on invalid fields.
+"""
 function validate_config(yaml_config::Dict{Any, Any})
     
     # Check for `k`
@@ -328,7 +349,11 @@ function validate_config(yaml_config::Dict{Any, Any})
     end
 end
 
-# Function to print the config parameters
+"""
+    print_config(config::Config)
+
+Print configuration fields.
+"""
 function print_config(config::Config)
     
     println()
@@ -357,6 +382,11 @@ function print_config(config::Config)
     println()
 end
 
+"""
+    get_stepsize_strategy(stepsize_strategy::Int, L)
+
+Return line-search / step-size strategy selected by `stepsize_strategy`.
+"""
 function get_stepsize_strategy(stepsize_strategy::Int, L::T) where T
     
     if stepsize_strategy == 0
@@ -368,7 +398,12 @@ function get_stepsize_strategy(stepsize_strategy::Int, L::T) where T
     end
 end
 
-# turns Config objectinto dictionary that YAML.jl can serialise
+"""
+    todict(config::Config)
+
+Convert a `Config` object to a dictionary that matches the YAML layout used by
+the project configuration files.
+"""
 function todict(config::Config)
     # Note: we explicitly build the dictionary so that the YAML layout matches examples/config.yml,
     # in particular nesting intersection settings under the "intersection" key and not exposing anc_flag.
@@ -399,7 +434,11 @@ function todict(config::Config)
     )
 end
     
-# Serialize `config` to YAML and store it at `config_filename`
+"""
+    write_config(config::Config, config_filename)
+
+Serialize `config` to YAML and write it to `config_filename`.
+"""
 function write_config(config::Config, config_filename::AbstractString)
     
     # make sure the destination directory exists
@@ -408,6 +447,11 @@ function write_config(config::Config, config_filename::AbstractString)
     return abspath(config_filename)
 end
 
+"""
+    generate_n_points(n, k, seed; ub_n_points=10)
+
+Generate `k` random vertex counts in `{n+1, ..., n*ub_n_points}` using `seed`.
+"""
 function generate_n_points(n::Integer, k::Integer, seed::Integer; ub_n_points::Integer=10)
     # Generate a list of k random integers in {n+1, ..., n*ub_n_points}
     Random.seed!(seed)  # Set the seed for reproducibility

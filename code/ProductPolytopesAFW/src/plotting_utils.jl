@@ -116,6 +116,7 @@ function cutoff_time(trajectories::Vector{Vector{Any}})
     # Decide `cutoff_time`: ∀ Vectors in `trajectories`, extract 5th element (time) of the last tuple, then compute min among all these times
     return minimum([last(traj)[5] for traj in trajectories])
 end
+
 """
     [Multiple dispatch] cutoff_time(logfiles::Vector{String})
 Input:
@@ -143,10 +144,6 @@ function cutoff_time(logfiles::Vector{String}, wanted_fw_variants::Vector{String
     return global_cutoff_time
 end
 
-
-
-
-
 """
     cutoff_log_shortest_time(trajectories::Vector{Vector{Any}})
 Input: `trajectories`, where each vector is a vector of 5-tuples: (iter, pgap, dual, dgap, time)
@@ -163,6 +160,7 @@ function cutoff_log_shortest_time(trajectories::Vector{Vector{Any}})
     
     return cutoff_trajectories, cutoff_t
 end
+
 """
     [Multiple Dispatch] cutoff_log_shortest_time(trajectories::Vector{Vector{Any}}, cutoff_time::Float64) 
 Input:
@@ -176,10 +174,6 @@ function cutoff_log_shortest_time(trajectories::Vector{Vector{Any}}, cutoff_time
     # Create `cutoff_trajectories`, truncated to earliest finish point: ∀ Vectors in `trajectories`, cut out tuples where `time` ≥ `cutoff_time`
     return [filter(tuple -> tuple[5] ≤ cutoff_time, traj) for traj in trajectories]
 end
-
-
-
-
 
 """
     load_fw_trajectories(path::String; wanted_fw_variants::Vector{String}=String[])
