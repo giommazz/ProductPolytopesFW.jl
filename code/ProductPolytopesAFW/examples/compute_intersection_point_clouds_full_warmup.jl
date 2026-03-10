@@ -11,13 +11,10 @@ using Plots
 # ---------------------------------------------------------------------------------
 # MAIN FUNCTIONS
 # Solve small instance (using `config_warmup`) to "warm-up" the REPL: this compiles `ProductPolytopesAFW`, so that no compilation needed upon running `main`
-function repl_warmup(config::Config, vertices, shifted_vertices, labels, basename_run)
+function repl_warmup(config::Config, vertices, shifted_vertices)
 
     # Retrieve nonintersecting and intersecting LMOs from previously generated instances
     lmo_list = create_lmos(config, [vertices, shifted_vertices])
-
-    # Will contain data about diafferent FW runs, for non-intersecting and intersecting polytopes
-    trajectories_ni, trajectories_i = [], []
 
     for (i, lmos) in enumerate(lmo_list)
         # nonintersecting flag
@@ -31,11 +28,9 @@ function repl_warmup(config::Config, vertices, shifted_vertices, labels, basenam
         _, _, _, _, _ = run_FullFW(config, FrankWolfe.frank_wolfe, prod_lmo)    
         _, _, _, _, _ = run_FullAFW(config, prod_lmo)
     end
-
-    return trajectories_ni, trajectories_i
 end
 
-function main(config::Config, vertices, shifted_vertices, opt, labels, basename_run)
+function main(config::Config, vertices, shifted_vertices, opt)
 
     # Retrieve nonintersecting and intersecting LMOs from previously generated instances
     lmo_list = create_lmos(config, [vertices, shifted_vertices])
@@ -81,11 +76,11 @@ function main(config::Config, vertices, shifted_vertices, opt, labels, basename_
         # _, _, _, _, td_full_bc_fw = run_BlockCoordinateFW(config, FrankWolfe.FullUpdate(), FrankWolfe.FrankWolfeStep(), prod_lmo)
         # push_to_trajectories!(ni_flag, td_full_bc_fw, trajectories_ni, trajectories_i, opt)
 
-        # println("\n\n\n ----------> Full Block-coordinate Away FW (ours)")
+        # println("\n\n\n ----------> Full Block-coordinate Away FW")
         # _, _, _, _, td_full_bc_afw = run_BlockCoordinateFW(config, FrankWolfe.FullUpdate(), AwayStep(), prod_lmo)  
         # push_to_trajectories!(ni_flag, td_full_bc_afw, trajectories_ni, trajectories_i, opt)
 
-        # println("\n\n\n ----------> Full Block-coordinate Blended Pairwise FW (ours)")
+        # println("\n\n\n ----------> Full Block-coordinate Blended Pairwise FW")
         # _, _, _, _, td_full_bc_bpfw = run_BlockCoordinateFW(config, FrankWolfe.FullUpdate(), FrankWolfe.BPCGStep(), prod_lmo)  
         # push_to_trajectories!(ni_flag, td_full_bc_bpfw, trajectories_ni, trajectories_i, opt)
 
@@ -142,15 +137,11 @@ println("********************************************************")
 println("WARMUP: Generating instances and solving them to optimum")
 println("********************************************************")
 vertices, shifted_vertices, _, fw_gap = generate_polytopes(config_warmup)
-# Optimal solution
-basename_run = generate_filename(config_warmup)
-# Labels for the plots
-labels = ["F-BC-AFW"]
 # execute main
 println("********************************************************")
 println("WARMUP: Running FW on the instances")
 println("********************************************************")
-_, _ = repl_warmup(config_warmup, vertices, shifted_vertices, labels, basename_run)
+repl_warmup(config_warmup, vertices, shifted_vertices)
 
 
 
@@ -185,7 +176,7 @@ println("\n\n********************************************************")
 println("MAIN: Running FW on the instances")
 println("********************************************************")
 t_start_main = time()
-trajectories_ni, trajectories_i = main(config, vertices, shifted_vertices, opt, labels, "ni_"*basename_run)
+trajectories_ni, trajectories_i = main(config, vertices, shifted_vertices, opt)
 t_end_main = time()
 println("\n\n\t\tElapsed time main: ", t_end_main - t_start_main, " seconds\n\n")
 
