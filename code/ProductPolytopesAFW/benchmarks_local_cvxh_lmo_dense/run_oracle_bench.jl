@@ -16,7 +16,7 @@ const VALID_BACKENDS = Set([
 ])
 
 function usage()
-    return "Usage: julia --project=. benchmarks_local_cvxh_lmo/run_oracle_bench.jl <config.yml> <n> <backend_tag>"
+    return "Usage: julia --project=. benchmarks_local_cvxh_lmo_dense/run_oracle_bench.jl <config.yml> <n> <backend_tag>"
 end
 
 function load_config(path::AbstractString)

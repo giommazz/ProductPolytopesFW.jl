@@ -2,6 +2,24 @@
 
 Next tasks to implement or explore to generate intersection instances where AFW linear behavior is visible and where FW vs AFW differences are easier to interpret.
 
+## Sparse Benchmark Reporting and README Cleanup
+### Why
+The sparse benchmark tables are now large enough that raw per-density rows are hard to read. The README should also state explicitly what the oracle benchmark measures.
+### Idea
+Add aggregated sparse benchmark tables and clarify that the oracle benchmark is repeated `compute_extreme_point` over the full oracle, not an active-set oracle.
+### Implementation sketch
+1. Add aggregated sparse benchmark tables grouped by fixed `n`, backend variant, and workload (`fw` / `afw`) for `algorithm_table`.
+2. Aggregate across densities:
+   - time with geometric mean,
+   - `alloc_bytes` and `alloc_count` with arithmetic mean (or median if preferred),
+   - `max_rss_kb` with max.
+3. Add speedup columns versus `vec_best` for aggregated timing tables.
+4. Add an aggregated `oracle_table` grouped by fixed `n` and backend, again aggregating across densities.
+5. Update `benchmarks_local_cvxh_lmo_sparse/README.md`:
+   - describe `oracle` as repeated full `compute_extreme_point` calls,
+   - state explicitly that this is not an active-set oracle benchmark,
+   - document the current density sweep and any reporting outputs added.
+
 ## Edge-Biased Sampling for `box_uniform` (`box_boundary_power`)
 ### Why
 `ConvexHullLMO` scans all sampled points, but only extreme points can be selected by the oracle. With uniform interior sampling, many points are redundant and increase runtime.

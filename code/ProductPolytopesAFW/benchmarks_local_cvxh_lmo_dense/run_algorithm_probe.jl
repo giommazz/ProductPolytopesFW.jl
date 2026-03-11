@@ -17,7 +17,7 @@ const VALID_BACKENDS = Set([
 const VALID_ALGORITHMS = Set(["fw", "afw"])
 
 function usage()
-    return "Usage: julia --project=. benchmarks_local_cvxh_lmo/run_algorithm_probe.jl <config.yml> <fw|afw> <n> <backend_tag>"
+    return "Usage: julia --project=. benchmarks_local_cvxh_lmo_dense/run_algorithm_probe.jl <config.yml> <fw|afw> <n> <backend_tag>"
 end
 
 function load_config(path::AbstractString)

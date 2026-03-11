@@ -2,6 +2,32 @@
 
 Julia package and experiment scripts for Frank-Wolfe variants on product polytope feasibility instances.
 
+## Associated paper
+
+This repository contains the code accompanying the paper
+
+**Linear Convergence of the Frank-Wolfe Algorithm over Product Polytopes**  
+Gabriele Iommazzo, David Martinez-Rubio, Francisco Criado, Elias Wirth, Sebastian Pokutta.  
+Accepted at **AISTATS 2026**.  
+Preprint: [arXiv:2505.11259](https://arxiv.org/abs/2505.11259)
+
+The repository includes the implementation used for the computational results in the paper, together with additional experiment and benchmarking scripts.
+
+## Citation
+
+If you use this repository in your research, please cite:
+
+```bibtex
+@article{iommazzo2025linear,
+  title={Linear Convergence of the Frank-Wolfe Algorithm over Product Polytopes},
+  author={Iommazzo, Gabriele and Mart{\\'i}nez-Rubio, David and Criado, Francisco and Wirth, Elias and Pokutta, Sebastian},
+  journal={arXiv preprint arXiv:2505.11259},
+  year={2025},
+  doi={10.48550/arXiv.2505.11259},
+  url={https://arxiv.org/abs/2505.11259}
+}
+```
+
 ## Setup
 
 ```bash

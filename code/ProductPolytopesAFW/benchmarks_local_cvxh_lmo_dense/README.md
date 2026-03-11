@@ -2,7 +2,7 @@
 
 Compare the following variants:
 
-- `vec_best`: `ConvexHullLMO` with most efficient vector-based setup
+- `vec_best`: `ConvexHullLMO` with most efficient vector-based setup for this oracle
 - `mat_opt_cacheauto`: `MatrixConvexHullLMO` with optimized matrix-vector scan and default cache
 - `mat_opt_cacheoff`: same optimized scan, cache disabled
 - `mat_scan_cacheauto`: `MatrixConvexHullLMO` with row-by-row scan and default cache
@@ -13,6 +13,7 @@ Summary tables are as follows.
 
 ### Oracle table (`results/oracle_table`)
 Measures only repeated calls to `compute_extreme_point`, without running Frank-Wolfe.
+Each `compute_extreme_point` call is evaluated against the full stored vertex set of the oracle, not against an active set.
 
 For each case, the total number of oracle calls is
 
@@ -29,6 +30,7 @@ where:
 `oracle_table` uses the following config: `oracle_repetitions = 200`, `k = 2`, and `direction_batch_size = 32` so each oracle case performs `200 * 2 * 32 = 12800` calls to `compute_extreme_point`.
 
 ### Algorithm table (`results/algorithm_table`)
+
 Runs a very short solver execution with `FrankWolfe.frank_wolfe` and `FrankWolfe.away_frank_wolfe`.
 
 Both use `SafeGoldenratio` as line search. Goal: measure backend cost during algorithm execution.
@@ -44,11 +46,27 @@ Both tables use the same main columns:
 - `alloc_bytes`: total number of bytes allocated by Julia during the whole workload
 - `alloc_count`: total number of Julia allocation events during the whole workload
 - `max_rss_kb`: peak memory of the whole process, in KB
+- `speedup_vs_vec_best`: speedup against `vec_best` inside the same group
 
 The call-count column is different:
 
 - `oracle_calls` in `oracle_table`: total number of `compute_extreme_point` calls, see above
 - `iterations` in `algorithm_table`: total number of FW or AFW iterations
+
+The speedup column is computed as:
+
+`speedup_vs_vec_best = time(vec_best) / time(current_backend)`
+
+with grouping:
+
+- `oracle_table`: same `n`
+- `algorithm_table`: same `(algorithm, n)`
+
+Interpretation:
+
+- `> 1.00`: `current backend` is faster than `vec_best` (i.e., `FrankWolfe.ConvexHullLMO`)
+- `= 1.00`: same speed as `vec_best`
+- `< 1.00`: current backend is slower than `vec_best`
 
 Instead, `n_points = n_points_multiplier * n` and, with the default `n_points_multiplier = 2` one has:
 
@@ -70,7 +88,7 @@ Instead, `n_points = n_points_multiplier * n` and, with the default `n_points_mu
 - `vec_best` uses the standard `ConvexHullLMO` on a Julia collection of row-atoms.
 - `mat_scan` uses the matrix-backed LMO, but still evaluates the rows one by one: it is the same style of search (one score at a time), but with the atoms stored in one dense matrix instead of a generic vector-like container.
 
-`mat_opt` changes the implementation: it computes all row scores at once through one dense matrix-vector multiplication and only then takes the min score (exploits contiguous storage and BLAS routines).
+Instead, `mat_opt` changes the implementation: it computes all row scores at once through one dense matrix-vector multiplication and only then takes the min score (exploits contiguous storage and BLAS routines).
 
 The cache is used only by the matrix backend. It stores dense copies of vertices that were selected recently by the oracle. This matters because the matrix backend stores atoms as matrix rows. When one row is selected, the backend often needs to materialize that row as a standalone dense `Vector`. If later the same row index is selected again, `cacheauto` lets the code reuse the already materialized vector instead of copying that row from the matrix again.
 
@@ -108,8 +126,18 @@ Interpretation:
 
 Run the full suite:
 
-`bash benchmarks_local_cvxh_lmo/run_suite.sh`
+`bash benchmarks_local_cvxh_lmo_dense/run_suite.sh`
 
 or regenerate only the tables from existing raw logs and per-case CSV files:
 
-`julia --project=. benchmarks_local_cvxh_lmo/summarize_results.jl benchmarks_local_cvxh_lmo/config.yml`
+`julia --project=. benchmarks_local_cvxh_lmo_dense/summarize_results.jl benchmarks_local_cvxh_lmo_dense/config.yml`
+
+## How to view the tables
+
+View the dense algorithm table in a readable terminal layout:
+
+`column -t -s $'\t' benchmarks_local_cvxh_lmo_dense/results/algorithm_table.tsv | less -S`
+
+View the dense oracle table in a readable terminal layout:
+
+`column -t -s $'\t' benchmarks_local_cvxh_lmo_dense/results/oracle_table.tsv | less -S`

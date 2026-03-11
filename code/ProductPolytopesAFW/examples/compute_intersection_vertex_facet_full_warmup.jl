@@ -262,7 +262,14 @@ println("Touching point p (first 10 coords): ", p_touch[1:min(10, length(p_touch
 opt_ni = compute_nonintersecting_opt(config, lmos_ni)
 println("Non-intersecting optimal value (distance objective): ", opt_ni)
 
-basename_run = "legacy_vertex_facet_" * generate_filename(config)
+basename_run = generate_vertex_facet_filename(
+    config;
+    alpha=vf_alpha,
+    beta=vf_beta,
+    delta=vf_delta,
+    touching_point_rnd=vf_touching_point_rnd,
+    separation=vf_separation,
+)
 
 println("\n\n********************************************************")
 println("MAIN: Running FW on legacy instances")

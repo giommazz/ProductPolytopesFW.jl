@@ -168,7 +168,7 @@ println("********************************************************")
 println("MAIN: Generating instances and solving them to optimum")
 println("********************************************************")
 vertices, shifted_vertices, opt, fw_gap = generate_polytopes(config)
-basename_run = generate_filename(config)
+basename_run = generate_point_cloud_filename(config)
 
 # ---------------------------------------------------------------------------------
 # RUN MAIN TO SOLVE INSTANCES

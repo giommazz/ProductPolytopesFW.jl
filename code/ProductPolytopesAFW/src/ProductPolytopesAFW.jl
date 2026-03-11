@@ -43,7 +43,7 @@ module ProductPolytopesAFW
         approxequal, log_times, pad_log_data, save_logdata_to_csv,
         push_to_trajectories!, save_trajectories, load_trajectories, compute_primal_gap, best_seen_solution, get_k_n_from_logstring
     # From `polytope_generation.jl` / `polytope_utils.jl`
-    export generate_polytopes, compute_distance, save_polytopes, load_polytopes, generate_filename
+    export generate_polytopes, compute_distance, save_polytopes, load_polytopes, generate_point_cloud_filename, generate_vertex_facet_filename
     # From `plot_utils.jl`
     export plot_trajectories
     # From `plotting_utils.jl`
