@@ -1,0 +1,2 @@
+case_id,benchmark_kind,n,n_points,backend,representation,optimized,cache,line_search,iterations,elapsed_s,alloc_bytes,alloc_count,final_primal,checksum,status,error_message
+fw_n2000_mat_scan_cacheoff,fw,2000,4000,matrix,matrix,false,off,safegoldenratio,5,0.61821324,16003720,3290,32274.782593854376,NaN,success,

@@ -17,7 +17,7 @@ mkdir -p "${RESULTS_DIR}/raw_logs" "${RESULTS_DIR}/csv"
 
 mapfile -t N_VALUES < <(cd "${REPO_DIR}" && "${JULIA_BIN}" --project=. -e 'using YAML; cfg = YAML.load_file(ARGS[1]); for n in cfg["n_values"]; println(Int(n)); end' "${CONFIG_PATH}")
 
-BACKENDS=("vec_best" "mat_opt_cacheauto" "mat_opt_cacheoff" "mat_scan_cacheauto" "mat_scan_cacheoff")
+BACKENDS=("vec_views" "vec_vectors" "mat_opt_cacheauto" "mat_opt_cacheoff" "mat_scan_cacheauto" "mat_scan_cacheoff")
 BENCHMARK_KINDS=("oracle" "fw" "afw")
 
 run_case() {

@@ -1,8 +1,9 @@
-# Benchmarking `ConvexHullLMO` against `MatrixConvexHullLMO`
+# Benchmarking dense `ConvexHullLMO` and `MatrixConvexHullLMO` backends
 
-Compare the following variants:
+Compare the following dense variants:
 
-- `vec_best`: `ConvexHullLMO` with most efficient vector-based setup for this oracle
+- `vec_views`: `ConvexHullLMO` built from `collect(eachrow(V))`
+- `vec_vectors`: `ConvexHullLMO` built from fully materialized `Vector{Vector}`
 - `mat_opt_cacheauto`: `MatrixConvexHullLMO` with optimized matrix-vector scan and default cache
 - `mat_opt_cacheoff`: same optimized scan, cache disabled
 - `mat_scan_cacheauto`: `MatrixConvexHullLMO` with row-by-row scan and default cache
@@ -27,7 +28,7 @@ where:
 - `oracle_repetitions` is the number of times this same batch structure is repeated
 
 
-`oracle_table` uses the following config: `oracle_repetitions = 200`, `k = 2`, and `direction_batch_size = 32` so each oracle case performs `200 * 2 * 32 = 12800` calls to `compute_extreme_point`.
+`oracle_table` uses the following config: `oracle_repetitions = 50`, `k = 2`, and `direction_batch_size = 32` so each oracle case performs `50 * 2 * 32 = 3200` calls to `compute_extreme_point`.
 
 ### Algorithm table (`results/algorithm_table`)
 
@@ -46,7 +47,7 @@ Both tables use the same main columns:
 - `alloc_bytes`: total number of bytes allocated by Julia during the whole workload
 - `alloc_count`: total number of Julia allocation events during the whole workload
 - `max_rss_kb`: peak memory of the whole process, in KB
-- `speedup_vs_vec_best`: speedup against `vec_best` inside the same group
+- `speedup_vs_vec_vectors`: speedup against `vec_vectors` inside the same group
 
 The call-count column is different:
 
@@ -55,7 +56,7 @@ The call-count column is different:
 
 The speedup column is computed as:
 
-`speedup_vs_vec_best = time(vec_best) / time(current_backend)`
+`speedup_vs_vec_vectors = time(vec_vectors) / time(current_backend)`
 
 with grouping:
 
@@ -64,9 +65,9 @@ with grouping:
 
 Interpretation:
 
-- `> 1.00`: `current backend` is faster than `vec_best` (i.e., `FrankWolfe.ConvexHullLMO`)
-- `= 1.00`: same speed as `vec_best`
-- `< 1.00`: current backend is slower than `vec_best`
+- `> 1.00`: `current backend` is faster than `vec_vectors`
+- `= 1.00`: same speed as `vec_vectors`
+- `< 1.00`: current backend is slower than `vec_vectors`
 
 Instead, `n_points = n_points_multiplier * n` and, with the default `n_points_multiplier = 2` one has:
 
@@ -75,17 +76,24 @@ Instead, `n_points = n_points_multiplier * n` and, with the default `n_points_mu
 - `n = 1000 -> n_points = 2000`
 - `n = 2000 -> n_points = 4000`
 
-### Meaning of the five configurations
+### Meaning of the six configurations
 
-- `vec_best`: baseline `ConvexHullLMO`, built from a *vector* of row-atoms
+- `vec_views`: vector baseline using row views from the original dense matrix
+- `vec_vectors`: vector baseline using fully materialized dense row vectors
 - `mat_opt_*`: matrix backend using one *dense matrix-vector product* (`mul!` / BLAS-backed) plus an `argmin` over the resulting scores
 - `mat_scan_*`: matrix backend using a row-by-row scan (one dot product per row)
 - `cacheauto`: materialized-vertex cache enabled with the backend default policy
 - `cacheoff`: cache disabled (`cache_cap = 0`)
 
-`vec_best` VS `mat_scan` both score one candidate atom at a time and keep the best one found so far. The difference is in how the atoms are stored and accessed:
+`vec_views` and `vec_vectors` both use the standard `ConvexHullLMO`; they differ only in how the dense points are represented:
 
-- `vec_best` uses the standard `ConvexHullLMO` on a Julia collection of row-atoms.
+- `vec_views` stores row views into the original matrix.
+- `vec_vectors` stores one standalone dense `Vector` per atom.
+
+`vec_vectors` is the stronger vector baseline and is used as the speedup reference.
+
+`mat_scan` still scores one candidate atom at a time and keeps the best one found so far. The difference is in how the atoms are stored and accessed:
+
 - `mat_scan` uses the matrix-backed LMO, but still evaluates the rows one by one: it is the same style of search (one score at a time), but with the atoms stored in one dense matrix instead of a generic vector-like container.
 
 Instead, `mat_opt` changes the implementation: it computes all row scores at once through one dense matrix-vector multiplication and only then takes the min score (exploits contiguous storage and BLAS routines).
@@ -98,7 +106,14 @@ So the cache is not a cache of the whole active set and not a cache of arbitrary
 
 ## How time and memory were captured
 
-Inside Julia, the scripts measure:
+Inside Julia, the scripts first prepare the dense point-cloud representation for the selected backend and build the corresponding LMO objects. This one-time setup is performed outside the timed region.
+
+The timed region then measures only the benchmark workload itself:
+
+- repeated `compute_extreme_point` calls for `oracle`
+- the short FW/AFW run for `algorithm_table`
+
+Inside Julia, the scripts measure the timed region with:
 
 - time with `@elapsed`
 - allocated bytes with `@allocated`

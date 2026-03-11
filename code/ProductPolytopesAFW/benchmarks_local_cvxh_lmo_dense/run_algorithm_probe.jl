@@ -8,7 +8,8 @@ using Random
 using YAML
 
 const VALID_BACKENDS = Set([
-    "vec_best",
+    "vec_views",
+    "vec_vectors",
     "mat_opt_cacheauto",
     "mat_opt_cacheoff",
     "mat_scan_cacheauto",
@@ -48,16 +49,18 @@ function case_id(algorithm::AbstractString, n::Int, backend_tag::AbstractString)
 end
 
 function backend_metadata(tag::AbstractString)
-    if tag == "vec_best"
-        return (backend="vector", optimized="na", cache="na", cache_cap=nothing, use_optimized=false)
+    if tag == "vec_views"
+        return (backend="vector", representation="views", optimized="na", cache="na", cache_cap=nothing, use_optimized=false)
+    elseif tag == "vec_vectors"
+        return (backend="vector", representation="vectors", optimized="na", cache="na", cache_cap=nothing, use_optimized=false)
     elseif tag == "mat_opt_cacheauto"
-        return (backend="matrix", optimized="true", cache="on", cache_cap=nothing, use_optimized=true)
+        return (backend="matrix", representation="matrix", optimized="true", cache="on", cache_cap=nothing, use_optimized=true)
     elseif tag == "mat_opt_cacheoff"
-        return (backend="matrix", optimized="true", cache="off", cache_cap=0, use_optimized=true)
+        return (backend="matrix", representation="matrix", optimized="true", cache="off", cache_cap=0, use_optimized=true)
     elseif tag == "mat_scan_cacheauto"
-        return (backend="matrix", optimized="false", cache="on", cache_cap=nothing, use_optimized=false)
+        return (backend="matrix", representation="matrix", optimized="false", cache="on", cache_cap=nothing, use_optimized=false)
     elseif tag == "mat_scan_cacheoff"
-        return (backend="matrix", optimized="false", cache="off", cache_cap=0, use_optimized=false)
+        return (backend="matrix", representation="matrix", optimized="false", cache="off", cache_cap=0, use_optimized=false)
     end
     error("Unsupported backend tag '$tag'.")
 end
@@ -118,12 +121,25 @@ function generate_point_clouds(cfg, n::Int)
     ]
 end
 
-function build_lmos(vertices::Vector{Matrix{Float64}}, backend_tag::AbstractString)
+function prepare_vertex_storage(vertices::Vector{Matrix{Float64}})
+    return (
+        matrices=vertices,
+        vec_views=[collect(eachrow(V)) for V in vertices],
+        vec_vectors=[[Vector(V[i, :]) for i in 1:size(V, 1)] for V in vertices],
+    )
+end
+
+function build_lmos(prepared_vertices, backend_tag::AbstractString)
     meta = backend_metadata(backend_tag)
-    if meta.backend == "vector"
+    if backend_tag == "vec_views"
         return [
-            ProductPolytopesAFW.CopyExtremePointLMO(FrankWolfe.ConvexHullLMO(collect(eachrow(V))))
-            for V in vertices
+            ProductPolytopesAFW.CopyExtremePointLMO(FrankWolfe.ConvexHullLMO(Vrows))
+            for Vrows in prepared_vertices.vec_views
+        ], meta
+    elseif backend_tag == "vec_vectors"
+        return [
+            ProductPolytopesAFW.CopyExtremePointLMO(FrankWolfe.ConvexHullLMO(Vrows))
+            for Vrows in prepared_vertices.vec_vectors
         ], meta
     end
 
@@ -133,7 +149,7 @@ function build_lmos(vertices::Vector{Matrix{Float64}}, backend_tag::AbstractStri
             cache_cap=meta.cache_cap,
             use_optimized_search=meta.use_optimized,
         )
-        for V in vertices
+        for V in prepared_vertices.matrices
     ], meta
 end
 
@@ -143,22 +159,25 @@ function starting_point(lmos, n::Int)
     return FrankWolfe.BlockVector(blocks)
 end
 
-function run_probe(cfg, algorithm::AbstractString, vertices, backend_tag::AbstractString)
-    lmos, _ = build_lmos(vertices, backend_tag)
+function setup_probe(prepared_vertices, cfg, algorithm::AbstractString, n::Int, backend_tag::AbstractString)
+    lmos, _ = build_lmos(prepared_vertices, backend_tag)
     prod_lmo = FrankWolfe.ProductLMO(Tuple(lmos))
-    x0 = starting_point(lmos, size(vertices[1], 2))
+    x0 = starting_point(lmos, n)
     line_search = ProductPolytopesAFW.SafeGoldenratio(1e-9)
     iterations = algorithm == "fw" ? Int(cfg["fw_iterations"]) : Int(cfg["afw_iterations"])
+    return (prod_lmo=prod_lmo, x0=x0, line_search=line_search, iterations=iterations)
+end
 
+function run_probe(cfg, algorithm::AbstractString, state)
     if algorithm == "fw"
         result = FrankWolfe.frank_wolfe(
             ProductPolytopesAFW.convex_feasibility_objective_v2b,
             ProductPolytopesAFW.convex_feasibility_gradient_v2!,
-            prod_lmo,
-            x0;
+            state.prod_lmo,
+            state.x0;
             epsilon=0.0,
-            max_iteration=iterations,
-            line_search=line_search,
+            max_iteration=state.iterations,
+            line_search=state.line_search,
             print_iter=typemax(Int),
             memory_mode=FrankWolfe.InplaceEmphasis(),
             verbose=false,
@@ -168,11 +187,11 @@ function run_probe(cfg, algorithm::AbstractString, vertices, backend_tag::Abstra
         result = FrankWolfe.away_frank_wolfe(
             ProductPolytopesAFW.convex_feasibility_objective_v2b,
             ProductPolytopesAFW.convex_feasibility_gradient_v2!,
-            prod_lmo,
-            x0;
+            state.prod_lmo,
+            state.x0;
             epsilon=0.0,
-            max_iteration=iterations,
-            line_search=line_search,
+            max_iteration=state.iterations,
+            line_search=state.line_search,
             print_iter=typemax(Int),
             memory_mode=FrankWolfe.InplaceEmphasis(),
             verbose=false,
@@ -180,17 +199,20 @@ function run_probe(cfg, algorithm::AbstractString, vertices, backend_tag::Abstra
         )
     end
 
-    return result, iterations
+    return result, state.iterations
 end
 
-function measure(workload::Function)
+function measure_excluding_setup(setup::Function, workload::Function)
     GC.gc()
-    alloc_bytes = @allocated workload()
+    state = setup()
+    alloc_bytes = @allocated workload(state)
     GC.gc()
-    alloc_count = @allocations workload()
+    state = setup()
+    alloc_count = @allocations workload(state)
     GC.gc()
     value = nothing
-    elapsed_s = @elapsed value = workload()
+    state = setup()
+    elapsed_s = @elapsed value = workload(state)
     return value, elapsed_s, alloc_bytes, alloc_count
 end
 
@@ -203,6 +225,7 @@ function success_row(cfg, algorithm::AbstractString, n::Int, backend_tag::Abstra
         n=n,
         n_points=n_points,
         backend=meta.backend,
+        representation=meta.representation,
         optimized=meta.optimized,
         cache=meta.cache,
         line_search="safegoldenratio",
@@ -226,6 +249,7 @@ function failure_row(cfg, algorithm::AbstractString, n::Int, backend_tag::Abstra
         n=n,
         n_points=n_points,
         backend=meta.backend,
+        representation=meta.representation,
         optimized=meta.optimized,
         cache=meta.cache,
         line_search="safegoldenratio",
@@ -252,10 +276,12 @@ function main(args::Vector{String})
     out_dir = results_dir(cfg_path, cfg)
     output_file = joinpath(out_dir, "csv", "$(case_id(algorithm, n, backend_tag)).csv")
     vertices = generate_point_clouds(cfg, n)
+    prepared_vertices = prepare_vertex_storage(vertices)
 
     try
-        workload = () -> run_probe(cfg, algorithm, vertices, backend_tag)
-        measured, elapsed_s, alloc_bytes, alloc_count = measure(workload)
+        setup = () -> setup_probe(prepared_vertices, cfg, algorithm, n, backend_tag)
+        workload = state -> run_probe(cfg, algorithm, state)
+        measured, elapsed_s, alloc_bytes, alloc_count = measure_excluding_setup(setup, workload)
         result, iterations = measured
         row = success_row(cfg, algorithm, n, backend_tag, elapsed_s, alloc_bytes, alloc_count, result, iterations)
         write_output(output_file, row)

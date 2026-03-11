@@ -8,7 +8,8 @@ using Random
 using YAML
 
 const VALID_BACKENDS = Set([
-    "vec_best",
+    "vec_views",
+    "vec_vectors",
     "mat_opt_cacheauto",
     "mat_opt_cacheoff",
     "mat_scan_cacheauto",
@@ -45,16 +46,18 @@ function case_id(n::Int, backend_tag::AbstractString)
 end
 
 function backend_metadata(tag::AbstractString)
-    if tag == "vec_best"
-        return (backend="vector", optimized="na", cache="na", cache_cap=nothing, use_optimized=false)
+    if tag == "vec_views"
+        return (backend="vector", representation="views", optimized="na", cache="na", cache_cap=nothing, use_optimized=false)
+    elseif tag == "vec_vectors"
+        return (backend="vector", representation="vectors", optimized="na", cache="na", cache_cap=nothing, use_optimized=false)
     elseif tag == "mat_opt_cacheauto"
-        return (backend="matrix", optimized="true", cache="on", cache_cap=nothing, use_optimized=true)
+        return (backend="matrix", representation="matrix", optimized="true", cache="on", cache_cap=nothing, use_optimized=true)
     elseif tag == "mat_opt_cacheoff"
-        return (backend="matrix", optimized="true", cache="off", cache_cap=0, use_optimized=true)
+        return (backend="matrix", representation="matrix", optimized="true", cache="off", cache_cap=0, use_optimized=true)
     elseif tag == "mat_scan_cacheauto"
-        return (backend="matrix", optimized="false", cache="on", cache_cap=nothing, use_optimized=false)
+        return (backend="matrix", representation="matrix", optimized="false", cache="on", cache_cap=nothing, use_optimized=false)
     elseif tag == "mat_scan_cacheoff"
-        return (backend="matrix", optimized="false", cache="off", cache_cap=0, use_optimized=false)
+        return (backend="matrix", representation="matrix", optimized="false", cache="off", cache_cap=0, use_optimized=false)
     end
     error("Unsupported backend tag '$tag'.")
 end
@@ -121,12 +124,25 @@ function generate_direction_batches(cfg, n::Int)
     return [[randn(rng, n) for _ in 1:batch_size] for _ in 1:Int(cfg["k"])]
 end
 
-function build_lmos(vertices::Vector{Matrix{Float64}}, backend_tag::AbstractString)
+function prepare_vertex_storage(vertices::Vector{Matrix{Float64}})
+    return (
+        matrices=vertices,
+        vec_views=[collect(eachrow(V)) for V in vertices],
+        vec_vectors=[[Vector(V[i, :]) for i in 1:size(V, 1)] for V in vertices],
+    )
+end
+
+function build_lmos(prepared_vertices, backend_tag::AbstractString)
     meta = backend_metadata(backend_tag)
-    if meta.backend == "vector"
+    if backend_tag == "vec_views"
         return [
-            ProductPolytopesAFW.CopyExtremePointLMO(FrankWolfe.ConvexHullLMO(collect(eachrow(V))))
-            for V in vertices
+            ProductPolytopesAFW.CopyExtremePointLMO(FrankWolfe.ConvexHullLMO(Vrows))
+            for Vrows in prepared_vertices.vec_views
+        ], meta
+    elseif backend_tag == "vec_vectors"
+        return [
+            ProductPolytopesAFW.CopyExtremePointLMO(FrankWolfe.ConvexHullLMO(Vrows))
+            for Vrows in prepared_vertices.vec_vectors
         ], meta
     end
 
@@ -136,13 +152,11 @@ function build_lmos(vertices::Vector{Matrix{Float64}}, backend_tag::AbstractStri
             cache_cap=meta.cache_cap,
             use_optimized_search=meta.use_optimized,
         )
-        for V in vertices
+        for V in prepared_vertices.matrices
     ], meta
 end
 
-function run_oracle_workload(vertices, directions, cfg, backend_tag::AbstractString)
-    lmos, _ = build_lmos(vertices, backend_tag)
-    repetitions = Int(cfg["oracle_repetitions"])
+function run_oracle_workload(lmos, directions, repetitions::Int)
     checksum = 0.0
     @inbounds for _ in 1:repetitions
         for block_idx in eachindex(lmos)
@@ -156,14 +170,17 @@ function run_oracle_workload(vertices, directions, cfg, backend_tag::AbstractStr
     return checksum
 end
 
-function measure(workload::Function)
+function measure_excluding_setup(setup::Function, workload::Function)
     GC.gc()
-    alloc_bytes = @allocated workload()
+    state = setup()
+    alloc_bytes = @allocated workload(state)
     GC.gc()
-    alloc_count = @allocations workload()
+    state = setup()
+    alloc_count = @allocations workload(state)
     GC.gc()
     value = 0.0
-    elapsed_s = @elapsed value = workload()
+    state = setup()
+    elapsed_s = @elapsed value = workload(state)
     return value, elapsed_s, alloc_bytes, alloc_count
 end
 
@@ -174,9 +191,12 @@ function main(args::Vector{String})
     mkpath(joinpath(out_dir, "csv"))
 
     vertices = generate_point_clouds(cfg, n)
+    prepared_vertices = prepare_vertex_storage(vertices)
     directions = generate_direction_batches(cfg, n)
-    workload = () -> run_oracle_workload(vertices, directions, cfg, backend_tag)
-    checksum, elapsed_s, alloc_bytes, alloc_count = measure(workload)
+    repetitions = Int(cfg["oracle_repetitions"])
+    setup = () -> first(build_lmos(prepared_vertices, backend_tag))
+    workload = lmos -> run_oracle_workload(lmos, directions, repetitions)
+    checksum, elapsed_s, alloc_bytes, alloc_count = measure_excluding_setup(setup, workload)
     meta = backend_metadata(backend_tag)
     n_points = size(vertices[1], 1)
 
@@ -186,10 +206,11 @@ function main(args::Vector{String})
         n=n,
         n_points=n_points,
         backend=meta.backend,
+        representation=meta.representation,
         optimized=meta.optimized,
         cache=meta.cache,
         line_search="na",
-        iterations=Int(cfg["oracle_repetitions"]) * Int(cfg["direction_batch_size"]) * Int(cfg["k"]),
+        iterations=repetitions * Int(cfg["direction_batch_size"]) * Int(cfg["k"]),
         elapsed_s=elapsed_s,
         alloc_bytes=alloc_bytes,
         alloc_count=alloc_count,

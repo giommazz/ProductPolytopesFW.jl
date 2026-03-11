@@ -4,7 +4,7 @@ n_points_multiplier: 2
 vertex_sampling: "ellipsoid"
 sphere_radius_factor: 0.9
 seed: 42
-oracle_repetitions: 200
+oracle_repetitions: 50
 direction_batch_size: 32
 fw_iterations: 5
 afw_iterations: 5

@@ -1,0 +1,2 @@
+case_id,benchmark_kind,n,n_points,backend,representation,optimized,cache,line_search,iterations,elapsed_s,alloc_bytes,alloc_count,final_primal,checksum,status,error_message
+afw_n1000_vec_views,afw,1000,2000,vector,views,na,na,safegoldenratio,5,0.043239387,7028744,2894,16176.187210574022,NaN,success,

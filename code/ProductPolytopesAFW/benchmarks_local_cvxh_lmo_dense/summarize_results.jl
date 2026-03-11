@@ -5,7 +5,8 @@ using Printf
 using YAML
 
 const BACKEND_TAGS = [
-    "vec_best",
+    "vec_views",
+    "vec_vectors",
     "mat_opt_cacheauto",
     "mat_opt_cacheoff",
     "mat_scan_cacheauto",
@@ -70,32 +71,23 @@ function format_fixed2(value)
 end
 
 function backend_tag(row)
-    backend = String(row.backend)
-    cache = String(row.cache)
-    optimized = row.optimized isa Bool ? row.optimized : lowercase(String(row.optimized)) == "true"
-
-    if backend == "vector"
-        return "vec_best"
-    elseif backend == "matrix" && optimized && cache == "on"
-        return "mat_opt_cacheauto"
-    elseif backend == "matrix" && optimized && cache == "off"
-        return "mat_opt_cacheoff"
-    elseif backend == "matrix" && !optimized && cache == "on"
-        return "mat_scan_cacheauto"
-    elseif backend == "matrix" && !optimized && cache == "off"
-        return "mat_scan_cacheoff"
+    case_id = String(row.case_id)
+    for tag in BACKEND_TAGS
+        if endswith(case_id, "_" * tag)
+            return tag
+        end
     end
     error("Could not infer backend tag from row $(row.case_id).")
 end
 
-function add_speedup_vs_vecbest!(table::DataFrame, group_cols::Vector{Symbol}, time_col::Symbol)
-    table.speedup_vs_vec_best = Vector{Union{Missing, Float64}}(missing, nrow(table))
+function add_speedup_vs_vecvectors!(table::DataFrame, group_cols::Vector{Symbol}, time_col::Symbol)
+    table.speedup_vs_vec_vectors = Vector{Union{Missing, Float64}}(missing, nrow(table))
     for subdf in groupby(table, group_cols)
-        vec_rows = findall(==("vec_best"), subdf.backend_tag)
-        length(vec_rows) == 1 || error("Expected exactly one vec_best row in each group.")
+        vec_rows = findall(==("vec_vectors"), subdf.backend_tag)
+        length(vec_rows) == 1 || error("Expected exactly one vec_vectors row in each group.")
         vec_time = subdf[vec_rows[1], time_col]
         for row_idx in 1:nrow(subdf)
-            subdf[row_idx, :speedup_vs_vec_best] = vec_time / subdf[row_idx, time_col]
+            subdf[row_idx, :speedup_vs_vec_vectors] = vec_time / subdf[row_idx, time_col]
         end
     end
     return table
@@ -104,14 +96,14 @@ end
 function compact_oracle_table(rows::DataFrame)
     selected = rows[rows.benchmark_kind .== "oracle", :]
     selected.backend_tag = [backend_tag(row) for row in eachrow(selected)]
-    add_speedup_vs_vecbest!(selected, [:n], :elapsed_s)
-    table = select(selected, :case_id, :n, :n_points, :iterations, :elapsed_s, :alloc_bytes, :alloc_count, :max_rss_kb, :speedup_vs_vec_best)
+    add_speedup_vs_vecvectors!(selected, [:n], :elapsed_s)
+    table = select(selected, :case_id, :n, :n_points, :iterations, :elapsed_s, :alloc_bytes, :alloc_count, :max_rss_kb, :speedup_vs_vec_vectors)
     rename!(table, :iterations => :oracle_calls)
     table.elapsed_s = format_sci.(table.elapsed_s)
     table.alloc_bytes = format_sci.(table.alloc_bytes)
     table.alloc_count = format_sci.(table.alloc_count)
     table.max_rss_kb = format_sci.(table.max_rss_kb)
-    table.speedup_vs_vec_best = format_fixed2.(table.speedup_vs_vec_best)
+    table.speedup_vs_vec_vectors = format_fixed2.(table.speedup_vs_vec_vectors)
     sort!(table, [:n, :case_id])
     return table
 end
@@ -119,13 +111,13 @@ end
 function compact_algorithm_table(rows::DataFrame)
     selected = rows[in.(rows.benchmark_kind, Ref(["fw", "afw"])), :]
     selected.backend_tag = [backend_tag(row) for row in eachrow(selected)]
-    add_speedup_vs_vecbest!(selected, [:benchmark_kind, :n], :elapsed_s)
-    table = select(selected, :case_id, :n, :n_points, :iterations, :elapsed_s, :alloc_bytes, :alloc_count, :max_rss_kb, :speedup_vs_vec_best)
+    add_speedup_vs_vecvectors!(selected, [:benchmark_kind, :n], :elapsed_s)
+    table = select(selected, :case_id, :n, :n_points, :iterations, :elapsed_s, :alloc_bytes, :alloc_count, :max_rss_kb, :speedup_vs_vec_vectors)
     table.elapsed_s = format_sci.(table.elapsed_s)
     table.alloc_bytes = format_sci.(table.alloc_bytes)
     table.alloc_count = format_sci.(table.alloc_count)
     table.max_rss_kb = format_sci.(table.max_rss_kb)
-    table.speedup_vs_vec_best = format_fixed2.(table.speedup_vs_vec_best)
+    table.speedup_vs_vec_vectors = format_fixed2.(table.speedup_vs_vec_vectors)
     sort!(table, [:n, :case_id])
     return table
 end
