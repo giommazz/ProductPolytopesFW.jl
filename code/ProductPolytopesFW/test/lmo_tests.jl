@@ -13,7 +13,7 @@
         idx = argmin(scores)
         expected = collect(@view V[idx, :])
 
-        lmo = ProductPolytopesAFW.MatrixConvexHullLMO(V; cache_cap=2, use_optimized_search=true)
+        lmo = ProductPolytopesFW.MatrixConvexHullLMO(V; cache_cap=2, use_optimized_search=true)
         s = FrankWolfe.compute_extreme_point(lmo, direction)
 
         @test s isa Vector{Float64}
@@ -21,8 +21,8 @@
     end
 
     @testset "Optimized search and row-scan return same extreme point" begin
-        lmo_opt = ProductPolytopesAFW.MatrixConvexHullLMO(V; cache_cap=2, use_optimized_search=true)
-        lmo_scan = ProductPolytopesAFW.MatrixConvexHullLMO(V; cache_cap=2, use_optimized_search=false)
+        lmo_opt = ProductPolytopesFW.MatrixConvexHullLMO(V; cache_cap=2, use_optimized_search=true)
+        lmo_scan = ProductPolytopesFW.MatrixConvexHullLMO(V; cache_cap=2, use_optimized_search=false)
 
         s_opt = FrankWolfe.compute_extreme_point(lmo_opt, direction)
         s_scan = FrankWolfe.compute_extreme_point(lmo_scan, direction)
@@ -31,8 +31,8 @@
     end
 
     @testset "Cache on/off parity and dense output" begin
-        lmo_cache = ProductPolytopesAFW.MatrixConvexHullLMO(V; cache_cap=3, use_optimized_search=true)
-        lmo_nocache = ProductPolytopesAFW.MatrixConvexHullLMO(V; cache_cap=0, use_optimized_search=true)
+        lmo_cache = ProductPolytopesFW.MatrixConvexHullLMO(V; cache_cap=3, use_optimized_search=true)
+        lmo_nocache = ProductPolytopesFW.MatrixConvexHullLMO(V; cache_cap=0, use_optimized_search=true)
 
         dirs = (
             [0.2, -1.5, 0.9],

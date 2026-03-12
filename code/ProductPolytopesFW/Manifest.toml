@@ -1019,7 +1019,7 @@ deps = ["Unicode"]
 uuid = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 version = "1.11.0"
 
-[[deps.ProductPolytopesAFW]]
+[[deps.ProductPolytopesFW]]
 deps = ["CDDLib", "CSV", "Combinatorics", "DataFrames", "Dates", "FileIO", "FiniteDifferences", "FrankWolfe", "GLPK", "HiGHS", "JLD2", "JuMP", "LinearAlgebra", "Plots", "Polyhedra", "Random", "SCIP", "Statistics", "TestEnv", "YAML"]
 path = "."
 uuid = "f2b8fa5e-0abd-47db-9d6f-354aeaa919ee"

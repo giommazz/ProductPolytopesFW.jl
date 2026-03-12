@@ -1,4 +1,4 @@
-# ProductPolytopesAFW
+# ProductPolytopesFW
 
 Julia package and experiment scripts for Frank-Wolfe variants on product polytope feasibility instances.
 
@@ -31,7 +31,7 @@ If you use this repository in your research, please cite:
 ## Setup
 
 ```bash
-cd code/ProductPolytopesAFW
+cd code/ProductPolytopesFW
 julia --project=. -e 'using Pkg; Pkg.instantiate(); Pkg.precompile()'
 ```
 
@@ -79,7 +79,7 @@ To profile wall time and memory of one run:
 ```
 
 To compare convex-hull backends, run the same script while changing in `examples/config.yml`:
-- `convex_hull_backend: "matrix"`(this package's `ProductPolytopesAFW.MatrixConvexHullLMO`) vs `"vector"` (`FrankWolfe.ConvexHullLMO`)
+- `convex_hull_backend: "matrix"`(this package's `ProductPolytopesFW.MatrixConvexHullLMO`) vs `"vector"` (`FrankWolfe.ConvexHullLMO`)
 - `matrix_lmo_use_optimized_search: true/false` (only for matrix backend)
 - `matrix_lmo_cache_cap: -1/0/>0` (only for matrix backend)
 

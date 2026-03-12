@@ -30,7 +30,7 @@
             write(io, yaml_text)
         end
 
-        cfg = ProductPolytopesAFW.Config(cfg_path)
+        cfg = ProductPolytopesFW.Config(cfg_path)
         @test cfg.convex_hull_backend == "vector"
         @test cfg.matrix_lmo_cache_cap == 0
         @test cfg.matrix_lmo_use_optimized_search == false
@@ -41,8 +41,8 @@
     end
 
     @testset "modify_config updates requested fields and preserves others" begin
-        base = ProductPolytopesAFW.Config()
-        updated = ProductPolytopesAFW.modify_config(
+        base = ProductPolytopesFW.Config()
+        updated = ProductPolytopesFW.modify_config(
             base;
             max_iterations=222,
             max_print_iterations=33,

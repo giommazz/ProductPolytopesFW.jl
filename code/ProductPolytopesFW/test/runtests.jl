@@ -1,5 +1,5 @@
 using Test
-using ProductPolytopesAFW
+using ProductPolytopesFW
 using FrankWolfe
 using LinearAlgebra
 using Random

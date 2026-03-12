@@ -14,8 +14,8 @@
 #SBATCH --cpus-per-task=10      # reserve a certain amount of cores for this job
 #SBATCH --mem=480G
 #SBATCH -N1 --nodelist=htc-cmp[501-532] # choose one node from the list in the square brackets
-#SBATCH --chdir=/home/htc/giommazz/product-polytopes-afw/code/ProductPolytopesAFW/  # Navigate to dir where script you want to run is
-#SBATCH --output=/home/htc/giommazz/product-polytopes-afw/code/ProductPolytopesAFW/examples/logs/%x_%A.out # logfiles ---> %x=job name, %A=job ID
+#SBATCH --chdir=/home/htc/giommazz/product-polytopes-fw/code/ProductPolytopesFW/  # Navigate to dir where script you want to run is
+#SBATCH --output=/home/htc/giommazz/product-polytopes-fw/code/ProductPolytopesFW/examples/logs/%x_%A.out # logfiles ---> %x=job name, %A=job ID
 #SBATCH --partition=big  # Specify the desired partition on cluster (default: small)
 ##SBATCH --exclude=htc-cmp[101-148,501-532] # exclude nodes. Your job will run on nodes not in the list.
 

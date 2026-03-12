@@ -1,5 +1,5 @@
-# `ProductPolytopesAFW.jl`
-module ProductPolytopesAFW
+# `ProductPolytopesFW.jl`
+module ProductPolytopesFW
     using FrankWolfe
     using Plots                 # Plotting utilities needed to run FrankWolfe/plot_utils.jl
     using Random
@@ -49,4 +49,4 @@ module ProductPolytopesAFW
     # From `plotting_utils.jl`
     export plot_time_only, cutoff_log_shortest_time, cutoff_time, load_fw_trajectories_i, load_fw_trajectories_ni, avg_over_logs
 
-end # module ProductPolytopesAFW
+end # module ProductPolytopesFW

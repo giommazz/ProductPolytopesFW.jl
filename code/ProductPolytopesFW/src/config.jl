@@ -35,7 +35,7 @@ struct Config
     # Use convex-hull LMOs (true) or FrankWolfe.MathOptLMO (false)
     cvxhflag::Bool
     # Backend used when `cvxhflag == true`:
-    # - "matrix": ProductPolytopesAFW.MatrixConvexHullLMO
+    # - "matrix": ProductPolytopesFW.MatrixConvexHullLMO
     # - "vector": FrankWolfe.ConvexHullLMO (best effort: row views, no full copy)
     convex_hull_backend::String
     # MatrixConvexHullLMO cache cap:

@@ -105,7 +105,7 @@ Allow each block/polytope to be generated either as a sampled convex hull or as 
 1. Extend `Config` with per-block polytope type and parameters.
 2. Update LMO creation logic to instantiate the correct oracle for each block.
 3. Skip point-cloud generation for structured blocks.
-4. Potential files: `examples/config.yml`, `src/config.jl`, `src/lmo_utils.jl`, `src/polytope_generation.jl`, `src/ProductPolytopesAFW.jl`.
+4. Potential files: `examples/config.yml`, `src/config.jl`, `src/lmo_utils.jl`, `src/polytope_generation.jl`, `src/ProductPolytopesFW.jl`.
 
 
 

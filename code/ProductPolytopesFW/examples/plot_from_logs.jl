@@ -3,7 +3,7 @@
 # This is useful if the user decides at a certain point to change anything in the plotting functions. but does not want
 #   At that point, instead of re-running all the experiments from scratch, one can just plot using saved logs
 #   One can decide to plot only some FW variants from the logs
-using ProductPolytopesAFW
+using ProductPolytopesFW
 using FrankWolfe
 using Plots
 

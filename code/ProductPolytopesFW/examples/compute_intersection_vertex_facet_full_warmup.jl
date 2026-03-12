@@ -8,7 +8,7 @@
 #   - P₁ is a hypercube (`BoxLMO`, generalization of L∞-ball)
 #   - P₂ is a diamond (`DiamondLMO`, generalization of L₁ ball)
 #   A vertex of P₂ touches the interior of a facet of P₁
-using ProductPolytopesAFW
+using ProductPolytopesFW
 using FrankWolfe
 using Plots
 using Random

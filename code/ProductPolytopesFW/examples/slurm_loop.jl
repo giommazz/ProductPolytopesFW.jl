@@ -1,5 +1,5 @@
 #!/usr/bin/env julia
-using ProductPolytopesAFW
+using ProductPolytopesFW
 
 const CONFIG_LINE_TEMPLATE = "config = Config(\"examples/config.yml\")"
 

@@ -1,6 +1,6 @@
 @testset "Tiny FW/AFW smoke runs" begin
-    base_cfg = ProductPolytopesAFW.Config()
-    cfg = ProductPolytopesAFW.modify_config(
+    base_cfg = ProductPolytopesFW.Config()
+    cfg = ProductPolytopesFW.modify_config(
         base_cfg;
         k=2,
         n=3,
@@ -30,17 +30,17 @@
         2.0 2.0 3.0;
     ]
 
-    lmos = ProductPolytopesAFW.create_lmos(cfg, [V1, V2])
-    prod_lmo = ProductPolytopesAFW.create_product_lmo(lmos)
+    lmos = ProductPolytopesFW.create_lmos(cfg, [V1, V2])
+    prod_lmo = ProductPolytopesFW.create_product_lmo(lmos)
 
-    x_fw, v_fw, primal_fw, gap_fw, traj_fw = ProductPolytopesAFW.run_FullFW(cfg, FrankWolfe.frank_wolfe, prod_lmo)
+    x_fw, v_fw, primal_fw, gap_fw, traj_fw = ProductPolytopesFW.run_FullFW(cfg, FrankWolfe.frank_wolfe, prod_lmo)
     @test isfinite(primal_fw)
     @test isfinite(gap_fw)
     @test !isempty(traj_fw)
     @test x_fw !== nothing
     @test v_fw !== nothing
 
-    x_afw, v_afw, primal_afw, gap_afw, traj_afw = ProductPolytopesAFW.run_FullAFW(cfg, prod_lmo)
+    x_afw, v_afw, primal_afw, gap_afw, traj_afw = ProductPolytopesFW.run_FullAFW(cfg, prod_lmo)
     @test isfinite(primal_afw)
     @test isfinite(gap_afw)
     @test !isempty(traj_afw)
