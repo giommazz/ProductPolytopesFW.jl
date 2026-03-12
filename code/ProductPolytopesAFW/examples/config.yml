@@ -2,15 +2,15 @@
 #   User parameters
 # ***************************
 # Number of polytopes
-k: 2
+k: 3
 # Dimension of the subspace in which each polytope lies
-n: 2003
+n: 203
 # list of `k` integers, each indicating the n. of points to be used to generate `k` polytopes
 # if `0` given, `n_points` is generated randomly using `ub_n_points`
 n_points: 0
 # Upper bound multiplier used only when `n_points: 0`:
 # for each polytope `i`, sample `n_points[i]` uniformly in {n+1, …, n*ub_n_points}
-ub_n_points: 100
+ub_n_points: 50
 # Vertex sampling strategy (how the points/atoms used for each polytope are generated):
 # - "box_uniform": (default) sample points uniformly inside each axis-aligned box (can be anisotropic across coordinates)
 # - "sphere"     : sample points on a Euclidean sphere fully contained in the box (more isotropic, but can "collapse" if one box side is small)
@@ -44,7 +44,7 @@ sphere_radius_factor: 0.9
 #         "center" : vertex mean (average of sampled vertices) of each polytope
 #         "vertex" : vertex of each polytope closest to chosen anchor (for P₂ under "p1_p2_segment", closest vertex p₂ from the FW-based closest pair is used)
 intersection:
-  anchor: "p1_p2_segment"
+  anchor: "p1_center"
   anchor_t: 0.5
   reference_point: "vertex"
 # epsilon-optimality threshold
