@@ -1,2 +1,0 @@
-case_id,benchmark_kind,n,n_points,backend,representation,optimized,cache,line_search,iterations,elapsed_s,alloc_bytes,alloc_count,final_primal,checksum,status,error_message
-oracle_n2000_mat_scan_cacheauto,oracle,2000,4000,matrix,matrix,false,on,na,3200,125.023240396,1028768,192,NaN,12969.526925432066,success,
