@@ -18,7 +18,7 @@ The repository includes the implementation used for the computational results in
 If you use this repository in your research, please cite:
 
 ```bibtex
-@article{iommazzo2025linear,
+@article{IMC+25,
   title={Linear Convergence of the Frank-Wolfe Algorithm over Product Polytopes},
   author={Iommazzo, Gabriele and Mart{\\'i}nez-Rubio, David and Criado, Francisco and Wirth, Elias and Pokutta, Sebastian},
   journal={arXiv preprint arXiv:2505.11259},
