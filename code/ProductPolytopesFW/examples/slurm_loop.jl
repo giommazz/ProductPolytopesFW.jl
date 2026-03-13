@@ -1,75 +1,60 @@
 #!/usr/bin/env julia
+# Generate per-run config/script variants and submit a `(k, n)` grid to Slurm
+# through `examples/slurm_experiments.sh`, using hardcoded settings below.
 using ProductPolytopesFW
 
 const CONFIG_LINE_TEMPLATE = "config = Config(\"examples/config.yml\")"
 
-function usage()
-    return """
-Usage:
-  julia --project=. examples/slurm_loop.jl <script_template> <results_dir> <base_config> <k_csv> <n_csv> <seed_start> [--dry-run]
+# -----------------------------------------------------------------------------
+# Hardcoded run settings (edit these values directly)
+# -----------------------------------------------------------------------------
+const SCRIPT_TEMPLATE = "examples/compute_intersection_vertex_facet_full_warmup.jl"
+const RESULTS_DIR = "examples/results_linesearch_vertex_facet"
+const BASE_CONFIG = "examples/config.yml"
+const K_VALUES = [2]
+const N_VALUES = [5000, 10000, 20000]
+const SEED_START = 42
+const DRY_RUN = false
 
-Arguments:
-  <script_template>  Experiment script template (point-cloud or vertex-facet script).
-  <results_dir>      Output directory passed to slurm_experiments.sh.
-  <base_config>      Base YAML config file.
-  <k_csv>            Comma-separated k values (example: 2,3,4).
-  <n_csv>            Comma-separated n values (example: 103,207).
-  <seed_start>       Initial integer seed, incremented after each submitted job.
-  --dry-run          Optional flag: print sbatch commands without submitting.
 """
-end
+    validate_hardcoded_settings()
 
-function parse_int_csv(csv::AbstractString, field_name::AbstractString)
-    values = Int[]
-    for token in split(csv, ",")
-        token = strip(token)
-        isempty(token) && error("Invalid $field_name: empty value in '$csv'.")
-        value = try
-            parse(Int, token)
-        catch
-            error("Invalid $field_name: '$token' is not an integer.")
-        end
-        value > 0 || error("Invalid $field_name: all values must be positive integers.")
-        push!(values, value)
-    end
-    isempty(values) && error("Invalid $field_name: no values parsed.")
-    return values
-end
-
-function parse_seed(seed_raw::AbstractString)
-    seed = try
-        parse(Int, seed_raw)
-    catch
-        error("Invalid seed_start '$seed_raw': must be an integer.")
-    end
-    seed >= 0 || error("Invalid seed_start '$seed_raw': must be non-negative.")
-    return seed
-end
-
-function parse_args(args::Vector{String})
-    if !(length(args) in (6, 7))
-        error(usage())
-    end
-    dry_run = false
-    if length(args) == 7
-        args[7] == "--dry-run" || error("Unknown option '$(args[7])'.\n\n$(usage())")
-        dry_run = true
-    end
-
-    script_template = abspath(args[1])
-    results_dir = abspath(args[2])
-    base_config = abspath(args[3])
-    k_values = parse_int_csv(args[4], "k_csv")
-    n_values = parse_int_csv(args[5], "n_csv")
-    seed_start = parse_seed(args[6])
+Validate the hardcoded run settings and return normalized absolute paths/values.
+"""
+function validate_hardcoded_settings()
+    script_template = abspath(SCRIPT_TEMPLATE)
+    results_dir = abspath(RESULTS_DIR)
+    base_config = abspath(BASE_CONFIG)
 
     isfile(script_template) || error("Script template not found: $script_template")
     isfile(base_config) || error("Base config not found: $base_config")
-    (endswith(base_config, ".yml") || endswith(base_config, ".yaml")) || error("Base config must be a .yml/.yaml file: $base_config")
+    (endswith(base_config, ".yml") || endswith(base_config, ".yaml")) ||
+        error("Base config must be a .yml/.yaml file: $base_config")
 
-    return script_template, results_dir, base_config, k_values, n_values, seed_start, dry_run
+    script_kind = if occursin("vertex_facet", lowercase(script_template))
+        "vertex_facet"
+    elseif occursin("point_clouds", lowercase(script_template))
+        "point_clouds"
+    else
+        error("SCRIPT_TEMPLATE must contain either 'vertex_facet' or 'point_clouds': $script_template")
+    end
+    occursin(script_kind, lowercase(results_dir)) ||
+        error("RESULTS_DIR must contain '$script_kind' to match SCRIPT_TEMPLATE. Found: $results_dir")
+
+    isempty(K_VALUES) && error("K_VALUES must contain at least one integer.")
+    isempty(N_VALUES) && error("N_VALUES must contain at least one integer.")
+    all(k -> k > 0, K_VALUES) || error("All K_VALUES must be positive integers.")
+    all(n -> n > 0, N_VALUES) || error("All N_VALUES must be positive integers.")
+    SEED_START >= 0 || error("SEED_START must be non-negative.")
+
+    return script_template, results_dir, base_config, Int.(K_VALUES), Int.(N_VALUES), Int(SEED_START), Bool(DRY_RUN)
 end
 
+"""
+    write_modified_config_for_run(base_config, config_dir, k, n, seed)
+
+Create a per-run YAML config by overriding `(k, n, seed)` in the base config.
+"""
 function write_modified_config_for_run(
     base_config::Config,
     config_dir::AbstractString,
@@ -82,6 +67,12 @@ function write_modified_config_for_run(
     return write_config(modified, config_filename)
 end
 
+"""
+    write_script_variant(script_template, script_dir, config_filename, k, n, seed)
+
+Create a per-run Julia script that points to the generated config file.
+The template is required to contain exactly one `config = Config("...")` line.
+"""
 function write_script_variant(
     script_template::AbstractString,
     script_dir::AbstractString,
@@ -91,6 +82,7 @@ function write_script_variant(
     seed::Int,
 )
     src_text = read(script_template, String)
+    # Replace exactly one config-loading line so the generated script is tied to one run config.
     occurrences = length(split(src_text, CONFIG_LINE_TEMPLATE)) - 1
     occurrences == 1 || error(
         "Expected exactly one occurrence of '$CONFIG_LINE_TEMPLATE' in $(script_template), found $(occurrences).",
@@ -105,6 +97,11 @@ function write_script_variant(
     return abspath(script_filename)
 end
 
+"""
+    safe_submit(cmd; dry_run=false)
+
+Submit one `sbatch` command, or print it without submitting when `dry_run=true`.
+"""
 function safe_submit(cmd::Cmd; dry_run::Bool=false)
     if dry_run
         println("[dry-run] ", cmd)
@@ -117,8 +114,14 @@ function safe_submit(cmd::Cmd; dry_run::Bool=false)
     end
 end
 
-function main(args::Vector{String})
-    script_template, results_dir, base_config_filename, k_values, n_values, seed_start, dry_run = parse_args(args)
+"""
+    main()
+
+Generate per-run config/script files for each hardcoded `(k, n)` pair and submit
+the corresponding Slurm jobs.
+"""
+function main()
+    script_template, results_dir, base_config_filename, k_values, n_values, seed_start, dry_run = validate_hardcoded_settings()
     base_config = Config(base_config_filename)
 
     generated_root = joinpath(results_dir, "slurm_generated")
@@ -136,6 +139,7 @@ function main(args::Vector{String})
         run_config = write_modified_config_for_run(base_config, generated_config_dir, k, n, seed)
         run_script = write_script_variant(script_template, generated_script_dir, run_config, k, n, seed)
 
+        # Keep the Slurm CPU request synchronized with the current `k` value.
         slurm_cmd = `sbatch --cpus-per-task=$(k) $(slurm_wrapper) $(run_script) $(results_dir) $(run_config)`
         println("Submitting job k=$(k), n=$(n), seed=$(seed)")
         safe_submit(slurm_cmd; dry_run=dry_run)
@@ -144,12 +148,5 @@ function main(args::Vector{String})
 end
 
 if abspath(PROGRAM_FILE) == @__FILE__
-    try
-        main(ARGS)
-    catch err
-        println(stderr, err)
-        println(stderr, "")
-        println(stderr, usage())
-        exit(1)
-    end
+    main()
 end
