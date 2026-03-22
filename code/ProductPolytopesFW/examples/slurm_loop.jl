@@ -6,13 +6,13 @@ using ProductPolytopesFW
 const CONFIG_LINE_TEMPLATE = "config = Config(\"examples/config.yml\")"
 
 # -----------------------------------------------------------------------------
-# Hardcoded run settings (edit these values directly)
+# Hardcoded run settings
 # -----------------------------------------------------------------------------
 const SCRIPT_TEMPLATE = "examples/compute_intersection_vertex_facet_full_warmup.jl"
 const RESULTS_DIR = "examples/results_linesearch_vertex_facet"
 const BASE_CONFIG = "examples/config.yml"
 const K_VALUES = [2]
-const N_VALUES = [5000, 10000, 20000]
+const N_VALUES = [10000]
 const SEED_START = 42
 const DRY_RUN = false
 
@@ -54,6 +54,7 @@ end
     write_modified_config_for_run(base_config, config_dir, k, n, seed)
 
 Create a per-run YAML config by overriding `(k, n, seed)` in the base config.
+The generated filename includes iteration budgets to avoid collisions across reruns.
 """
 function write_modified_config_for_run(
     base_config::Config,
@@ -63,12 +64,13 @@ function write_modified_config_for_run(
     seed::Int,
 )
     modified = modify_config(base_config, k=k, n=n, seed=seed)
-    config_filename = joinpath(config_dir, "config_k$(k)_n$(n)_s$(seed).yml")
-    return write_config(modified, config_filename)
+    run_tag = "k$(k)_n$(n)_i$(modified.max_iterations)_io$(modified.max_iterations_opt)_s$(seed)"
+    config_filename = joinpath(config_dir, "config_$(run_tag).yml")
+    return write_config(modified, config_filename), run_tag
 end
 
 """
-    write_script_variant(script_template, script_dir, config_filename, k, n, seed)
+    write_script_variant(script_template, script_dir, config_filename, run_tag)
 
 Create a per-run Julia script that points to the generated config file.
 The template is required to contain exactly one `config = Config("...")` line.
@@ -77,9 +79,7 @@ function write_script_variant(
     script_template::AbstractString,
     script_dir::AbstractString,
     config_filename::AbstractString,
-    k::Int,
-    n::Int,
-    seed::Int,
+    run_tag::AbstractString,
 )
     src_text = read(script_template, String)
     # Replace exactly one config-loading line so the generated script is tied to one run config.
@@ -92,7 +92,7 @@ function write_script_variant(
     new_text = replace(src_text, CONFIG_LINE_TEMPLATE => replacement)
 
     script_stem = splitext(basename(script_template))[1]
-    script_filename = joinpath(script_dir, "$(script_stem)_k$(k)_n$(n)_s$(seed).jl")
+    script_filename = joinpath(script_dir, "$(script_stem)_$(run_tag).jl")
     write(script_filename, new_text)
     return abspath(script_filename)
 end
@@ -136,8 +136,8 @@ function main()
 
     seed = seed_start
     for k in k_values, n in n_values
-        run_config = write_modified_config_for_run(base_config, generated_config_dir, k, n, seed)
-        run_script = write_script_variant(script_template, generated_script_dir, run_config, k, n, seed)
+        run_config, run_tag = write_modified_config_for_run(base_config, generated_config_dir, k, n, seed)
+        run_script = write_script_variant(script_template, generated_script_dir, run_config, run_tag)
 
         # Keep the Slurm CPU request synchronized with the current `k` value.
         slurm_cmd = `sbatch --cpus-per-task=$(k) $(slurm_wrapper) $(run_script) $(results_dir) $(run_config)`

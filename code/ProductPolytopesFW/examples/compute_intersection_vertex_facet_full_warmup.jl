@@ -200,7 +200,7 @@ print_config(config_warmup)
 vf_alpha = 0.02 #0.2
 vf_beta = 0.45
 vf_delta = 0.45
-vf_touching_point_rnd = false # true → random point in relint of facet, o/w (1, 0.5, ..., 0.5)
+vf_touching_point_rnd = true # true → random point in relint of facet, o/w (1, 0.5, ..., 0.5)
 vf_separation = 0.5
 println("Vertex-facet parameters:")
 println("  alpha: ", vf_alpha)
