@@ -6,7 +6,7 @@
 # Line Search Extensions
 # -----------------------------------------------------------------------------
 """
-    SafeGoldenratio(tol=1e-7)
+    SafeGoldenratio(tol=1e-10)
 
 Like `FrankWolfe.Goldenratio` but with numerically safer reconstruction of final step size `γ`.
 
@@ -23,7 +23,7 @@ struct SafeGoldenratio{T} <: FrankWolfe.LineSearchMethod
     tol::T
 end
 
-SafeGoldenratio() = SafeGoldenratio(1e-7)
+SafeGoldenratio() = SafeGoldenratio(1e-10)
 
 """
     SafeGoldenratioWorkspace{XT,GT}

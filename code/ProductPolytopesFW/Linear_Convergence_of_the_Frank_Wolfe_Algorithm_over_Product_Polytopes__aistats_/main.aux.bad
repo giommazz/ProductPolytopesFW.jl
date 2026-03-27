@@ -1,0 +1,738 @@
+\relax 
+\providecommand\hyper@newdestlabel[2]{}
+\providecommand\babel@aux[2]{}
+\@nameuse{bbl@beforestart}
+\providecommand\HyperFirstAtBeginDocument{\AtBeginDocument}
+\HyperFirstAtBeginDocument{\ifx\hyper@anchor\@undefined
+\global\let\oldcontentsline\contentsline
+\gdef\contentsline#1#2#3#4{\oldcontentsline{#1}{#2}{#3}}
+\global\let\oldnewlabel\newlabel
+\gdef\newlabel#1#2{\newlabelxx{#1}#2}
+\gdef\newlabelxx#1#2#3#4#5#6{\oldnewlabel{#1}{{#2}{#3}}}
+\AtEndDocument{\ifx\hyper@anchor\@undefined
+\let\contentsline\oldcontentsline
+\let\newlabel\oldnewlabel
+\fi}
+\fi}
+\global\let\hyper@last\relax 
+\gdef\HyperFirstAtBeginDocument#1{#1}
+\providecommand\HyField@AuxAddToFields[1]{}
+\providecommand\HyField@AuxAddToCoFields[2]{}
+\abx@aux@refcontext{nyt/global//global/global}
+\abx@aux@cite{0}{BCC+23}
+\abx@aux@segm{0}{0}{BCC+23}
+\abx@aux@cite{0}{Jag13}
+\abx@aux@segm{0}{0}{Jag13}
+\abx@aux@cite{0}{wolfe1970convergence}
+\abx@aux@segm{0}{0}{wolfe1970convergence}
+\abx@aux@cite{0}{guelat1986some}
+\abx@aux@segm{0}{0}{guelat1986some}
+\abx@aux@cite{0}{levitin1966constrained}
+\abx@aux@segm{0}{0}{levitin1966constrained}
+\abx@aux@cite{0}{lacoste2013affine}
+\abx@aux@segm{0}{0}{lacoste2013affine}
+\abx@aux@cite{0}{GH15}
+\abx@aux@segm{0}{0}{GH15}
+\abx@aux@cite{0}{LJ15}
+\abx@aux@segm{0}{0}{LJ15}
+\abx@aux@cite{0}{BS15}
+\abx@aux@segm{0}{0}{BS15}
+\abx@aux@cite{0}{penya2016vonneumann}
+\abx@aux@segm{0}{0}{penya2016vonneumann}
+\abx@aux@cite{0}{PR18}
+\abx@aux@segm{0}{0}{PR18}
+\abx@aux@cite{0}{BS15}
+\abx@aux@segm{0}{0}{BS15}
+\abx@aux@cite{0}{BCC+23}
+\abx@aux@segm{0}{0}{BCC+23}
+\abx@aux@cite{0}{CCC+09}
+\abx@aux@segm{0}{0}{CCC+09}
+\abx@aux@cite{0}{CCP12}
+\abx@aux@segm{0}{0}{CCP12}
+\abx@aux@cite{0}{SY98}
+\abx@aux@segm{0}{0}{SY98}
+\abx@aux@cite{0}{CP10proximal}
+\abx@aux@segm{0}{0}{CP10proximal}
+\abx@aux@cite{0}{Com96}
+\abx@aux@segm{0}{0}{Com96}
+\abx@aux@cite{0}{ACT23}
+\abx@aux@segm{0}{0}{ACT23}
+\abx@aux@cite{0}{RSV12}
+\abx@aux@segm{0}{0}{RSV12}
+\abx@aux@cite{0}{MA18}
+\abx@aux@segm{0}{0}{MA18}
+\abx@aux@cite{0}{LJS+13}
+\abx@aux@segm{0}{0}{LJS+13}
+\abx@aux@cite{0}{BRZ23}
+\abx@aux@segm{0}{0}{BRZ23}
+\providecommand \oddpage@label [2]{}
+\babel@aux{english}{}
+\@writefile{toc}{\contentsline {section}{\numberline {1}Introduction}{1}{section.1}\protected@file@percent }
+\newlabel{s:intro}{{1}{1}{Introduction}{section.1}{}}
+\newlabel{s:intro@cref}{{[section][1][]1}{[1][1][]1}}
+\abx@aux@backref{1}{BCC+23}{0}{1}{1}
+\abx@aux@page{1}{1}
+\newlabel{eq:lmo}{{{LMO}}{1}{Introduction}{AMS.2}{}}
+\newlabel{eq:lmo@cref}{{[equation][2147483647][]{LMO}}{[1][1][]1}}
+\abx@aux@backref{2}{Jag13}{0}{1}{1}
+\abx@aux@page{2}{1}
+\abx@aux@backref{3}{wolfe1970convergence}{0}{1}{1}
+\abx@aux@page{3}{1}
+\abx@aux@backref{4}{guelat1986some}{0}{1}{1}
+\abx@aux@page{4}{1}
+\abx@aux@backref{5}{levitin1966constrained}{0}{1}{1}
+\abx@aux@page{5}{1}
+\abx@aux@backref{6}{lacoste2013affine}{0}{1}{1}
+\abx@aux@page{6}{1}
+\abx@aux@backref{7}{GH15}{0}{1}{1}
+\abx@aux@page{7}{1}
+\abx@aux@backref{8}{LJ15}{0}{1}{1}
+\abx@aux@page{8}{1}
+\abx@aux@backref{9}{BS15}{0}{1}{1}
+\abx@aux@page{9}{1}
+\abx@aux@backref{10}{penya2016vonneumann}{0}{1}{1}
+\abx@aux@page{10}{1}
+\abx@aux@backref{11}{PR18}{0}{1}{1}
+\abx@aux@page{11}{1}
+\abx@aux@backref{12}{BS15}{0}{1}{1}
+\abx@aux@page{12}{1}
+\abx@aux@backref{13}{BCC+23}{0}{1}{1}
+\abx@aux@page{13}{1}
+\abx@aux@cite{0}{DVZ22}
+\abx@aux@segm{0}{0}{DVZ22}
+\abx@aux@cite{0}{GM86}
+\abx@aux@segm{0}{0}{GM86}
+\abx@aux@cite{0}{wirth2023approximate}
+\abx@aux@segm{0}{0}{wirth2023approximate}
+\abx@aux@cite{0}{CFK23}
+\abx@aux@segm{0}{0}{CFK23}
+\abx@aux@cite{0}{wirth2025accelerated}
+\abx@aux@segm{0}{0}{wirth2025accelerated}
+\abx@aux@cite{0}{pena2023affine}
+\abx@aux@segm{0}{0}{pena2023affine}
+\abx@aux@cite{0}{Von49}
+\abx@aux@segm{0}{0}{Von49}
+\abx@aux@cite{0}{Gin18}
+\abx@aux@segm{0}{0}{Gin18}
+\abx@aux@cite{0}{BS16}
+\abx@aux@segm{0}{0}{BS16}
+\abx@aux@cite{0}{BC11}
+\abx@aux@segm{0}{0}{BC11}
+\abx@aux@cite{0}{BPW23}
+\abx@aux@segm{0}{0}{BPW23}
+\abx@aux@cite{0}{GPR67}
+\abx@aux@segm{0}{0}{GPR67}
+\abx@aux@cite{0}{BB93}
+\abx@aux@segm{0}{0}{BB93}
+\abx@aux@cite{0}{BB96}
+\abx@aux@segm{0}{0}{BB96}
+\abx@aux@cite{0}{BT03}
+\abx@aux@segm{0}{0}{BT03}
+\abx@aux@cite{0}{DIL15}
+\abx@aux@segm{0}{0}{DIL15}
+\abx@aux@cite{0}{BLM21}
+\abx@aux@segm{0}{0}{BLM21}
+\abx@aux@cite{0}{BBS21}
+\abx@aux@segm{0}{0}{BBS21}
+\abx@aux@backref{14}{CCC+09}{0}{2}{2}
+\abx@aux@page{14}{2}
+\abx@aux@backref{15}{CCP12}{0}{2}{2}
+\abx@aux@page{15}{2}
+\abx@aux@backref{16}{SY98}{0}{2}{2}
+\abx@aux@page{16}{2}
+\abx@aux@backref{17}{CP10proximal}{0}{2}{2}
+\abx@aux@page{17}{2}
+\abx@aux@backref{18}{Com96}{0}{2}{2}
+\abx@aux@page{18}{2}
+\abx@aux@backref{19}{ACT23}{0}{2}{2}
+\abx@aux@page{19}{2}
+\abx@aux@backref{20}{RSV12}{0}{2}{2}
+\abx@aux@page{20}{2}
+\abx@aux@backref{21}{MA18}{0}{2}{2}
+\abx@aux@page{21}{2}
+\abx@aux@backref{22}{LJS+13}{0}{2}{2}
+\abx@aux@page{22}{2}
+\abx@aux@backref{23}{BRZ23}{0}{2}{2}
+\abx@aux@page{23}{2}
+\newlabel{prob:cfp}{{{P}}{2}{Introduction}{AMS.3}{}}
+\newlabel{prob:cfp@cref}{{[equation][2147483647][]{P}}{[1][2][]2}}
+\abx@aux@backref{24}{DVZ22}{0}{2}{2}
+\abx@aux@page{24}{2}
+\abx@aux@backref{25}{GM86}{0}{2}{2}
+\abx@aux@page{25}{2}
+\@writefile{toc}{\contentsline {paragraph}{Contributions}{2}{section*.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {2}Other related work}{2}{section.2}\protected@file@percent }
+\newlabel{s:literature}{{2}{2}{Other related work}{section.2}{}}
+\newlabel{s:literature@cref}{{[section][2][]2}{[1][2][]2}}
+\@writefile{toc}{\contentsline {paragraph}{Polytope condition numbers}{2}{section*.5}\protected@file@percent }
+\abx@aux@backref{26}{wirth2023approximate}{0}{2}{2}
+\abx@aux@page{26}{2}
+\abx@aux@backref{27}{CFK23}{0}{2}{2}
+\abx@aux@page{27}{2}
+\abx@aux@backref{28}{wirth2025accelerated}{0}{2}{2}
+\abx@aux@page{28}{2}
+\abx@aux@backref{29}{pena2023affine}{0}{2}{2}
+\abx@aux@page{29}{2}
+\@writefile{toc}{\contentsline {paragraph}{Convex feasibility via projections.}{2}{section*.6}\protected@file@percent }
+\abx@aux@cite{0}{Wil68}
+\abx@aux@segm{0}{0}{Wil68}
+\abx@aux@cite{0}{Wol76}
+\abx@aux@segm{0}{0}{Wol76}
+\abx@aux@cite{0}{BPS15}
+\abx@aux@segm{0}{0}{BPS15}
+\abx@aux@cite{0}{BRZ23}
+\abx@aux@segm{0}{0}{BRZ23}
+\abx@aux@cite{0}{GPL18}
+\abx@aux@segm{0}{0}{GPL18}
+\abx@aux@cite{0}{GLS23}
+\abx@aux@segm{0}{0}{GLS23}
+\abx@aux@cite{0}{GPL18}
+\abx@aux@segm{0}{0}{GPL18}
+\abx@aux@cite{0}{SMF20}
+\abx@aux@segm{0}{0}{SMF20}
+\abx@aux@cite{0}{garber2015faster}
+\abx@aux@segm{0}{0}{garber2015faster}
+\abx@aux@cite{0}{KDP20}
+\abx@aux@segm{0}{0}{KDP20}
+\abx@aux@cite{0}{wirth2023acceleration}
+\abx@aux@segm{0}{0}{wirth2023acceleration}
+\abx@aux@cite{0}{wirth2025accelerated}
+\abx@aux@segm{0}{0}{wirth2025accelerated}
+\abx@aux@cite{0}{LJ15}
+\abx@aux@segm{0}{0}{LJ15}
+\abx@aux@cite{0}{TTP22}
+\abx@aux@segm{0}{0}{TTP22}
+\abx@aux@cite{0}{pena2023affine}
+\abx@aux@segm{0}{0}{pena2023affine}
+\abx@aux@cite{0}{wirth2024fast}
+\abx@aux@segm{0}{0}{wirth2024fast}
+\abx@aux@cite{0}{PR18}
+\abx@aux@segm{0}{0}{PR18}
+\abx@aux@cite{0}{GM86}
+\abx@aux@segm{0}{0}{GM86}
+\abx@aux@cite{0}{LJ15}
+\abx@aux@segm{0}{0}{LJ15}
+\abx@aux@cite{0}{GH15}
+\abx@aux@segm{0}{0}{GH15}
+\abx@aux@cite{0}{TTP22}
+\abx@aux@segm{0}{0}{TTP22}
+\abx@aux@cite{0}{BS15}
+\abx@aux@segm{0}{0}{BS15}
+\abx@aux@cite{0}{LJ15}
+\abx@aux@segm{0}{0}{LJ15}
+\abx@aux@cite{0}{wirth2024fast}
+\abx@aux@segm{0}{0}{wirth2024fast}
+\abx@aux@backref{30}{Von49}{0}{3}{3}
+\abx@aux@page{30}{3}
+\abx@aux@backref{31}{Gin18}{0}{3}{3}
+\abx@aux@page{31}{3}
+\abx@aux@backref{32}{BS16}{0}{3}{3}
+\abx@aux@page{32}{3}
+\abx@aux@backref{33}{BC11}{0}{3}{3}
+\abx@aux@page{33}{3}
+\abx@aux@backref{34}{BPW23}{0}{3}{3}
+\abx@aux@page{34}{3}
+\abx@aux@backref{35}{GPR67}{0}{3}{3}
+\abx@aux@page{35}{3}
+\abx@aux@backref{36}{BB93}{0}{3}{3}
+\abx@aux@page{36}{3}
+\abx@aux@backref{37}{BB96}{0}{3}{3}
+\abx@aux@page{37}{3}
+\abx@aux@backref{38}{BT03}{0}{3}{3}
+\abx@aux@page{38}{3}
+\abx@aux@backref{39}{DIL15}{0}{3}{3}
+\abx@aux@page{39}{3}
+\abx@aux@backref{40}{BLM21}{0}{3}{3}
+\abx@aux@page{40}{3}
+\abx@aux@backref{41}{BBS21}{0}{3}{3}
+\abx@aux@page{41}{3}
+\@writefile{toc}{\contentsline {paragraph}{Frank–Wolfe for feasibility and block‐coordinate variants.}{3}{section*.7}\protected@file@percent }
+\abx@aux@backref{42}{Wil68}{0}{3}{3}
+\abx@aux@page{42}{3}
+\abx@aux@backref{43}{Wol76}{0}{3}{3}
+\abx@aux@page{43}{3}
+\abx@aux@backref{44}{BPS15}{0}{3}{3}
+\abx@aux@page{44}{3}
+\abx@aux@backref{45}{BRZ23}{0}{3}{3}
+\abx@aux@page{45}{3}
+\abx@aux@backref{46}{GPL18}{0}{3}{3}
+\abx@aux@page{46}{3}
+\abx@aux@backref{47}{GLS23}{0}{3}{3}
+\abx@aux@page{47}{3}
+\abx@aux@backref{48}{GPL18}{0}{3}{3}
+\abx@aux@page{48}{3}
+\abx@aux@backref{49}{SMF20}{0}{3}{3}
+\abx@aux@page{49}{3}
+\@writefile{toc}{\contentsline {paragraph}{FW convergence and fast convergence rates.}{3}{section*.8}\protected@file@percent }
+\abx@aux@backref{50}{garber2015faster}{0}{3}{3}
+\abx@aux@page{50}{3}
+\abx@aux@backref{51}{KDP20}{0}{3}{3}
+\abx@aux@page{51}{3}
+\abx@aux@backref{52}{wirth2023acceleration}{0}{3}{3}
+\abx@aux@page{52}{3}
+\abx@aux@backref{53}{wirth2025accelerated}{0}{3}{3}
+\abx@aux@page{53}{3}
+\abx@aux@backref{54}{LJ15}{0}{3}{3}
+\abx@aux@page{54}{3}
+\abx@aux@backref{55}{TTP22}{0}{3}{3}
+\abx@aux@page{55}{3}
+\abx@aux@backref{56}{pena2023affine}{0}{3}{3}
+\abx@aux@page{56}{3}
+\abx@aux@backref{57}{wirth2024fast}{0}{3}{3}
+\abx@aux@page{57}{3}
+\abx@aux@backref{58}{PR18}{0}{3}{3}
+\abx@aux@page{58}{3}
+\abx@aux@backref{59}{GM86}{0}{3}{3}
+\abx@aux@page{59}{3}
+\abx@aux@backref{60}{LJ15}{0}{3}{3}
+\abx@aux@page{60}{3}
+\abx@aux@backref{61}{GH15}{0}{3}{3}
+\abx@aux@page{61}{3}
+\abx@aux@backref{62}{TTP22}{0}{3}{3}
+\abx@aux@page{62}{3}
+\abx@aux@backref{63}{BS15}{0}{3}{3}
+\abx@aux@page{63}{3}
+\abx@aux@backref{64}{LJ15}{0}{3}{3}
+\abx@aux@page{64}{3}
+\abx@aux@backref{65}{wirth2024fast}{0}{3}{3}
+\abx@aux@page{65}{3}
+\@writefile{toc}{\contentsline {section}{\numberline {3}Notation and Preliminaries}{3}{section.3}\protected@file@percent }
+\newlabel{s:preliminaries}{{3}{3}{Notation and Preliminaries}{section.3}{}}
+\newlabel{s:preliminaries@cref}{{[section][3][]3}{[1][3][]3}}
+\@writefile{loe}{\contentsline {definition}{\ifthmt@listswap Definition~3.1\else \numberline {3.1}Definition\fi \thmtformatoptarg {\textbf  {Convexity and $L$-smoothness}}}{3}{definition.3.1}\protected@file@percent }
+\newlabel{def:conv_smooth}{{3.1}{3}{\textbf {Convexity and $L$-smoothness}}{definition.3.1}{}}
+\newlabel{def:conv_smooth@cref}{{[definition][1][]3.1}{[1][3][]3}}
+\abx@aux@cite{0}{Bec17}
+\abx@aux@segm{0}{0}{Bec17}
+\abx@aux@cite{0}{KNS16}
+\abx@aux@segm{0}{0}{KNS16}
+\abx@aux@cite{0}{PR18}
+\abx@aux@segm{0}{0}{PR18}
+\abx@aux@cite{0}{lacoste2013affine}
+\abx@aux@segm{0}{0}{lacoste2013affine}
+\abx@aux@cite{0}{BS15}
+\abx@aux@segm{0}{0}{BS15}
+\abx@aux@cite{0}{LJ15}
+\abx@aux@segm{0}{0}{LJ15}
+\abx@aux@cite{0}{PR18}
+\abx@aux@segm{0}{0}{PR18}
+\abx@aux@backref{66}{Bec17}{0}{4}{4}
+\abx@aux@page{66}{4}
+\@writefile{loe}{\contentsline {definition}{\ifthmt@listswap Definition~3.2\else \numberline {3.2}Definition\fi \thmtformatoptarg {\textbf  {Polyak-Łojasiewicz (PL) condition}}}{4}{definition.3.2}\protected@file@percent }
+\newlabel{def:pl}{{3.2}{4}{\textbf {Polyak-Łojasiewicz (PL) condition}}{definition.3.2}{}}
+\newlabel{def:pl@cref}{{[definition][2][]3.2}{[1][4][]4}}
+\abx@aux@backref{67}{KNS16}{0}{4}{4}
+\abx@aux@page{67}{4}
+\@writefile{toc}{\contentsline {section}{\numberline {4}Conditioning of Product Polytopes and Convergence}{4}{section.4}\protected@file@percent }
+\newlabel{s:conditioning_convergence}{{4}{4}{Conditioning of Product Polytopes and Convergence}{section.4}{}}
+\newlabel{s:conditioning_convergence@cref}{{[section][4][]4}{[1][4][]4}}
+\abx@aux@backref{68}{PR18}{0}{4}{4}
+\abx@aux@page{68}{4}
+\abx@aux@backref{69}{lacoste2013affine}{0}{4}{4}
+\abx@aux@page{69}{4}
+\abx@aux@backref{70}{BS15}{0}{4}{4}
+\abx@aux@page{70}{4}
+\abx@aux@backref{71}{LJ15}{0}{4}{4}
+\abx@aux@page{71}{4}
+\@writefile{loe}{\contentsline {definition}{\ifthmt@listswap Definition~4.1\else \numberline {4.1}Definition\fi \thmtformatoptarg {\textbf  {Pyramidal width \citep {PR18}}}}{4}{definition.4.1}\protected@file@percent }
+\newlabel{def:pyrwidth}{{4.1}{4}{\textbf {Pyramidal width \citep {PR18}}}{definition.4.1}{}}
+\newlabel{def:pyrwidth@cref}{{[definition][1][]4.1}{[1][4][]4}}
+\abx@aux@backref{72}{PR18}{0}{4}{4}
+\abx@aux@page{72}{4}
+\newlabel{eq:pyrwidth_X}{{1}{4}{\textbf {Pyramidal width \citep {PR18}}}{equation.4.1}{}}
+\newlabel{eq:pyrwidth_X@cref}{{[equation][1][]1}{[1][4][]4}}
+\@writefile{loe}{\contentsline {definition}{\ifthmt@listswap Definition~4.2\else \numberline {4.2}Definition\fi \thmtformatoptarg {\textbf  {Affine pyramidal width}}}{4}{definition.4.2}\protected@file@percent }
+\newlabel{eq:affine_pyrwidth_X}{{2}{4}{\textbf {Affine pyramidal width}}{equation.4.2}{}}
+\newlabel{eq:affine_pyrwidth_X@cref}{{[equation][2][]2}{[1][4][]4}}
+\@writefile{loe}{\contentsline {lemma}{\ifthmt@listswap Lemma~4.3\else \numberline {4.3}Lemma\fi }{4}{lemma.4.3}\protected@file@percent }
+\newlabel{lemma:affine_pyramidal_width}{{4.3}{4}{}{lemma.4.3}{}}
+\newlabel{lemma:affine_pyramidal_width@cref}{{[lemma][3][]4.3}{[1][4][]4}}
+\@writefile{loe}{\contentsline {corollary}{\ifthmt@listswap Corollary~4.4\else \numberline {4.4}Corollary\fi \thmtformatoptarg {\textbf  {Widths equivalence}}}{4}{corollary.4.4}\protected@file@percent }
+\newlabel{cor:affinepyr_sameas_pyr}{{4.4}{4}{\textbf {Widths equivalence}}{corollary.4.4}{}}
+\newlabel{cor:affinepyr_sameas_pyr@cref}{{[corollary][4][]4.4}{[1][4][]4}}
+\abx@aux@cite{0}{PR18}
+\abx@aux@segm{0}{0}{PR18}
+\abx@aux@cite{0}{RS22}
+\abx@aux@segm{0}{0}{RS22}
+\abx@aux@cite{0}{BS15}
+\abx@aux@segm{0}{0}{BS15}
+\@writefile{loe}{\contentsline {theorem}{\ifthmt@listswap Theorem~4.5\else \numberline {4.5}Theorem\fi \thmtformatoptarg {\textbf  {Pyramidal width of the product}}}{5}{theorem.4.5}\protected@file@percent }
+\newlabel{thm:pyrwidth_mPmQ}{{4.5}{5}{\textbf {Pyramidal width of the product}}{theorem.4.5}{}}
+\newlabel{thm:pyrwidth_mPmQ@cref}{{[theorem][5][4]4.5}{[1][5][]5}}
+\newlabel{eq:pyrwidth_mPmQ}{{3}{5}{\textbf {Pyramidal width of the product}}{equation.4.3}{}}
+\newlabel{eq:pyrwidth_mPmQ@cref}{{[equation][3][]3}{[1][5][]5}}
+\@writefile{loe}{\contentsline {definition}{\ifthmt@listswap Definition~4.6\else \numberline {4.6}Definition\fi \thmtformatoptarg {\textbf  {Vertex-facet distance \citep {PR18}}}}{5}{definition.4.6}\protected@file@percent }
+\newlabel{def:vfd}{{4.6}{5}{\textbf {Vertex-facet distance \citep {PR18}}}{definition.4.6}{}}
+\newlabel{def:vfd@cref}{{[definition][6][]4.6}{[1][5][]5}}
+\abx@aux@backref{73}{PR18}{0}{5}{5}
+\abx@aux@page{73}{5}
+\@writefile{loe}{\contentsline {proposition}{\ifthmt@listswap Proposition~4.7\else \numberline {4.7}Proposition\fi \thmtformatoptarg {\textbf  {Vertex-facet distance of the product}}}{5}{proposition.4.7}\protected@file@percent }
+\newlabel{prop:vfd_PxQ_bounds}{{4.7}{5}{\textbf {Vertex-facet distance of the product}}{proposition.4.7}{}}
+\newlabel{prop:vfd_PxQ_bounds@cref}{{[proposition][7][]4.7}{[1][5][]5}}
+\abx@aux@backref{74}{RS22}{0}{5}{5}
+\abx@aux@page{74}{5}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.1}Linear Convergence}{5}{subsection.4.1}\protected@file@percent }
+\newlabel{s:convergence}{{4.1}{5}{Linear Convergence}{subsection.4.1}{}}
+\newlabel{s:convergence@cref}{{[subsection][1][4]4.1}{[1][5][]5}}
+\@writefile{loe}{\contentsline {proposition}{\ifthmt@listswap Proposition~4.8\else \numberline {4.8}Proposition\fi \thmtformatoptarg {\textbf  {Linear rates via the product's pyramidal width}}}{5}{proposition.4.8}\protected@file@percent }
+\newlabel{prop:linconv_pw}{{4.8}{5}{\textbf {Linear rates via the product's pyramidal width}}{proposition.4.8}{}}
+\newlabel{prop:linconv_pw@cref}{{[proposition][8][]4.8}{[1][5][]5}}
+\abx@aux@backref{75}{BS15}{0}{5}{5}
+\abx@aux@page{75}{5}
+\@writefile{loe}{\contentsline {proposition}{\ifthmt@listswap Proposition~4.9\else \numberline {4.9}Proposition\fi \thmtformatoptarg {\textbf  {Linear rates via the product's vertex-facet distance}}}{5}{proposition.4.9}\protected@file@percent }
+\newlabel{prop:linconv_vf}{{4.9}{5}{\textbf {Linear rates via the product's vertex-facet distance}}{proposition.4.9}{}}
+\newlabel{prop:linconv_vf@cref}{{[proposition][9][]4.9}{[1][5][]5}}
+\@writefile{toc}{\contentsline {section}{\numberline {5}The approximate feasibility problem for a polytope intersection}{5}{section.5}\protected@file@percent }
+\newlabel{s:polytope_intersection}{{5}{5}{The approximate feasibility problem for a polytope intersection}{section.5}{}}
+\newlabel{s:polytope_intersection@cref}{{[section][5][]5}{[1][5][]5}}
+\newlabel{prob:intersection_k}{{4}{5}{The approximate feasibility problem for a polytope intersection}{equation.5.4}{}}
+\newlabel{prob:intersection_k@cref}{{[equation][4][]4}{[1][5][]5}}
+\abx@aux@cite{0}{BCC+23}
+\abx@aux@segm{0}{0}{BCC+23}
+\abx@aux@cite{0}{Jag13}
+\abx@aux@segm{0}{0}{Jag13}
+\@writefile{loe}{\contentsline {proposition}{\ifthmt@listswap Proposition~5.1\else \numberline {5.1}Proposition\fi \thmtformatoptarg {\textbf  {Convexity, smoothness, and PL of \textup  {\hbox {\mathsurround \z@ \normalfont  (\ignorespaces \ref  {prob:intersection_k}\unskip \@@italiccorr )}}}}}{6}{proposition.5.1}\protected@file@percent }
+\newlabel{prop:lsmooth_cvx_pl_intersection_k}{{5.1}{6}{\textbf {Convexity, smoothness, and PL of \eqref {prob:intersection_k}}}{proposition.5.1}{}}
+\newlabel{prop:lsmooth_cvx_pl_intersection_k@cref}{{[proposition][1][]5.1}{[1][6][]6}}
+\@writefile{toc}{\contentsline {section}{\numberline {6}Experiments}{6}{section.6}\protected@file@percent }
+\newlabel{s:experiments}{{6}{6}{Experiments}{section.6}{}}
+\newlabel{s:experiments@cref}{{[section][6][]6}{[1][6][]6}}
+\abx@aux@backref{76}{BCC+23}{0}{6}{6}
+\abx@aux@page{76}{6}
+\abx@aux@backref{77}{Jag13}{0}{6}{6}
+\abx@aux@page{77}{6}
+\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces Different variants of the FW algorithm (C-BC-FW, F-FW, F-AFW) run for up to $1000$ iterations on two non‑intersecting polytopes in $\mathbb  {R}^{20000}$. \relax }}{7}{figure.caption.9}\protected@file@percent }
+\providecommand*\caption@xref[2]{\@setref\relax\@undefined{#1}}
+\newlabel{fig:k2n20000}{{1}{7}{Different variants of the FW algorithm (C-BC-FW, F-FW, F-AFW) run for up to $1000$ iterations on two non‑intersecting polytopes in $\R ^{20000}$. \relax }{figure.caption.9}{}}
+\newlabel{fig:k2n20000@cref}{{[figure][1][]1}{[1][6][]7}}
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces Different variants of the FW algorithm (C-BC-FW, F-FW, F-AFW) run for up to $1000$ iterations on ten non‑intersecting polytopes in $\mathbb  {R}^{10000}$. One can observe that the rates of convergence for the objective are at least linear in F-AFW.\relax }}{7}{figure.caption.10}\protected@file@percent }
+\newlabel{fig:k10n10000}{{2}{7}{Different variants of the FW algorithm (C-BC-FW, F-FW, F-AFW) run for up to $1000$ iterations on ten non‑intersecting polytopes in $\R ^{10000}$. One can observe that the rates of convergence for the objective are at least linear in F-AFW.\relax }{figure.caption.10}{}}
+\newlabel{fig:k10n10000@cref}{{[figure][2][]2}{[1][6][]7}}
+\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces Different variants of the FW algorithm (C-BC-FW, F-FW, F-AFW) run for up to $1000$ iterations on two intersecting polytopes in $\mathbb  {R}^{20000}$. Note that the FW gap is not guaranteed to decrease monotonically but the minimum of it across iterations decreases linearly as well.\relax }}{8}{figure.caption.11}\protected@file@percent }
+\newlabel{fig:k2n10000_intersecting}{{3}{8}{Different variants of the FW algorithm (C-BC-FW, F-FW, F-AFW) run for up to $1000$ iterations on two intersecting polytopes in $\R ^{20000}$. Note that the FW gap is not guaranteed to decrease monotonically but the minimum of it across iterations decreases linearly as well.\relax }{figure.caption.11}{}}
+\newlabel{fig:k2n10000_intersecting@cref}{{[figure][3][]3}{[1][7][]8}}
+\@writefile{toc}{\contentsline {section}{\numberline {7}Conclusion}{8}{section.7}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{References}{9}{section*.12}\protected@file@percent }
+\abx@aux@page{78}{9}
+\abx@aux@page{79}{9}
+\abx@aux@page{80}{9}
+\abx@aux@page{81}{9}
+\abx@aux@page{82}{9}
+\abx@aux@page{83}{9}
+\abx@aux@page{84}{9}
+\abx@aux@page{85}{9}
+\abx@aux@page{86}{9}
+\abx@aux@page{87}{9}
+\abx@aux@page{88}{9}
+\abx@aux@page{89}{9}
+\abx@aux@page{90}{9}
+\abx@aux@page{91}{9}
+\abx@aux@page{92}{9}
+\abx@aux@page{93}{9}
+\abx@aux@page{94}{9}
+\abx@aux@page{95}{9}
+\abx@aux@page{96}{9}
+\abx@aux@page{97}{9}
+\abx@aux@page{98}{9}
+\abx@aux@page{99}{9}
+\abx@aux@page{100}{9}
+\abx@aux@page{101}{9}
+\abx@aux@page{102}{9}
+\abx@aux@page{103}{10}
+\abx@aux@page{104}{10}
+\abx@aux@page{105}{10}
+\abx@aux@page{106}{10}
+\abx@aux@page{107}{10}
+\abx@aux@page{108}{10}
+\abx@aux@page{109}{10}
+\abx@aux@page{110}{10}
+\abx@aux@page{111}{10}
+\abx@aux@page{112}{10}
+\abx@aux@page{113}{10}
+\abx@aux@page{114}{10}
+\abx@aux@page{115}{10}
+\abx@aux@page{116}{10}
+\abx@aux@page{117}{10}
+\abx@aux@page{118}{10}
+\abx@aux@page{119}{10}
+\abx@aux@page{120}{10}
+\abx@aux@page{121}{10}
+\abx@aux@page{122}{10}
+\abx@aux@page{123}{10}
+\abx@aux@page{124}{10}
+\abx@aux@page{125}{10}
+\abx@aux@page{126}{10}
+\abx@aux@page{127}{11}
+\abx@aux@page{128}{11}
+\abx@aux@page{129}{11}
+\abx@aux@page{130}{11}
+\abx@aux@page{131}{11}
+\abx@aux@page{132}{11}
+\abx@aux@page{133}{11}
+\@writefile{toc}{\contentsline {section}{\numberline {A}Proofs}{14}{appendix.A}\protected@file@percent }
+\newlabel{a:proofs}{{A}{14}{Proofs}{appendix.A}{}}
+\newlabel{a:proofs@cref}{{[appendix][1][2147483647]A}{[1][14][]14}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {A.1}Pyramidal width}{14}{subsection.A.1}\protected@file@percent }
+\newlabel{a:pw}{{A.1}{14}{Pyramidal width}{subsection.A.1}{}}
+\newlabel{a:pw@cref}{{[subappendix][1][2147483647,1]A.1}{[1][14][]14}}
+\@writefile{loe}{\contentsline {lemma}{\ifthmt@listswap Lemma~A.1\else \numberline {A.1}Lemma\fi \thmtformatoptarg {\textbf  {Cartesian product of $k$ polytopes}}}{14}{lemma.A.1}\protected@file@percent }
+\newlabel{fact:cart_prod_kpolytopes}{{A.1}{14}{\textbf {Cartesian product of $k$ polytopes}}{lemma.A.1}{}}
+\newlabel{fact:cart_prod_kpolytopes@cref}{{[lemma][1][2147483647]A.1}{[1][14][]14}}
+\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces \leavevmode {\color  {black}To prove that $\mathsf  {dist}\left (\mathsf  {aff}\left (g\right ), [q,v]\right ) < \mathsf  {dist}\left (\mathsf  {aff}\left (f\right ),q\right )$, we looking at the right triangle $v,p,q$ and compare $\mathsf  {dist}\left (p',q'\right )$ with $\mathsf  {dist}\left (p,q\right )$.} \relax }}{15}{figure.caption.14}\protected@file@percent }
+\newlabel{fig:relint_pw}{{4}{15}{\gabrev {To prove that $\dist {\aff {g}, [q,v]} < \dist {\aff {f},q}$, we looking at the right triangle $v,p,q$ and compare $\dist {p',q'}$ with $\dist {p,q}$.} \relax }{figure.caption.14}{}}
+\newlabel{fig:relint_pw@cref}{{[figure][4][2147483647]4}{[1][14][]15}}
+\@writefile{loe}{\contentsline {lemma}{\ifthmt@listswap Lemma~A.2\else \numberline {A.2}Lemma\fi }{16}{lemma.A.2}\protected@file@percent }
+\newlabel{lemma:preparatory_bounds_pw}{{A.2}{16}{}{lemma.A.2}{}}
+\newlabel{lemma:preparatory_bounds_pw@cref}{{[lemma][2][2147483647]A.2}{[1][16][]16}}
+\newlabel{eq:preparatory_bounds_pw}{{5}{16}{}{equation.A.5}{}}
+\newlabel{eq:preparatory_bounds_pw@cref}{{[equation][5][2147483647]5}{[1][16][]16}}
+\@writefile{loe}{\contentsline {corollary}{\ifthmt@listswap Corollary~A.3\else \numberline {A.3}Corollary\fi }{17}{corollary.A.3}\protected@file@percent }
+\newlabel{cor:pyr_width_lb_for_k_polytopes}{{A.3}{17}{}{corollary.A.3}{}}
+\newlabel{cor:pyr_width_lb_for_k_polytopes@cref}{{[corollary][3][2147483647]A.3}{[1][16][]17}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {A.2}Vertex-facet distance}{17}{subsection.A.2}\protected@file@percent }
+\newlabel{a:vf}{{A.2}{17}{Vertex-facet distance}{subsection.A.2}{}}
+\newlabel{a:vf@cref}{{[subappendix][2][2147483647,1]A.2}{[1][17][]17}}
+\newlabel{eq:vfd_prod}{{6}{17}{Vertex-facet distance}{equation.A.6}{}}
+\newlabel{eq:vfd_prod@cref}{{[equation][6][2147483647]6}{[1][17][]17}}
+\newlabel{eq:verts_facet_equiv}{{7}{17}{Vertex-facet distance}{equation.A.7}{}}
+\newlabel{eq:verts_facet_equiv@cref}{{[equation][7][2147483647]7}{[1][17][]17}}
+\abx@aux@cite{0}{BCC+23}
+\abx@aux@segm{0}{0}{BCC+23}
+\abx@aux@cite{0}{KAP21}
+\abx@aux@segm{0}{0}{KAP21}
+\abx@aux@cite{0}{BCC+23}
+\abx@aux@segm{0}{0}{BCC+23}
+\abx@aux@cite{0}{LJ15}
+\abx@aux@segm{0}{0}{LJ15}
+\abx@aux@cite{0}{LJ15}
+\abx@aux@segm{0}{0}{LJ15}
+\abx@aux@cite{0}{BCC+23}
+\abx@aux@segm{0}{0}{BCC+23}
+\@writefile{toc}{\contentsline ctive function in \cref  {prob:intersection_k}}{18}{subsection.A.3}\protected@file@percent }
+\newlabel{a:obj}{{A.3}{18}{Properties of the objective function in \cref {prob:intersection_k}}{subsection.A.3}{}}
+\newlabel{a:obj@cref}{{[subappendix][3][2147483647,1]A.3}{[1][18][]18}}
+\newlabel{proof:lsmooth_cvx_intersection_k}{{A.3}{18}{Properties of the objective function in \cref {prob:intersection_k}}{subsection.A.3}{}}
+\newlabel{proof:lsmooth_cvx_intersection_k@cref}{{[subappendix][3][2147483647,1]A.3}{[1][18][]18}}
+\newlabel{proof:qg_pl_intersection_k}{{A.3}{18}{Properties of the objective function in \cref {prob:intersection_k}}{subsection.A.3}{}}
+\newlabel{proof:qg_pl_intersection_k@cref}{{[subappendix][3][2147483647,1]A.3}{[1][18][]18}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {A.4}Linear rates in the product in terms of the pyramidal width}{18}{subsection.A.4}\protected@file@percent }
+\newlabel{a:linconv_pw}{{A.4}{18}{Linear rates in the product in terms of the pyramidal width}{subsection.A.4}{}}
+\newlabel{a:linconv_pw@cref}{{[subappendix][4][2147483647,1]A.4}{[1][18][]18}}
+\abx@aux@backref{134}{BCC+23}{0}{18}{18}
+\abx@aux@page{134}{18}
+\abx@aux@backref{135}{KAP21}{0}{18}{18}
+\abx@aux@page{135}{18}
+\abx@aux@backref{136}{BCC+23}{0}{18}{18}
+\abx@aux@page{136}{18}
+\abx@aux@backref{137}{LJ15}{0}{18}{18}
+\abx@aux@page{137}{18}
+\abx@aux@cite{0}{BCC+23}
+\abx@aux@segm{0}{0}{BCC+23}
+\abx@aux@cite{0}{BCC+23}
+\abx@aux@segm{0}{0}{BCC+23}
+\abx@aux@cite{0}{BCC+23}
+\abx@aux@segm{0}{0}{BCC+23}
+\@writefile{loe}{\contentsline {theorem}{\ifthmt@listswap Theorem~A.4\else \numberline {A.4}Theorem\fi \thmtformatoptarg {\blx@tocontentsinit {0}\cite [Theorem 3]{LJ15}}}{19}{theorem.A.4}\protected@file@percent }
+\newlabel{thm:scaling_ineq}{{A.4}{19}{\cite [Theorem 3]{LJ15}}{theorem.A.4}{}}
+\newlabel{thm:scaling_ineq@cref}{{[theorem][4][2147483647,1]A.4}{[1][18][]19}}
+\abx@aux@backref{138}{LJ15}{0}{19}{19}
+\abx@aux@page{138}{19}
+\newlabel{thm:pyrwidth}{{A.4}{19}{\cite [Theorem 3]{LJ15}}{theorem.A.4}{}}
+\newlabel{thm:pyrwidth@cref}{{[theorem][4][2147483647,1]A.4}{[1][18][]19}}
+\@writefile{loe}{\contentsline {lemma}{\ifthmt@listswap Lemma~A.5\else \numberline {A.5}Lemma\fi \thmtformatoptarg {\leavevmode {\color  {black}{\blx@tocontentsinit {0}\cite [Lemma 3.32]{BCC+23}}}}}{19}{lemma.A.5}\protected@file@percent }
+\newlabel{lemma:geom_pl}{{A.5}{19}{\gabrev {{\cite [Lemma 3.32]{BCC+23}}}}{lemma.A.5}{}}
+\newlabel{lemma:geom_pl@cref}{{[lemma][5][2147483647]A.5}{[1][19][]19}}
+\abx@aux@backref{139}{BCC+23}{0}{19}{19}
+\abx@aux@page{139}{19}
+\@writefile{loe}{\contentsline {lemma}{\ifthmt@listswap Lemma~A.6\else \numberline {A.6}Lemma\fi }{19}{lemma.A.6}\protected@file@percent }
+\newlabel{lemma:d_bound}{{A.6}{19}{}{lemma.A.6}{}}
+\newlabel{lemma:d_bound@cref}{{[lemma][6][2147483647]A.6}{[1][19][]19}}
+\@writefile{loe}{\contentsline {lemma}{\ifthmt@listswap Lemma~A.7\else \numberline {A.7}Lemma\fi \thmtformatoptarg {\blx@tocontentsinit {0}\cite [Lemma 1.5]{BCC+23}}}{19}{lemma.A.7}\protected@file@percent }
+\newlabel{lemma:progress_smooth_survey}{{A.7}{19}{\cite [Lemma 1.5]{BCC+23}}{lemma.A.7}{}}
+\newlabel{lemma:progress_smooth_survey@cref}{{[lemma][7][2147483647]A.7}{[1][19][]19}}
+\abx@aux@backref{140}{BCC+23}{0}{19}{19}
+\abx@aux@page{140}{19}
+\abx@aux@backref{141}{BCC+23}{0}{19}{19}
+\abx@aux@page{141}{19}
+\newlabel{eq:linconv_pw_1}{{10}{19}{Linear rates in the product in terms of the pyramidal width}{equation.A.10}{}}
+\newlabel{eq:linconv_pw_1@cref}{{[equation][10][2147483647]10}{[1][19][]19}}
+\newlabel{eq:linconv_pw_2}{{11}{19}{Linear rates in the product in terms of the pyramidal width}{equation.A.11}{}}
+\newlabel{eq:linconv_pw_2@cref}{{[equation][11][2147483647]11}{[1][19][]19}}
+\abx@aux@cite{0}{BCC+23}
+\abx@aux@segm{0}{0}{BCC+23}
+\abx@aux@cite{0}{BS15}
+\abx@aux@segm{0}{0}{BS15}
+\abx@aux@cite{0}{BS15}
+\abx@aux@segm{0}{0}{BS15}
+\abx@aux@cite{0}{BS15}
+\abx@aux@segm{0}{0}{BS15}
+\abx@aux@cite{0}{BS15}
+\abx@aux@segm{0}{0}{BS15}
+\abx@aux@cite{0}{BS15}
+\abx@aux@segm{0}{0}{BS15}
+\abx@aux@cite{0}{BS15}
+\abx@aux@segm{0}{0}{BS15}
+\abx@aux@cite{0}{BCC+{[1][19][]19}}
+\abx@aux@cite{0}{BCC+23}
+\abx@aux@segm{0}{0}{BCC+23}
+\abx@aux@cite{0}{BS15}
+\abx@aux@segm{0}{0}{BS15}
+\abx@aux@cite{0}{BS15}
+\abx@aux@segm{0}{0}{BS15}
+\abx@aux@cite{0}{BS15}
+\abx@aux@segm{0}{0}{BS15}
+\abx@aux@cite{0}{BS15}
+\abx@aux@segm{0}{0}{BS15}
+\abx@aux@cite{0}{BS15}
+\abx@aux@segm{0}{0}{BS15}
+\abx@aux@cite{0}{BS15}
+\abx@aux@segm{0}{0}{BS15}
+\abx@aux@cite{0}{BCC+23}
+\abx@aux@segm{0}{0}{BCC+23}
+\abx@aux@backref{142}{BCC+23}{0}{20}{20}
+\abx@aux@page{142}{20}
+\@writefile{toc}{\contentsline {subsection}{\numberline {A.5}Linear rates in the product in terms of the vertex-facet distance}{20}{subsection.A.5}\protected@file@percent }
+\newlabel{a:linconv_vfd}{{A.5}{20}{Linear rates in the product in terms of the vertex-facet distance}{subsection.A.5}{}}
+\newlabel{a:linconv_vfd@cref}{{[subappendix][5][2147483647,1]A.5}{[1][20][]20}}
+\abx@aux@backref{143}{BS15}{0}{20}{20}
+\abx@aux@page{143}{20}
+\abx@aux@backref{144}{BS15}{0}{20}{20}
+\abx@aux@page{144}{20}
+\abx@aux@backref{145}{BS15}{0}{20}{20}
+\abx@aux@page{145}{20}
+\abx@aux@backref{146}{BS15}{0}{20}{20}
+\abx@aux@page{146}{20}
+\abx@aux@backref{147}{BS15}{0}{20}{20}
+\abx@aux@page{147}{20}
+\abx@aux@backref{148}{BS15}{0}{20}{20}
+\abx@aux@page{148}{20}
+\abx@aux@backref{149}{BCC+23}{0}{20}{20}
+\abx@aux@page{149}{20}
+\abx@aux@cite{0}{BCC+23}
+\abx@aux@segm{0}{0}{BCC+23}
+\abx@aux@cite{0}{BCC+23}
+\abx@aux@segm{0}{0}{BCC+23}
+\abx@aux@cite{0}{BCC+23}
+\abx@aux@segm{0}{0}{BCC+23}
+\@writefile{toc}{\contentsline {section}{\numberline {B}Algorithms}{21}{appendix.B}\protected@file@percent }
+\newlabel{a:algos}{{B}{21}{Algorithms}{appendix.B}{}}
+\newlabel{a:algos@cref}{{[appendix][2][2147483647]B}{[1][21][]21}}
+\abx@aux@backref{150}{BCC+23}{0}{21}{21}
+\abx@aux@page{150}{21}
+\abx@aux@backref{151}{BCC+23}{0}{21}{21}
+\abx@aux@page{151}{21}
+\@writefile{loa}{\contentsline {algocf}{\numberline {1}{\ignorespaces Away Frank Wolfe {\blx@tocontentsinit {0}\cite [Algorithm 2.2]{BCC+23}}\relax }}{21}{algocf.1}\protected@file@percent }
+\newlabel{algo:AFW}{{1}{21}{Algorithms}{algocf.1}{}}
+\newlabel{algo:AFW@cref}{{[algorithm][1][2147483647]1}{[1][21][]21}}
+\abx@aux@cite{0}{BS15}
+\abx@aux@segm{0}{0}{BS15}
+\abx@aux@cite{0}{BPW24}
+\abx@aux@segm{0}{0}{BPW24}
+\abx@aux@cite{0}{martinez2025beyond}
+\abx@aux@segm{0}{0}{martinez2025beyond}
+\abx@aux@cite{0}{BPW23}
+\abx@aux@segm{0}{0}{BPW23}
+\abx@aux@cite{0}{BPS15}
+\abx@aux@segm{0}{0}{BPS15}
+\abx@aux@backref{152}{BCC+23}{0}{22}{22}
+\abx@aux@page{152}{22}
+\abx@aux@backref{153}{BS15}{0}{22}{22}
+\abx@aux@page{153}{22}
+\abx@aux@backref{154}{BPW24}{0}{22}{22}
+\abx@aux@page{154}{22}
+\abx@aux@backref{155}{martinez2025beyond}{0}{22}{22}
+\abx@aux@page{155}{22}
+\abx@aux@backref{156}{BPW23}{0}{22}{22}
+\abx@aux@page{156}{22}
+\abx@aux@backref{157}{BPS15}{0}{22}{22}
+\abx@aux@page{157}{22}
+\@writefile{loa}{\contentsline {algocf}{\numberline {2}{\ignorespaces Alternating Linear Minimization\relax }}{22}{algocf.2}\protected@file@percent }
+\newlabel{algo:alm}{{2}{22}{Algorithms}{algocf.2}{}}
+\newlabel{algo:alm@cref}{{[algorithm][2][2147483647]2}{[1][22][]22}}
+\@writefile{toc}{\contentsline {section}{\numberline {C}More Experiments}{22}{appendix.C}\protected@file@percent }
+\newlabel{a:extra_experiments}{{C}{22}{More Experiments}{appendix.C}{}}
+\newlabel{a:extra_experiments@cref}{{[appendix][3][2147483647]C}{[1][22][]22}}
+\@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces Different variants of the AFW algorithm, run for up to $1\,000$ iterations on two non‑intersecting polytopes in $\mathbb  {R}^{2\,500}$. \relax }}{23}{figure.caption.15}\protected@file@percent }
+\newlabel{fig:k2n2500_ni}{{5}{23}{Different variants of the AFW algorithm, run for up to $1\,000$ iterations on two non‑intersecting polytopes in $\R ^{2\,500}$. \relax }{figure.caption.15}{}}
+\newlabel{fig:k2n2500_ni@cref}{{[figure][5][2147483647]5}{[1][22][]23}}
+\@writefile{lof}{\contentsline {figure}{\numberline {6}{\ignorespaces Different variants of the AFW algorithm, run for up to $1\,000$ iterations on two non‑intersecting polytopes in $\mathbb  {R}^{5000}$. \relax }}{23}{figure.caption.16}\protected@file@percent }
+\newlabel{fig:k2n5000_ni}{{6}{23}{Different variants of the AFW algorithm, run for up to $1\,000$ iterations on two non‑intersecting polytopes in $\R ^{5000}$. \relax }{figure.caption.16}{}}
+\newlabel{fig:k2n5000_ni@cref}{{[figure][6][2147483647]6}{[1][22][]23}}
+\@writefile{lof}{\contentsline {figure}{\numberline {7}{\ignorespaces Different variants of the AFW algorithm, run for up to $1\,000$ iterations on five non‑intersecting polytopes in $\mathbb  {R}^{5\,000}$. \relax }}{23}{figure.caption.17}\protected@file@percent }
+\newlabel{fig:k5n5000_ni}{{7}{23}{Different variants of the AFW algorithm, run for up to $1\,000$ iterations on five non‑intersecting polytopes in $\R ^{5\,000}$. \relax }{figure.caption.17}{}}
+\newlabel{fig:k5n5000_ni@cref}{{[figure][7][2147483647]7}{[1][22][]23}}
+\@writefile{lof}{\contentsline {figure}{\numberline {8}{\ignorespaces Different variants of the AFW algorithm, run for up to $1\,000$ iterations on five non‑intersecting polytopes in $\mathbb  {R}^{10\,000}$. \relax }}{24}{figure.caption.18}\protected@file@percent }
+\newlabel{fig:k5n10000_ni}{{8}{24}{Different variants of the AFW algorithm, run for up to $1\,000$ iterations on five non‑intersecting polytopes in $\R ^{10\,000}$. \relax }{figure.caption.18}{}}
+\newlabel{fig:k5n10000_ni@cref}{{[figure][8][2147483647]8}{[1][22][]24}}
+\@writefile{lof}{\contentsline {figure}{\numberline {9}{\ignorespaces Different variants of the AFW algorithm, run for up to $1\,000$ iterations on two intersecting polytopes in $\mathbb  {R}^{10\,000}$. \relax }}{24}{figure.caption.19}\protected@file@percent }
+\newlabel{fig:k2n10000_i}{{9}{24}{Different variants of the AFW algorithm, run for up to $1\,000$ iterations on two intersecting polytopes in $\R ^{10\,000}$. \relax }{figure.caption.19}{}}
+\newlabel{fig:k2n10000_i@cref}{{[figure][9][2147483647]9}{[1][22][]24}}
+\@writefile{lof}{\contentsline {figure}{\numberline {10}{\ignorespaces Different variants of the AFW algorithm, run for up to $1\,000$ iterations on five intersecting polytopes in $\mathbb  {R}^{10\,000}$. \relax }}{24}{figure.caption.20}\protected@file@percent }
+\newlabel{fig:k5n10000_i}{{10}{24}{Different variants of the AFW algorithm, run for up to $1\,000$ iterations on five intersecting polytopes in $\R ^{10\,000}$. \relax }{figure.caption.20}{}}
+\newlabel{fig:k5n10000_i@cref}{{[figure][10][2147483647]10}{[1][22][]24}}
+\@writefile{lof}{\contentsline {figure}{\numberline {11}{\ignorespaces Different variants of the AFW algorithm run for up to $1\,000$ iterations on two non‑intersecting polytopes in $\mathbb  {R}^{10\,000}$, generated as the convex hull of $100\,000$ vertices.\relax }}{25}{figure.caption.21}\protected@file@percent }
+\newlabel{fig:k2n10000_100000vertices_ni}{{11}{25}{Different variants of the AFW algorithm run for up to $1\,000$ iterations on two non‑intersecting polytopes in $\R ^{10\,000}$, generated as the convex hull of $100\,000$ vertices.\relax }{figure.caption.21}{}}
+\newlabel{fig:k2n10000_100000vertices_ni@cref}{{[figure][11][2147483647]11}{[1][22][]25}}
+\@writefile{lof}{\contentsline {figure}{\numberline {12}{\ignorespaces Different variants of the AFW algorithm run for up to $1\,000$ iterations on two non‑intersecting polytopes in $\mathbb  {R}^{10\,000}$, generated as the convex hull of $15\,000$ vertices.\relax }}{25}{figure.caption.22}\protected@file@percent }
+\newlabel{fig:k2n10000_15000vertices_ni}{{12}{25}{Different variants of the AFW algorithm run for up to $1\,000$ iterations on two non‑intersecting polytopes in $\R ^{10\,000}$, generated as the convex hull of $15\,000$ vertices.\relax }{figure.caption.22}{}}
+\newlabel{fig:k2n10000_15000vertices_ni@cref}{{[figure][12][2147483647]12}{[1][25][]25}}
+\abx@aux@read@bbl@mdfivesum{nohash}
+\abx@aux@read@bblrerun
+\abx@aux@defaultrefcontext{0}{ACT23}{nyt/global//global/global}
+\abx@aux@defaultrefcontext{0}{BS16}{nyt/global//global/global}
+\abx@aux@defaultrefcontext{0}{BB93}{nyt/global//global/global}
+\abx@aux@defaultrefcontext{0}{BB96}{nyt/global//global/global}
+\abx@aux@defaultrefcontext{0}{BC11}{nyt/global//global/global}
+\abx@aux@defaultrefcontext{0}{Bec17}{nyt/global//global/global}
+\abx@aux@defaultrefcontext{0}{BPS15}{nyt/global//global/global}
+\abx@aux@defaultrefcontext{0}{BS15}{nyt/global//global/global}
+\abx@aux@defaultrefcontext{0}{BT03}{nyt/global//global/global}
+\abx@aux@defaultrefcontext{0}{BBS21}{nyt/global//global/global}
+\abx@aux@defaultrefcontext{0}{BPW24}{nyt/global//global/global}
+\abx@aux@defaultrefcontext{0}{BRZ23}{nyt/global//global/global}
+\abx@aux@defaultrefcontext{0}{BCC+23}{nyt/global//global/global}
+\abx@aux@defaultrefcontext{0}{BPW23}{nyt/global//global/global}
+\abx@aux@defaultrefcontext{0}{BLM21}{nyt/global//global/global}
+\abx@aux@defaultrefcontext{0}{CCP12}{nyt/global//global/global}
+\abx@aux@defaultrefcontext{0}{CCC+09}{nyt/global//global/global}
+\abx@aux@defaultrefcontext{0}{CFK23}{nyt/global//global/global}
+\abx@aux@defaultrefcontext{0}{Com96}{nyt/global//global/global}
+\abx@aux@defaultrefcontext{0}{CP10proximal}{nyt/global//global/global}
+\abx@aux@defaultrefcontext{0}{DVZ22}{nyt/global//global/global}
+\abx@aux@defaultrefcontext{0}{DIL15}{nyt/global//global/global}
+\abx@aux@defaultrefcontext{0}{GH15}{nyt/global//global/global}
+\abx@aux@defaultrefcontext{0}{garber2015faster}{nyt/global//global/global}
+\abx@aux@defaultrefcontext{0}{GLS23}{nyt/global//global/global}
+\abx@aux@defaultrefcontext{0}{GPL18}{nyt/global//global/global}
+\abx@aux@defaultrefcontext{0}{Gin18}{nyt/global//global/global}
+\abx@aux@defaultrefcontext{0}{GPR67}{nyt/global//global/global}
+\abx@aux@defaultrefcontext{0}{guelat1986some}{nyt/global//global/global}
+\abx@aux@defaultrefcontext{0}{GM86}{nyt/global//global/global}
+\abx@aux@defaultrefcontext{0}{Jag13}{nyt/global//global/global}
+\abx@aux@defaultrefcontext{0}{KNS16}{nyt/global//global/global}
+\abx@aux@defaultrefcontext{0}{KDP20}{nyt/global//global/global}
+\abx@aux@defaultrefcontext{0}{KAP21}{nyt/global//global/global}
+\abx@aux@defaultrefcontext{0}{lacoste2013affine}{nyt/global//global/global}
+\abx@aux@defaultrefcontext{0}{LJ15}{nyt/global//global/global}
+\abx@aux@defaultrefcontext{0}{LJS+13}{nyt/global//global/global}
+\abx@aux@defaultrefcontext{0}{levitin1966constrained}{nyt/global//global/global}
+\abx@aux@defaultrefcontext{0}{MA18}{nyt/global//global/global}
+\abx@aux@defaultrefcontext{0}{martinez2025beyond}{nyt/global//global/global}
+\abx@aux@defaultrefcontext{0}{Von49}{nyt/global//global/global}
+\abx@aux@defaultrefcontext{0}{pena2023affine}{nyt/global//global/global}
+\abx@aux@defaultrefcontext{0}{PR18}{nyt/global//global/global}
+\abx@aux@defaultrefcontext{0}{penya2016vonneumann}{nyt/global//global/global}
+\abx@aux@defaultrefcontext{0}{RS22}{nyt/global//global/global}
+\abx@aux@defaultrefcontext{0}{RSV12}{nyt/global//global/global}
+\abx@aux@defaultrefcontext{0}{SMF20}{nyt/global//global/global}
+\abx@aux@defaultrefcontext{0}{SY98}{nyt/global//global/global}
+\abx@aux@defaultrefcontext{0}{TTP22}{nyt/global//global/global}
+\abx@aux@defaultrefcontext{0}{Wil68}{nyt/global//global/global}
+\abx@aux@defaultrefcontext{0}{wirth2023acceleration}{nyt/global//global/global}
+\abx@aux@defaultrefcontext{0}{wirth2024fast}{nyt/global//global/global}
+\abx@aux@defaultrefcontext{0}{wirth2025accelerated}{nyt/global//global/global}
+\abx@aux@defaultrefcontext{0}{wirth2023approximate}{nyt/global//global/global}
+\abx@aux@defaultrefcontext{0}{wolfe1970convergence}{nyt/global//global/global}
+\abx@aux@defaultrefcontext{0}{Wol76}{nyt/global//global/global}
+\gdef \@abspage@last{25}
+26}

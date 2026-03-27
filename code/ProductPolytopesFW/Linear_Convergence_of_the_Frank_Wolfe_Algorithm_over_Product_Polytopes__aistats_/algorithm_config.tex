@@ -1,0 +1,53 @@
+% Config caption names:
+%\renewcommand{\lstlistingname}{Algorithm}
+
+% Wrapper for pseudocode
+\usepackage{algorithm}
+%\usepackage{algpseudocode}
+\usepackage{algcompatible}
+\algnewcommand{\lst}{\texttt{lst}}
+\algnewcommand{\slst}{\texttt{slst}}
+\algnewcommand{\SEND}{\textbf{send}}
+
+\newsavebox{\algleft}
+\newsavebox{\algright}
+
+\renewcommand{\algorithmiccomment}[1]{\hfill  $\diamond$ #1}
+
+\renewcommand{\algorithmicrequire}{\textbf{Input:}}
+\renewcommand{\algorithmicensure}{\textbf{Output:}}
+
+\makeatletter
+\newcounter{algorithmicH}% New algorithmic-like hyperref counter
+\let\oldalgorithmic\algorithmic
+\renewcommand{\algorithmic}{%
+  \stepcounter{algorithmicH}% Step counter
+  \oldalgorithmic}% Do what was always done with algorithmic environment
+\renewcommand{\theHALG@line}{ALG@line.\thealgorithmicH.\arabic{ALG@line}}
+\makeatother
+
+
+% ========================================================
+\makeatletter
+\newenvironment{breakablealgorithm}
+  {% \begin{breakablealgorithm}
+   \begin{center}
+     \refstepcounter{algorithm}% New algorithm
+     \hrule height.8pt depth0pt \kern2pt% \@fs@pre for \@fs@ruled
+     \renewcommand{\caption}[2][\relax]{% Make a new \caption
+       {\raggedright\textbf{\ALG@name~\thealgorithm} ##2\par}%
+       \ifx\relax##1\relax % #1 is \relax
+         \addcontentsline{loa}{algorithm}{\protect\numberline{\thealgorithm}##2}%
+       \else % #1 is not \relax
+         \addcontentsline{loa}{algorithm}{\protect\numberline{\thealgorithm}##1}%
+       \fi
+       \kern2pt\hrule\kern2pt
+     }
+  }{% \end{breakablealgorithm}
+     \kern2pt\hrule\relax% \@fs@post for \@fs@ruled
+   \end{center}
+  }
+
+%\newcommand{\theHalgorithm@line}{\thealgorithm.\arabic{algorithm@line}}
+
+\makeatother

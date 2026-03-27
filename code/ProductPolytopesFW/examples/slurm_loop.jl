@@ -2,6 +2,7 @@
 # Generate per-run config/script variants and submit a `(k, n)` grid to Slurm
 # through `examples/slurm_experiments.sh`, using hardcoded settings below.
 using ProductPolytopesFW
+using Dates
 
 const CONFIG_LINE_TEMPLATE = "config = Config(\"examples/config.yml\")"
 
@@ -54,7 +55,7 @@ end
     write_modified_config_for_run(base_config, config_dir, k, n, seed)
 
 Create a per-run YAML config by overriding `(k, n, seed)` in the base config.
-The generated filename includes iteration budgets to avoid collisions across reruns.
+The generated filename includes iteration budgets and a timestamp to keep runs unique.
 """
 function write_modified_config_for_run(
     base_config::Config,
@@ -64,8 +65,19 @@ function write_modified_config_for_run(
     seed::Int,
 )
     modified = modify_config(base_config, k=k, n=n, seed=seed)
-    run_tag = "k$(k)_n$(n)_i$(modified.max_iterations)_io$(modified.max_iterations_opt)_s$(seed)"
+    base_tag = "k$(k)_n$(n)_i$(modified.max_iterations)_io$(modified.max_iterations_opt)_s$(seed)"
+    timestamp = Dates.format(now(), "yyyymmdd_HHMMSS")
+    run_tag = "$(base_tag)_t$(timestamp)"
     config_filename = joinpath(config_dir, "config_$(run_tag).yml")
+
+    # Rare but possible if two identical submissions happen in the same second.
+    while isfile(config_filename)
+        sleep(1)
+        timestamp = Dates.format(now(), "yyyymmdd_HHMMSS")
+        run_tag = "$(base_tag)_t$(timestamp)"
+        config_filename = joinpath(config_dir, "config_$(run_tag).yml")
+    end
+
     return write_config(modified, config_filename), run_tag
 end
 

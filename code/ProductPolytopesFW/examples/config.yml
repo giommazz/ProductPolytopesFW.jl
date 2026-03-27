@@ -2,20 +2,20 @@
 #   User parameters
 # ***************************
 # Number of polytopes
-k: 3
+k: 10
 # Dimension of the subspace in which each polytope lies
-n: 203
+n: 10000
 # list of `k` integers, each indicating the n. of points to be used to generate `k` polytopes
 # if `0` given, `n_points` is generated randomly using `ub_n_points`
 n_points: 0
 # Upper bound multiplier used only when `n_points: 0`:
 # for each polytope `i`, sample `n_points[i]` uniformly in {n+1, …, n*ub_n_points}
-ub_n_points: 50
+ub_n_points: 5
 # Vertex sampling strategy (how the points/atoms used for each polytope are generated):
 # - "box_uniform": (default) sample points uniformly inside each axis-aligned box (can be anisotropic across coordinates)
 # - "sphere"     : sample points on a Euclidean sphere fully contained in the box (more isotropic, but can "collapse" if one box side is small)
 # - "ellipsoid"  : sample points on an axis-aligned ellipsoid inside the box (uses all box half-lengths; isotropic in box-normalized coordinates)
-vertex_sampling: "ellipsoid"
+vertex_sampling: "box_uniform"
 # Used only when `vertex_sampling in {"sphere", "ellipsoid"}:
 # - `sphere_radius_factor`: ρ, must satisfy 0 < ρ < 1 so sampled points lie strictly inside box (never on boundary).
 # - for "sphere": radius is R = ρ * min_d (UB[d]-LB[d])/2, centered at the box center.
@@ -44,7 +44,7 @@ sphere_radius_factor: 0.9
 #         "center" : vertex mean (average of sampled vertices) of each polytope
 #         "vertex" : vertex of each polytope closest to chosen anchor (for P₂ under "p1_p2_segment", closest vertex p₂ from the FW-based closest pair is used)
 intersection:
-  anchor: "p1_center"
+  anchor: "p1_p2_segment"
   anchor_t: 0.5
   reference_point: "vertex"
 # epsilon-optimality threshold
@@ -58,7 +58,7 @@ max_iterations_opt: 10000
 # How often FW iteration log is printed to screen
 max_print_iterations: 1000
 # Set the seed for reproducibility
-seed: 42
+seed: 240389
 # Toggle diagnostic prints (e.g., in `generate_polytopes`)
 verbose: true
 # Use convex-hull LMOs (true) or FrankWolfe.MathOptLMO (false)
