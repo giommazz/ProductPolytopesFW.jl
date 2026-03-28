@@ -720,7 +720,9 @@ All algorithms were run with a standard line search, see \cref{a:algos}.
 
 In the plots, we report the following metrics to quantify algorithmic performance over iterations: the primal gap $f(x_t)-\min_{x\in\mP}f(x)$, and also the so-called \FW{} gap $\max_{x \in \mathcal{P}} \innp{\nabla f(x_t), x_t - x}$ \citep{BCC+23}. 
 While the former cannot be calculated in general, since one does not usually know the minimum objective value a priori, the latter is a standard measure for \FW{} algorithms, since it is an upper bound on the former while at the same time being computable.
-Therefore, the \FW{} gap results in a stopping criterion that can be used to guarantee $\epsilon$-optimality has been reached. We used the FW gap as a stopping criterion in our experiments, if they already converged, cf. \citep{Jag13}. 
+Therefore, the \FW{} gap results in a stopping criterion that can be used to guarantee $\epsilon$-optimality has been reached.
+We thus used it as a stopping criterion in our experiments, if they already converged, cf. \citep{Jag13}.
+
 
 \gabaistats{TODO: UPDATE ITERATION COUNT WITH NEW EXPERIMENTS}
 We ran every \FW{} variant up to a maximum of $1000$ iterations or until the \FW{} gap dropped below $1e-07$, whichever occurred first. 
@@ -737,8 +739,8 @@ Here we report results for settings with $k = 2, 10$ polytopes in $\R^n$, with u
 
 Each instance is constructed by generating $k$ polytopes.
 We generate two kinds of problems: one where the polytopes do not intersect, and another where they do. 
-\gabaistats{TODO: CHECK WORDING AND GRAMMAR. ALSO REFERENCE PLOTS FOR POINT CLOUDS AND POINTS FOR VERTEX-FACET.}
-\gabaistats{We test two polytope setups, that we call ``point clouds'' and ``vertex-facet'' throughout.}
+\gabaistats{TODO: REFERENCE PLOTS FOR point-cloudS AND POINTS FOR VERTEX-FACET.}
+\gabaistats{We test two polytope setups, that we call ``point-cloud'' and ``vertex-facet'' throughout.}
 In the first case, each polytope is generated as the convex hull of a list of points that are sampled uniformly at random from mutually disjoint intervals for every coordinate $i \in [n]$.
 %\Dav{maybe point to the slides of sebastian's paper that did the same to generate polytopes. But maybe not, it'd be a weird thing to reference }
 %\dav{``Further, we note that, for all instances, we compute \LMO{}s that perform a single linear pass over the point list, evaluating one dot product per point.'' DM: if you want to add this detail, do it in the appendix}
@@ -752,18 +754,17 @@ Then, we shift the aforementioned polytopes %$\mP_1, \mP_2, \dots, \mP_k$
 so they 
 % have one vertex in common, ensuring a non-empty intersection.
 have non-empty intersection. 
-Concretely, \gabaistats{ for point clouds,} we shift $\mP_2$ until one of its vertices coincides with a vertex $v$ of $\mP_1$; we then move $\mP_2$ towards the barycentre of $\mP_1$ (the average of its vertices); finally, we translate all remaining polytopes so they share $v$. 
+Concretely, \gabaistats{ for point-clouds,} we shift $\mP_2$ until one of its vertices coincides with a vertex $v$ of $\mP_1$; we then move $\mP_2$ towards the barycentre of $\mP_1$ (the average of its vertices); finally, we translate all remaining polytopes so they share $v$. 
 \gabaistats{ Instead, we construct vertex-facet intersections so that only a single vertex of the generalized $\ell_1$-ball touches the interior of a facet of the generalized $\ell_\infty$-ball}
 
 The implementation was carried out fully in Julia (Version 1.9.4) and, in particular, we relied on the \href{https://github.com/ZIB-IOL/FrankWolfe.jl}{\texttt{FrankWolfe.jl}} package (Version 0.5.0, MIT License) for the algorithmic part.
 All runs were executed on Slurm compute nodes equipped with Intel Xeon Gold 6342 processors, each providing 96 logical cores, and approximately 512GiB RAM, interconnected via Infiniband.
 We requested $k$ cores per task in Slurm via \texttt{\#SBATCH\ --cpus-per-task=k}, and then set \texttt{export JULIA\_NUM\_THREADS=\$SLURM\_CPUS\_PER\_TASK} so that Julia’s \FW{} routines used exactly $k$ threads.
-
 \gabaistats{ TODO: UPDATE WITH URL TO CODE}
 The code for reproducing the results in this section will be made publicly available upon publication and can be found in the supplementary material.
 
 
-
+\gabaistats{TODO: SAY "FW VARIANTS INSTEAD OF LISTING ALL OF THE ACRONYMS}
 
 
 \begin{figure*}[ht!]
@@ -772,7 +773,7 @@ The code for reproducing the results in this section will be made publicly avail
 %\begin{adjustbox}{center}
 \includegraphics[width=1.01\textwidth,height=6.3cm]{./figures/plot_ni_k2_n20000_i1000_s240389_cvxho_anc_t20250511_212230_fromlogs}
 %  \end{adjustbox}
-\caption{C-BC-FW, F-FW, and F-AFW run for up to $1000$ iterations on two non-intersecting polytopes in $\R^{10000}$. }
+\caption{C-BC-FW, F-FW, and F-AFW run for up to $1000$ iterations on two non-intersecting point-cloud polytopes in $\R^{10000}$. }
 \label{fig:k2n20000}
 \end{figure*}
 
@@ -783,7 +784,7 @@ The code for reproducing the results in this section will be made publicly avail
 %\begin{adjustbox}{center}
 \includegraphics[width=1.01\textwidth,height=6.3cm]{./figures/plot_ni_k10_n10000_npub20000_unif_i5000_s240389_cvxho-mat_a-p1_p2_segment-0.5_ref-vertex_t20260327_180524}
 %\end{adjustbox}
-\caption{C-BC-FW, F-FW, and F-AFW run for up to $5000$ iterations on ten non-intersecting polytopes in $\R^{10000}$.
+\caption{C-BC-FW, F-FW, and F-AFW run for up to $5000$ iterations on ten non-intersecting point-cloud polytopes in $\R^{10000}$.
 Small non-monotonic fluctuations of the primal gap in the tail are numerical artifacts caused by finite-precision effects and the approximate computation of the reference optimum.}
 \label{fig:k10n10000}
 \end{figure*}
@@ -801,13 +802,18 @@ We observe that the full \AFW{} variant enjoys the best performance among the te
 % This is likely due to F-BC-\AFW{} having an improved management of the active set. At each iteration $t$, \AFW{} optimizes over the active set, to find an away vertex, and updates the set, see \cref{algo:AFW}. 
 \gabaistats{ away steps not only accelerate the algorithm in practice in high-dimensional product polytope setting, }
 %This not only accelerates the algorithm in practice in high-dimensional settings,
-but are key for our linear convergence analysis, as \cref{fig:k2n20000,fig:k10n10000} show.
+but are key for our linear convergence analysis, as \cref{fig:k2n20000,fig:k10n10000} show \gabaistats{for point-cloud instances}.
 % F‑BC-\AFW{} is always fastest, even in the most challenging case with ten polytopes, see \cref{fig:k10n10000}. F‑\AFW{} is the runner-up, even though its advantage over the remaining methods considerably decreases as $k$ increases, especially in terms of FW gap, cf. \cref{fig:k5n10000} and \cref{fig:k10n10000}.
-Even as the number of polytopes grows, \AFW{} maintains a clear edge over the other variants, although this advantage gradually diminishes, particularly in terms of the measured \FW{} gap. 
+Even as 
+%the number of polytopes grows,
+$k$ and $n$ grow, \AFW{} maintains a clear edge over the other variants, although
+%this advantage gradually diminishes, particularly in terms of the measured \FW{} gap. 
+a larger iteration budget is needed for the linear regime to become visible in the plots.
 % The \FW{}-based variants have similar performance, with F‑BC‑\FW{} coming third, and  F‑\FW{} and C‑BC‑\FW{} performing the worst. 
 Instead, the algorithmic performance of the tested \FW{}-based variants F-\FW{} and C-BC-\FW{} is very similar, and it yields worse convergence than F-\AFW{}. 
 Surprisingly, on our instances, the cyclic block‑coordinate \FW{} strategy offers no practical gain over the full \FW{} variant, even with large $k$.
 
+\gabaistats{TODO: REFERENCE NEW VERTEXFACET}
 For the case of intersecting polytopes in \cref{fig:k2n10000_intersecting} and others in \cref{a:extra_experiments}, the problem becomes easier and the difference among algorithms becomes narrower.
 \gabaistats{ TODO: check plots}
 We also note that the convergence happens to be faster across all algorithms for the non-intersecting setting.
@@ -818,10 +824,20 @@ Compare \cref{fig:k2n10000_intersecting}, reporting algorithmic performances on 
 \centering
 %\hspace*{-0.075\textwidth} % Shift the image 5% of the text width to the left
 %\begin{adjustbox}{center}
+\includegraphics[width=1.01\textwidth,height=6.3cm]{./figures/plot_i_vf_k2_n10000_i80000_s42_a0p1_b0p3_d0p45_tp-mid_sep-0p5_t20260324_022349}
+%\end{adjustbox}
+\caption{C-BC-FW, F-FW, and F-AFW run for up to $80000$ iterations on two intersecting vertex-facet polytopes in $\R^{10000}$.}
+\label{fig:k2n10000_intersecting}
+\end{figure*}
+
+
+\begin{figure*}[ht!]
+\centering
+%\hspace*{-0.075\textwidth} % Shift the image 5% of the text width to the left
+%\begin{adjustbox}{center}
 \includegraphics[width=1.01\textwidth,height=6.3cm]{./figures/plot_i_k2_n20000_i1000_s240389_cvxho_anc_t20250511_212230_fromlogs}
 %\end{adjustbox}
-\caption{C-BC-FW, F-FW, and F-AFW run for up to $1000$ iterations on two intersecting polytopes in $\R^{20000}$.
-Note that the FW gap is not guaranteed to decrease monotonically but its minimum across iterations decreases linearly.}
+\caption{C-BC-FW, F-FW, and F-AFW run for up to $1000$ iterations on two intersecting polytopes in $\R^{20000}$.}
 \label{fig:k2n10000_intersecting}
 \end{figure*}
 
@@ -837,6 +853,7 @@ employing \AFW{} variants in speeding up convergence.
 Most importantly, \emph{our computational results provide empirical confirmation of our theoretical linear rates for \AFW{}} in several scenarios, as this algorithm converged consistently faster than F-\FW{}
 %, F-BC-\FW{}
 and C-BC-\FW{} in all settings on disjoint polytopes.
+\gabaistats{Note that the \FW{} gap is not guaranteed to decrease monotonically but its minimum across iterations decreases linearly.}
 
 \section{Conclusion}
 
