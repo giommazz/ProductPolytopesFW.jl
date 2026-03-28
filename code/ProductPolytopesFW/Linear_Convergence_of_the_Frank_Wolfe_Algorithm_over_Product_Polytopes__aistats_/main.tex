@@ -122,6 +122,10 @@
 \input{bibliography_config.tex}
 \input{todo_config.tex}
 \input{definitions.tex}
+
+% Revision-comment macro for AISTATS changes; set color to black to hide revisions.
+\newcommand{\gabaistatscolor}{red}
+\newcommand{\gabaistats}[1]{{\color{\gabaistatscolor}#1}}
 %\input{algorithm_config.tex}
 
 % If your paper is accepted, change the options for the package
@@ -350,7 +354,7 @@ For the convex feasibility problem, classical methods make use of projections as
 \paragraph{Frank–Wolfe for feasibility and block‐coordinate variants.}  
 Several works applied \FW{}‐type methods to the convex feasibility problem. Early distance‐minimization schemes by \citep{Wil68,Wol76} use FW methods without providing convergence rates. More recent block‐coordinate FW algorithms \citep{BPS15,BRZ23} exploit product‐structure by cycling or randomly selecting blocks, but without global linear rates unless combined with costly subroutines.
 An augmented‐Lagrangian FW approach under a PL condition was proposed in \citep{GPL18} for two blocks, though it requires stringent feasibility assumptions and does not easily extend to larger $k$.
-{\color{red}
+\gabaistats{
 However, while this line of work is closely related to ours, its guarantees should be interpreted with caution since their proofs contain a flaw, as discussed in {\citep[Appendix~A]{GLS23}}.
 To the best of our knowledge, the first corrected analysis though for a more limited variant of the setting considered in \citep{GPL18} appears in {\citep[Section~6.2]{SMF20}}.}
 
@@ -490,7 +494,7 @@ that $\whatface{f}{\mP}$ is not always equal to $\wface{f}{\mP}$. Our claim only
   Then, $p$ is in the relative interior of $f$.
 \end{lemma}
 
-{\color{red}
+\gabaistats{
 \cref{lemma:affine_pyramidal_width} states a key structural property of a polytope, i.e., that the point realizing the affine pyramidal width lies in the relative interior of the corresponding face.
 This immediately implies that the affine variant is equivalent to the classical pyramidal width, as stated by \cref{cor:affinepyr_sameas_pyr} below.
 It is also better suited for our compositional arguments: in fact, this equivalence allows us to work with the affine pyramidal width in the proof of \cref{thm:pyrwidth_mPmQ} while still obtaining the classical pyramidal width for the product. 
@@ -524,7 +528,7 @@ Let $\pw{\mP}$ and $\pw{\mQ}$ be the pyramidal widths of polytopes $\mP, \mQ \su
 \end{equation}
 \end{theorem}
 
-{\color{red}
+\gabaistats{
 Note that \cref{thm:pyrwidth_mPmQ} directly implies a lower bound $\pw{\mP} = \bigomega{\frac{1}{\sqrt{k}}\min_{i\in[k]} \pw{\mP_i}}$ for the pyramidal width of the product polytope $\mP = \prod_{i\in[k]} \mP_i$ if $\delta_{\mP_i}$ is the pyramidal width of $\mP_i$, see \cref{cor:pyr_width_lb_for_k_polytopes}.
 Note also that our lower bound matches the trivial upper bound $\pw{\mP} \leq \min_{i\in[k]}\{\pw{\mP}_i\}$ up to a factor of $\sqrt{k}$ (in other words, the pyramidal width of the product can deteriorate by at most $\sqrt{k}$), so our bounds are tight.
 }
@@ -692,57 +696,74 @@ On the other hand, if the intersection is empty, we can run the algorithm until 
 \section{Experiments}\label{s:experiments}
 
 %\Gab{Update after discussion about F VS F-BC is cleared}
-In this section, we evaluate several algorithms for solving the problem in \cref{prob:intersection_k} on a product polytope, showcasing their practical performance and the differences among the explored options.
+In this section, we evaluate several algorithms for solving the problem in \cref{prob:intersection_k} on 
+%a product polytope,
+\gabaistats{several product polytopes,} showcasing their practical performance and the differences among the explored options.
 Our experiments compare the \FW{} and \AFW{} algorithms, cf. \cref{a:algos}, with different heuristic variants. 
 % For each, \FW{} and \AFW, We implement three types of algorithms: (1) ``full'' (F-\FW{} and F-\AFW{}), that at each iteration computes a single \LMO{} over the entire product polytope $\mP$ and maintains a single \emph{active set} in the product, which is a set of previously computed extreme points stored such that the current iterate can be written as a convex combination of such points, (2) ``full block-coordinate'' (F-BC), where we also compute the full \LMO{} but treat each component independently with a separate active set to represent the variable for that component, and (3) ``cyclic block-coordinate'' (C-BC) where at each iteration we only compute the \LMO{} of one component and update the corresponding variable only.
 
-We implement two types of algorithms: ``full'' (F-\FW{} and F-\AFW{}), that at each iteration computes a single \LMO{} over the entire product polytope $\mP$ and maintains a single \emph{active set} in the product, which is a set of previously computed extreme points stored such that the current iterate can be written as a convex combination of such points,
-and ``cyclic block-coordinate'' (C-BC), where at each iteration we only compute the \LMO{} of one component and update the corresponding variable and active set only.
+We implement two types of algorithms: ``full'' (F-\FW{} and F-\AFW{}), that at each iteration computes a single \LMO{} over the entire product polytope $\mP$ and maintains a single \emph{active set} in the product - i.e., a set of previously computed extreme points stored such that the current iterate can be written as a convex combination of such points - and ``cyclic block-coordinate'' (C-BC), where at each iteration we only compute the \LMO{} of one component and update the corresponding variable and active set only.
 
 % In particular, in the full block-coordinate approach (F-BC-FW, F-BC-AFW), all $k$ \LMO{}s are evaluated independently and in parallel in each iteration\dav{note here that F-FW is the same as F-BC-FW since FW doesn't have an active set and say that because of this, we do not have one of those algorithms in the plots and do that}. The product of these solutions is an \LMO{} for the product, but we note that the block-coordinate AFW algorithm stores and uses the so-called away vertices \textit{for each polytope}, as opposed to the full AFW that directly works with the product polytope.
 %On the other hand, in the cyclic block-coordinate regime (C-BC-\FW{}), the variables corresponding to each block are updated sequentially. 
 %To our knowledge, the only existing competitive FW-based method for the set-intersection problem is \cref{algo:alm} from \citep{BPW23}, which implements exactly C-BC-FW for the case $k=2$. % this is something for the related work.
 
-% We observe that the performance of the full block-coordinate variant using \AFW{} enjoys the best performance. 
-We observe that the full \AFW{} variant enjoys the best performance among the tested algorithms. 
-%, although the underlying theoretical analysis and linear rates remain invariant\dav{not true! we only have theory for the F-AFW algorithm} for F-\AFW{} and F-BC-\AFW{}, 
-% This is likely due to F-BC-\AFW{} having an improved management of the active set. At each iteration $t$, \AFW{} optimizes over the active set, to find an away vertex, and updates the set, see \cref{algo:AFW}. 
+
+
 At each iteration $t$, F-\AFW{} optimizes over the active set to find an away vertex, and updates the set, see \cref{algo:AFW}. 
 An away vertex $a_t$ allows the algorithm to choose to move in the direction guaranteeing more progress, namely, taking an \emph{away step} from $x_t$ in the direction $x_t - a_t$, or taking a \emph{\FW{} step} from $x_t$ towards the \LMO{} solution.
 % In these two phases, active set optimization and update, F-BC-\AFW{} exploits the feasible set structure through block decompositions and block updates.
-This not only accelerates the algorithm in practice in high-dimensional settings, but it is key for our linear convergence analysis, as \cref{fig:k2n20000,fig:k10n10000} show.
 
 All algorithms were run with a standard line search, see \cref{a:algos}.
 %\dav{Gabriele, the line search is not specified or discussed in \cref{a:algos} and it should}
 %In the short-step setting, the step-size is determined using the smoothness constant $L = 2$, as established in \cref{prop:lsmooth_cvx_pl_intersection_k}. 
 
+In the plots, we report the following metrics to quantify algorithmic performance over iterations: the primal gap $f(x_t)-\min_{x\in\mP}f(x)$, and also the so-called \FW{} gap $\max_{x \in \mathcal{P}} \innp{\nabla f(x_t), x_t - x}$ \citep{BCC+23}. 
+While the former cannot be calculated in general, since one does not usually know the minimum objective value a priori, the latter is a standard measure for \FW{} algorithms, since it is an upper bound on the former while at the same time being computable.
+Therefore, the \FW{} gap results in a stopping criterion that can be used to guarantee $\epsilon$-optimality has been reached. We used the FW gap as a stopping criterion in our experiments, if they already converged, cf. \citep{Jag13}. 
+
+\gabaistats{TODO: UPDATE ITERATION COUNT WITH NEW EXPERIMENTS}
+We ran every \FW{} variant up to a maximum of $1000$ iterations or until the \FW{} gap dropped below $1e-07$, whichever occurred first. 
+Both metrics in the figures below are plotted against
+%recorded as functions of the iteration count and as a function of
+the elapsed wall-clock time, in seconds, \gabaistats{measured within the corresponding \FW{} routine.}
+
+
+
 
 %\Dav{Probably the sentence below is a typo, the dimension and the number of points $n$ for the construction of the polytope are being called both $n$. Either that or the caption of the plots is wrong}
-Here we report results for settings with $k = 2, 10$ polytopes in $\R^n$, with up to $n = 20000$. We present more plots with different settings in \cref{a:extra_experiments}. 
+Here we report results for settings with $k = 2, 10$ polytopes in $\R^n$, with up to $n = 20000$. We present more plots, corresponding to additional setups in \cref{a:extra_experiments}. 
 %vertices per polytope. 
 
-Each instance is constructed by generating $k$ polytopes. We generate two kinds of problems: one where the polytopes do not intersect, and another where they do. In the first case, each polytope is generated  as the convex hull of a list of points that are sampled uniformly at random from mutually disjoint intervals for every coordinate $i \in [n]$. In the latter case, we shift the aforementioned polytopes $\mP_1, \mP_2, \dots, \mP_k$ so they 
-% have one vertex in common, ensuring a non-empty intersection.
-have non-empty intersection. Concretely, we shift $\mP_2$ until one of its vertices coincides with a vertex $v$ of $\mP_1$; we then move $\mP_2$ towards the barycentre of $\mP_1$ (the average of its vertices); finally, we translate all remaining polytopes so they share $v$. 
-
-The convergence happens to be faster across all algorithms for the non-intersecting setting. Compare \cref{fig:k2n10000_intersecting}, reporting algorithmic performances on the same polytopes used in \cref{fig:k2n20000} but made to intersect, and see the experiments in \cref{a:extra_experiments}, where we showcase more problems with non-empty intersection.
-
-
-
+Each instance is constructed by generating $k$ polytopes.
+We generate two kinds of problems: one where the polytopes do not intersect, and another where they do. 
+\gabaistats{TODO: CHECK WORDING AND GRAMMAR. ALSO REFERENCE PLOTS FOR POINT CLOUDS AND POINTS FOR VERTEX-FACET.}
+\gabaistats{We test two polytope setups, that we call ``point clouds'' and ``vertex-facet'' throughout.}
+In the first case, each polytope is generated as the convex hull of a list of points that are sampled uniformly at random from mutually disjoint intervals for every coordinate $i \in [n]$.
 %\Dav{maybe point to the slides of sebastian's paper that did the same to generate polytopes. But maybe not, it'd be a weird thing to reference }
 %\dav{``Further, we note that, for all instances, we compute \LMO{}s that perform a single linear pass over the point list, evaluating one dot product per point.'' DM: if you want to add this detail, do it in the appendix}
 For each polytope, we draw the number of points uniformly at random in $[n, 2n]$. This choice keeps each polytope ``reasonably challenging'' to optimize over.
 %, while ensuring that the cost of the oracle remains manageable for all runs. 
 In \cref{a:extra_experiments}, we also report an example with two disjoint polytopes in $\R^{10,000}$ built from $100,000$ vertices, an order of magnitude larger: the convergence behavior of the tested algorithms in that instance is essentially unchanged, and only the absolute time to convergence increases, reflecting a higher cost for the \LMO{}.
 %We then computed the convex hull of these points to form each polytope.\dav{but how many vertices do you have then in the end for the polytope? people are going to wonder}
+In the second case, we only consider the case $k =2$, and the polytopes are generalizations of an $\ell_\infty$-ball and of an $\ell_1$-ball, respectively. 
+%In the latter case, 
+Then, we shift the aforementioned polytopes %$\mP_1, \mP_2, \dots, \mP_k$
+so they 
+% have one vertex in common, ensuring a non-empty intersection.
+have non-empty intersection. 
+Concretely, \gabaistats{ for point clouds,} we shift $\mP_2$ until one of its vertices coincides with a vertex $v$ of $\mP_1$; we then move $\mP_2$ towards the barycentre of $\mP_1$ (the average of its vertices); finally, we translate all remaining polytopes so they share $v$. 
+\gabaistats{ Instead, we construct vertex-facet intersections so that only a single vertex of the generalized $\ell_1$-ball touches the interior of a facet of the generalized $\ell_\infty$-ball}
 
-In the plots, we report the following metrics to quantify algorithmic performance over iterations: the primal gap $f(x_t)-\min_{x\in\mP}f(x)$, and also the so-called \FW{} gap $\max_{x \in \mathcal{P}} \innp{\nabla f(x_t), x_t - x}$ \citep{BCC+23}. While the former cannot be calculated in general, since one does not usually know the minimum objective value a priori, the latter is a standard measure for \FW{} algorithms, since it is an upper bound on the former while at the same time being computable. Therefore, the \FW{} gap results in a stopping criterion that can be used to guarantee $\epsilon$-optimality has been reached. We used the FW gap as a stopping criterion in our experiments, if they already converged, cf. \citep{Jag13}. 
+The implementation was carried out fully in Julia (Version 1.9.4) and, in particular, we relied on the \href{https://github.com/ZIB-IOL/FrankWolfe.jl}{\texttt{FrankWolfe.jl}} package (Version 0.5.0, MIT License) for the algorithmic part.
+All runs were executed on Slurm compute nodes equipped with Intel Xeon Gold 6342 processors, each providing 96 logical cores, and approximately 512GiB RAM, interconnected via Infiniband.
+We requested $k$ cores per task in Slurm via \texttt{\#SBATCH\ --cpus-per-task=k}, and then set \texttt{export JULIA\_NUM\_THREADS=\$SLURM\_CPUS\_PER\_TASK} so that Julia’s \FW{} routines used exactly $k$ threads.
 
-We ran every \FW{} variant up to a maximum of $1000$ iterations or until the \FW{} gap dropped below $1e-07$, whichever occurred first. 
-Both metrics in the figures below are plotted against
-%recorded as functions of the iteration count and as a function of
-the elapsed computational time, in seconds.
-%
+\gabaistats{ TODO: UPDATE WITH URL TO CODE}
+The code for reproducing the results in this section will be made publicly available upon publication and can be found in the supplementary material.
+
+
+
 
 
 \begin{figure*}[ht!]
@@ -751,7 +772,7 @@ the elapsed computational time, in seconds.
 %\begin{adjustbox}{center}
 \includegraphics[width=1.01\textwidth,height=6.3cm]{./figures/plot_ni_k2_n20000_i1000_s240389_cvxho_anc_t20250511_212230_fromlogs}
 %  \end{adjustbox}
-\caption{Different variants of the FW algorithm (C-BC-FW, F-FW, F-AFW) run for up to $1000$ iterations on two non‑intersecting polytopes in $\R^{20000}$. }
+\caption{C-BC-FW, F-FW, and F-AFW run for up to $1000$ iterations on two non-intersecting polytopes in $\R^{10000}$. }
 \label{fig:k2n20000}
 \end{figure*}
 
@@ -760,19 +781,12 @@ the elapsed computational time, in seconds.
 \centering
 %\hspace*{-0.075\textwidth} % Shift the image 5% of the text width to the left
 %\begin{adjustbox}{center}
-\includegraphics[width=1.01\textwidth,height=6.3cm]{./figures/plot_ni_k10_n10000_i1000_s240389_cvxho_anc_t20250513_034433_fromlogs}
+\includegraphics[width=1.01\textwidth,height=6.3cm]{./figures/plot_ni_k10_n10000_npub20000_unif_i5000_s240389_cvxho-mat_a-p1_p2_segment-0.5_ref-vertex_t20260327_180524}
 %\end{adjustbox}
-\caption{Different variants of the FW algorithm (C-BC-FW, F-FW, F-AFW) run for up to $1000$ iterations on ten non‑intersecting polytopes in $\R^{10000}$. One can observe that the rates of convergence for the objective are at least linear in F-AFW.}
+\caption{C-BC-FW, F-FW, and F-AFW run for up to $5000$ iterations on ten non-intersecting polytopes in $\R^{10000}$.
+Small non-monotonic fluctuations of the primal gap in the tail are numerical artifacts caused by finite-precision effects and the approximate computation of the reference optimum.}
 \label{fig:k10n10000}
 \end{figure*}
-
-
-
-The implementation was carried out fully in Julia (Version 1.9.4) and, in particular, we relied on the \href{https://github.com/ZIB-IOL/FrankWolfe.jl}{\texttt{FrankWolfe.jl}} package (Version 0.5.0, MIT License) for the algorithmic part.
-All runs were executed on Slurm compute nodes equipped with Intel Xeon Gold 6342 processors, each providing 96 logical cores, and approximately 512GiB RAM, interconnected via Infiniband.
-We requested $k$ cores per task in Slurm via \texttt{\#SBATCH\ --cpus-per-task=k}, and then set \texttt{export JULIA\_NUM\_THREADS=\$SLURM\_CPUS\_PER\_TASK} so that Julia’s \FW{} routines used exactly $k$ threads.
-
-The code for reproducing the results in this section will be made publicly available upon publication and can be found in the supplementary material.
 
 %
 
@@ -782,6 +796,12 @@ The code for reproducing the results in this section will be made publicly avail
 
 %We found a consistent hierarchy across all experimental settings. F‑BC‑\AFW{} is always fastest, even in the most challenging case with ten polytopes, see \cref{fig:k10n10000}. F‑\AFW{} is the runner-up, even though its advantage over the remaining methods considerably decreases as $k$ increases, especially in terms of FW gap, cf. \cref{fig:k5n10000} and \cref{fig:k10n10000}.  Even as the number of polytopes grows, \AFW{} maintains a clear edge over the other variants, although this advantage gradually diminishes, particularly in terms of the measured \FW{} gap. 
 All in all, we found a consistent hierarchy across all experimental settings. 
+We observe that the full \AFW{} variant enjoys the best performance among the tested algorithms:
+%, although the underlying theoretical analysis and linear rates remain invariant\dav{not true! we only have theory for the F-AFW algorithm} for F-\AFW{} and F-BC-\AFW{}, 
+% This is likely due to F-BC-\AFW{} having an improved management of the active set. At each iteration $t$, \AFW{} optimizes over the active set, to find an away vertex, and updates the set, see \cref{algo:AFW}. 
+\gabaistats{ away steps not only accelerate the algorithm in practice in high-dimensional product polytope setting, }
+%This not only accelerates the algorithm in practice in high-dimensional settings,
+but are key for our linear convergence analysis, as \cref{fig:k2n20000,fig:k10n10000} show.
 % F‑BC-\AFW{} is always fastest, even in the most challenging case with ten polytopes, see \cref{fig:k10n10000}. F‑\AFW{} is the runner-up, even though its advantage over the remaining methods considerably decreases as $k$ increases, especially in terms of FW gap, cf. \cref{fig:k5n10000} and \cref{fig:k10n10000}.
 Even as the number of polytopes grows, \AFW{} maintains a clear edge over the other variants, although this advantage gradually diminishes, particularly in terms of the measured \FW{} gap. 
 % The \FW{}-based variants have similar performance, with F‑BC‑\FW{} coming third, and  F‑\FW{} and C‑BC‑\FW{} performing the worst. 
@@ -789,6 +809,10 @@ Instead, the algorithmic performance of the tested \FW{}-based variants F-\FW{} 
 Surprisingly, on our instances, the cyclic block‑coordinate \FW{} strategy offers no practical gain over the full \FW{} variant, even with large $k$.
 
 For the case of intersecting polytopes in \cref{fig:k2n10000_intersecting} and others in \cref{a:extra_experiments}, the problem becomes easier and the difference among algorithms becomes narrower.
+\gabaistats{ TODO: check plots}
+We also note that the convergence happens to be faster across all algorithms for the non-intersecting setting.
+Compare \cref{fig:k2n10000_intersecting}, reporting algorithmic performances on the same polytopes used in \cref{fig:k2n20000} but made to intersect, and see the experiments in \cref{a:extra_experiments}, where we showcase more problems with non-empty intersection.
+
 
 \begin{figure*}[ht!]
 \centering
@@ -796,7 +820,8 @@ For the case of intersecting polytopes in \cref{fig:k2n10000_intersecting} and o
 %\begin{adjustbox}{center}
 \includegraphics[width=1.01\textwidth,height=6.3cm]{./figures/plot_i_k2_n20000_i1000_s240389_cvxho_anc_t20250511_212230_fromlogs}
 %\end{adjustbox}
-\caption{Different variants of the FW algorithm (C-BC-FW, F-FW, F-AFW) run for up to $1000$ iterations on two intersecting polytopes in $\R^{20000}$. Note that the FW gap is not guaranteed to decrease monotonically but the minimum of it across iterations decreases linearly as well.}
+\caption{C-BC-FW, F-FW, and F-AFW run for up to $1000$ iterations on two intersecting polytopes in $\R^{20000}$.
+Note that the FW gap is not guaranteed to decrease monotonically but its minimum across iterations decreases linearly.}
 \label{fig:k2n10000_intersecting}
 \end{figure*}
 
@@ -1811,7 +1836,7 @@ Similarly to \cref{a:linconv_pw}, here we use our bounds on the vertex-facet dis
 % %Applying Proposition~\ref{prop:vfd_PxQ_bounds}, we obtain the progress estimate stated in our theorem, which corresponds to linear rates of the kind $t = O(\log\frac{1}{\epsilon})$ for AFW to obtain an $\epsilon$-accurate solution. These rates are derived from that progress estimate, in the same way as in the proof of \cref{prop:linconv_pw}.
 
 
-{\color{red}
+\gabaistats{
 For convergence analysis, the rates in \cref{prop:linconv_vf} are quantified by instantiating \citep[Theorem 3.1]{BS15} with the parameters of our setting.
 More precisely, we first identify the constants appearing in their geometric decay bound, namely $\Omega_X$, $\rho$, $D$, $N$, $\kappa$, and $C$ and then translate that decay into an explicit bound on the number of iterations $t$.
 This last step is carried out exactly as in the proof of \cref{prop:linconv_pw}.
