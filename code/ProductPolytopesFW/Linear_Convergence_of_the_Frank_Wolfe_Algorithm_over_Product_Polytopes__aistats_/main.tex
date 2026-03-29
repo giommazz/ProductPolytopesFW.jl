@@ -743,7 +743,7 @@ In this section, we evaluate \gabaistats{the practical performances of} several 
 \includegraphics[width=0.98\textwidth]{./figures/plot_ni_k2_n20000_i1000_s240389_cvxho_anc_t20250511_212230_fromlogs}
 %  \end{adjustbox}
 \caption{%C-BC-FW, F-FW, and F-AFW
-\FW{} variants, run for up to $1\,000$ iterations on two non-intersecting point-cloud polytopes in $\R^{20\,000}$.}
+FW variants, run for up to $1\,000$ iterations on two non-intersecting point-cloud polytopes in $\R^{20\,000}$.}
 \label{fig:k2n20000_pc_ni}
 \end{figure*}
 
@@ -754,7 +754,7 @@ In this section, we evaluate \gabaistats{the practical performances of} several 
 \includegraphics[width=0.98\textwidth]{./figures/plot_ni_k10_n10000_npub20000_unif_i10000_s240389_cvxho-mat_a-p1_p2_segment-0.5_ref-vertex_t20260328_082154}
 %\end{adjustbox}
 \caption{%C-BC-FW, F-FW, and F-AFW
-\FW{} variants, run for up to $10\,000$ iterations on ten non-intersecting point-cloud polytopes in $\R^{10\,000}$.}
+FW variants, run for up to $10\,000$ iterations on ten non-intersecting point-cloud polytopes in $\R^{10\,000}$.}
 \label{fig:k10n10000_pc_ni}
 \end{figure*}
 
@@ -765,7 +765,7 @@ In this section, we evaluate \gabaistats{the practical performances of} several 
 \includegraphics[width=0.98\textwidth]{./figures/plot_i_vf_k2_n10000_i80000_s42_a0p1_b0p3_d0p45_tp-mid_sep-0p5_t20260324_022349}
 %\end{adjustbox}
 \caption{%C-BC-FW, F-FW, and F-AFW
-\FW{} variants, run for up to $80\,000$ iterations on two intersecting vertex-facet polytopes in $\R^{10\,000}$.}
+FW variants, run for up to $80\,000$ iterations on two intersecting vertex-facet polytopes in $\R^{10\,000}$.}
 \label{fig:k2n10000_vf_i}
 \end{figure*}
 
@@ -776,7 +776,7 @@ In this section, we evaluate \gabaistats{the practical performances of} several 
 \includegraphics[width=0.98\textwidth]{./figures/plot_i_k2_n20000_i1000_s240389_cvxho_anc_t20250511_212230_fromlogs}
 %\end{adjustbox}
 \caption{%C-BC-FW, F-FW, and F-AFW
-\FW{} variants, run for up to $1\,000$ iterations on the two polytopes from \cref{fig:k2n20000_pc_ni}, translated to intersect.}
+FW variants, run for up to $1\,000$ iterations on the two polytopes from \cref{fig:k2n20000_pc_ni}, translated to intersect.}
 \label{fig:k2n20000_pc_i}
 \end{figure*}
 
@@ -1927,7 +1927,7 @@ Solving $f(x_t)-f(x^\ast)\le \epsilon$ for $t$ gives exactly the iteration compl
 
 \gabrev{The pseudocode for the \FW{} algorithm can be found in, e.g., {\citep[Algorithm 2.1]{BCC+23}}. We then} present the pseudocode of the \AFW{} algorithm.
 
-\begin{algorithm}[H]
+\begin{algorithm}[!t]
 %
 \KwData{Convex and smooth function $f$, start vertex $x_0 \in \verts{\mP}$, \LMO{} over $\mP$}
 Initialize active set: $\mA_0 \gets \{x_0\}$\\
@@ -1980,7 +1980,7 @@ $x_{t+1} \gets x_t - \lambda_td_t$\\
 }
 }
 %
-\caption{Away Frank Wolfe {\citep[Algorithm 2.2]{BCC+23}}}
+\caption{Away Frank--Wolfe {\citep[Algorithm 2.2]{BCC+23}}}
 \label{algo:AFW}
 \end{algorithm}
 %
@@ -2022,7 +2022,7 @@ Next, we provide the pseudocode for the alternating linear minimization (ALM) al
 % \label{algo:pocs}
 % \end{algorithm}
 
-\begin{algorithm}[H]
+\begin{algorithm}[!t]
 \KwData{$L$-smooth and convex $f$, $(x_0, y_0) \in \mP \times \mQ$, $\lambda_t, \gamma_t \in [0,1]$, $t = 0, \dots, T-1$}
 
 \For{$t = 0$ \KwTo $T-1$}{
@@ -2034,7 +2034,7 @@ Next, we provide the pseudocode for the alternating linear minimization (ALM) al
 
 	$y_{t+1} \gets x_t - \gamma_t (y_t - z_t)$
 }
-\caption{Alternating Linear Minimization}
+\caption{Alternating linear minimization}
 \label{algo:alm}
 \end{algorithm}
 
@@ -2055,17 +2055,33 @@ Next, we provide the pseudocode for the alternating linear minimization (ALM) al
 % \end{proposition}
 
 
-\section{More Experiments}\label{a:extra_experiments}
+\section{More experiments}\label{a:extra_experiments}
 
-\gabrev{In this section, we present additional plots to further validate the practical behavior of the \FW{} C-BC-\FW{} and \AFW{} algorithms. 
-As in \cref{s:experiments}, the plots below display the primal and \FW{} gap of the examined algorithms, plotted against the elapsed computational time, in seconds.
+\gabaistats{
+In this section, we present additional plots to further validate the practical behavior of \FW{}, \C-BC-FW{}, and \AFW{} when solving both point-cloud and vertex-facet instances.
+As in \cref{s:experiments}, the plots below display the primal and \FW{} gap of the examined algorithms, plotted against the elapsed computational time, in seconds, using logarithmic scales on both axes.
 The software and hardware settings are the same as the ones used to obtain the figures in \cref{s:experiments}.}
 
-\gabrev{The plots presented below show the outcome of running the experiments of \cref{s:experiments} several times but with different configurations and seeds.
-Doing this, we obtain the same relative performance among the algorithms:  when solving both instances where polytopes do not intersect (\cref{fig:k2n2500_pc_ni}, \cref{fig:k2n5000_pc_ni}, \cref{fig:k5n5000_pc_ni}, \cref{fig:k5n10000_pc_ni}) and when they have a non-empty intersection (\cref{fig:k2n10000_pc_i}, \cref{fig:k5n10000_pc_i}), the curves again exhibit the predicted linear rate for \AFW{} on product polytopes, and confirm that its empirical advantage persists across different randomizations.
-% We first provide plots showing aggregated results over several instances of problem \eqref{prob:intersection_k} for $k = 2$ and $k=5$, obtained by generating polytopes each time with different random seeds, with empty (\cref{fig:k2n20000_ni_avg13instances}, \cref{fig:k5n10000_ni_avg13instances}) and non-empty (\cref{fig:k2n20000_i_avg13instances}, \cref{fig:k5n10000_i_avg13instances}) intersection.
-Furthermore, these figures confirm that the runs presented in \cref{s:experiments} are representative of algorithmic behavior and not statistical outliers.}
-%
+\gabaistats{
+The point-cloud plots below show the outcome of running the experiments of \cref{s:experiments} with different configurations and seeds.
+In both the non-intersecting cases (\cref{fig:k2n2500_pc_ni}, \cref{fig:k2n5000_pc_ni}, \cref{fig:k5n5000_pc_ni}, \cref{fig:k5n10000_pc_ni}) and the intersecting ones (\cref{fig:k2n10000_pc_i}, \cref{fig:k5n10000_pc_i}), we observe the same relative ordering among the algorithms as in the main text.
+
+In particular, \AFW{} consistently outperforms the \FW{}-based baselines in non-intersecting runs, clearly showing its linear convergence in the plots. 
+%Notably, we increase the scale by solving the intersection problem on two disjoint polytopes, generated as the convex hull of $100\,000$ vertices each, namely, around an order of magnitude larger than the example in \cref{fig:k2n20000_pc_ni}. 
+%We provide the results of this test in \cref{fig:k2n10000_100000vertices_pc_ni}.
+Even the larger non-intersecting point-cloud instances in \cref{fig:k5n10000_pc_i,fig:k5n5000_pc_ni,fig:k5n10000_pc_ni,fig:k2n10000_100000vertices_pc_ni,fig:k2n10000_15000vertices_pc_ni}, where each polytope is generated from denser convex-hull constructions with a large amount of points (up to an order of magnitude larger than the example in \cref{fig:k2n20000_pc_ni}), make the linear regime of \AFW{} is clearly visible.
+Even in these cases, \AFW{} continues to outperform the other methods, underscoring its robustness even when individual \LMO{} calls become substantially more expensive.
+In fact, we note that, for each polytope, we always compute \LMO{}s that perform a single linear pass over the vertex list that was used to generate it, evaluating one dot product per vertex.
+The same implementation was used in \cref{s:experiments}.
+Because of this, the time to convergence in these examples is longer, in absolute terms, than on instances with polytopes generated from a list of between $n$ and $2n$ vertices (see \cref{s:experiments}).
+Clearly, however, the relative performance of all the tested algorithms is virtually unchanged.
+
+At the same time, the intersecting point-cloud cases still display a smaller empirical separation among the methods, in agreement with the discussion in \cref{s:experiments}.
+Overall, these plots confirm that the runs presented in \cref{s:experiments} are representative of algorithmic behavior and not statistical outliers.}
+
+
+
+
 \begin{figure}[!t]
 \centering
 \includegraphics[width=\textwidth]{./figures/plot_ni_k2_n2500_i1000_s240389_cvxho_anc_t20250514_114746_fromlogs}
@@ -2114,13 +2130,12 @@ Furthermore, these figures confirm that the runs presented in \cref{s:experiment
 \end{figure}
 
 
-\gabrev{We also increase the scale by solving the intersection problem on two disjoint polytopes, generated as the convex hull of $100\,000$ vertices each, namely, around an order of magnitude larger than the example in \cref{fig:k2n20000_pc_ni}. 
-We provide the results of this test in \cref{fig:k2n10000_100000vertices_pc_ni}.
-As shown in the plot, \AFW{} continues to outperform the other methods, underscoring its robustness even when individual \LMO{} calls become substantially more expensive.
-In fact, we note that, for each polytope, we always compute \LMO{}s that perform a single linear pass over the vertex list that was used to generate it, evaluating one dot product per vertex.
-The same implementation was used in \cref{s:experiments}.
-Because of this, the time to convergence in \cref{fig:k2n10000_100000vertices_pc_ni} is longer, in absolute terms, than on instances created following the procedure explained in \cref{s:experiments}, i.e., with polytopes generated from a list of between $n$ and $2n$ vertices, see \cref{fig:k2n10000_15000vertices_pc_ni} for a comparison with one such instance.
-Clearly, however, the relative performance of all the tested algorithms is virtually unchanged.}
+\gabaistats{
+We also include new vertex-facet experiments in \cref{fig:k2n10000_vf_ni,fig:k2n20000_vf_ni,fig:k2n20000_vf_i}.
+\cref{fig:k2n10000_vf_ni} complements the $n=10\,000$ intersecting vertex-facet instance from the main text by showing the corresponding non-intersecting construction.
+\cref{fig:k2n20000_vf_ni,fig:k2n20000_vf_i} further extend this family to dimension $20\,000$, in both the non-intersecting and intersecting settings.
+Across these additional vertex-facet plots, \AFW{} again exhibits the clearest linear regime and maintains a marked advantage over the FW-based baselines, which is consistent with the sharper local geometry induced by the vertex-facet construction.
+}
 
 \begin{figure}[!t]
 \centering
