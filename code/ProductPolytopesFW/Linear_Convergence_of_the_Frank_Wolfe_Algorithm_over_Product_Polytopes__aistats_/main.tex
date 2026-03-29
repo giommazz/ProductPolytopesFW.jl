@@ -124,9 +124,6 @@
 \input{todo_config.tex}
 \input{definitions.tex}
 
-% Revision-comment macro for AISTATS changes; set color to black to hide revisions.
-\newcommand{\gabaistatscolor}{red}
-\newcommand{\gabaistats}[1]{{\color{\gabaistatscolor}#1}}
 %\input{algorithm_config.tex}
 
 % If your paper is accepted, change the options for the package
@@ -180,36 +177,56 @@
 
 \aistatstitle{Linear Convergence of the Frank-Wolfe Algorithm over Product Polytopes}
 
+% \aistatsauthor{
+% Gabriele Iommazzo \And
+% David Mart\'inez-Rubio \And
+% Francisco Criado \AND
+% Elias Wirth \And
+% Sebastian Pokutta
+% }
+
+% \aistatsaddress{
+% Zuse Institute Berlin\\
+% %Berlin,
+% Germany
+% \And
+% Signal Theory and Communications Department\\
+% %Carlos III University
+% UC3M\\
+% %Madrid,
+% Spain
+% \And
+% Departamento de Matem\'aticas\\
+% CUNEF Universidad\\
+% %Madrid,
+% Spain
+% \AND
+% Berlin Institute of Technology\\
+% %Berlin,
+% Germany
+% \And
+% Technische Universit\"at Berlin\\
+% and Zuse Institute Berlin\\
+% %Berlin,
+% Germany }
+
 \aistatsauthor{
-Gabriele Iommazzo
-\And
-David Mart\'inez-Rubio
-\And
-Francisco Criado
-\And
-Elias Wirth
-\And
-Sebastian Pokutta
+Gabriele Iommazzo$^{1}$ \And
+David Mart\'inez-Rubio$^{2}$ \And
+Francisco Criado$^{3}$ \AND
+Elias Wirth$^{4}$ \And
+Sebastian Pokutta$^{1,5}$
 }
 
 \aistatsaddress{
-Zuse Institute Berlin\\
-Berlin, Germany
-\And
-Signal Theory and Communications Department\\
-Carlos III University\\
-Madrid, Spain
-\And
-Departamento de Matem\'aticas\\
-CUNEF Universidad\\
-Madrid, Spain
-\And
-Berlin Institute of Technology\\
-Berlin, Germany
-\And
-Technische Universit\"at Berlin\\
-and Zuse Institute Berlin\\
-Berlin, Germany } ]
+$^{1}$ Zuse Institute Berlin, Germany \quad
+$^{2}$ Carlos III University, Madrid, Spain \quad
+$^{3}$ CUNEF Universidad, Madrid, Spain\\
+$^{4}$ Berlin Institute of Technology, Germany \quad
+$^{5}$ Technische Universit\"at Berlin and Zuse Institute Berlin, Germany
+}
+
+]
 
 \begin{abstract}
 We study the linear convergence of Frank-Wolfe algorithms over product polytopes. We analyze two condition numbers for the product polytope, namely the \emph{pyramidal width} and the \emph{vertex-facet distance}, based on the condition numbers of individual polytope components. 
@@ -271,7 +288,7 @@ After computing \eqref{eq:lmo}, the standard \FW{} method takes a step from the 
 In many scenarios, \eqref{eq:lmo}
 is a cheaper alternative to the quadratic optimization problem that projections consist of, cf. \citep{Jag13}, and can be computed even when $\mX$ is defined implicitly, such as a convex hull of a set of points.
 
-The convergence behavior of Frank-Wolfe methods is strongly influenced by the geometry of the constraint set, that of the function, and the location of the unconstrained minimizer. While sublinear rates are typical in general convex and smooth settings, it is known that linear convergence can be achieved under additional assumptions, such as global optimizers being in the interior of $\X$ \citep{wolfe1970convergence,guelat1986some}, strong convexity of the feasible set along with all global optimizers being outside of it \citep{levitin1966constrained}, or strong convexity of $f$ for $\X$ being a polytope having some positive condition number. This last assumption holds for one of several different notions of conditioning that have been defined \citep{lacoste2013affine,GH15,LJ15,BS15,penya2016vonneumann,PR18}, % the penya2016vonneumann paper uses a conditioning called the relative width
+The convergence behavior of \FW{} methods is strongly influenced by the geometry of the constraint set, that of the function, and the location of the unconstrained minimizer. While sublinear rates are typical in general convex and smooth settings, it is known that linear convergence can be achieved under additional assumptions, such as global optimizers being in the interior of $\X$ \citep{wolfe1970convergence,guelat1986some}, strong convexity of the feasible set along with all global optimizers being outside of it \citep{levitin1966constrained}, or strong convexity of $f$ for $\X$ being a polytope having some positive condition number. This last assumption holds for one of several different notions of conditioning that have been defined \citep{lacoste2013affine,GH15,LJ15,BS15,penya2016vonneumann,PR18}, % the penya2016vonneumann paper uses a conditioning called the relative width
 among which there is the pyramidal width and the vertex-facet distance that we use in this paper, cf. \cref{s:conditioning_convergence}.
 
 A few works extend the applicability of the algorithms to larger classes of functions such as the ones satisfying the Polyak-Łojasiewicz (\newtarget{def:acronym_polyak_lojasiewicz}{\PL{}}) condition, as opposed to strong convexity \citep{BS15,BCC+23}.
@@ -385,8 +402,10 @@ The third premise is a condition that guarantees we can obtain descent on the ob
 % ------------------------------
 \section{Notation and Preliminaries}\label{s:preliminaries}
 
-We denote the set of vertices of an $n$-dimensional (bounded) polytope $\mP$ by $\verts{\mP}$, the convex hull and affine hull of its vertices by $\conv{\mP}$ and $\aff{\mP}$, respectively, the set of its proper faces by $\faces{\mP}$ and the set of its facets by $\facets{\mP}$.
-Recall that a face
+We denote the set of vertices of an $n$-dimensional (bounded) polytope $\mP$ by $\verts{\mP}$, the convex hull and affine hull of its vertices by $\conv{\mP}$ and $\aff{\mP}$, %respectively,
+the set of its proper faces by $\faces{\mP}$, and the set of its facets by $\facets{\mP}$.
+%Recall that 
+A face
 %\dav{afaik if you refer to objects that are not $n-1$ dimensional, they are call facets, not faces. GI: I would keep the term ``face'', see below} 
 is \emph{proper} if it is neither $\mP$ itself nor the empty set.
 Facets are proper ``maximal'' faces, in the sense that they are not contained in any other face, so they have dimension $n-1$.
@@ -397,7 +416,8 @@ $\dist{\mP, \mQ} \defi \min_{x \in \mP, y \in \mQ} \|x - y\|$ for nonempty polyt
 Further, we use the shorthand $\diam{\mP} \defi \max_{v, w \in \mathcal{P}} \|v - w\|$ to denote the \emph{diameter} of a polytope $\mathcal{P}$.
 We also denote the Kronecker product of two matrices $A, B$ by $A \otimes B$.
 
-We address the problem $\min_{x \in \mP} f(x)$ of minimizing a convex, smooth and \PL{} function over a polytope by considering \FW{} methods. Let $\Omega^\ast \defi \argmin_{x \in \mX} f(x)$ be its solution set, and we denote an arbitrary point in $\Omega^\ast$ by $x^\ast$.
+We address the problem $\min_{x \in \mP} f(x)$ of minimizing a convex, smooth and \PL{} function over a polytope via \FW{} methods.
+We denote its solution set by $\Omega^\ast \defi \argmin_{x \in \mX} f(x)$ and an arbitrary point in $\Omega^\ast$ by $x^\ast$.
 %, that we assume to be nonempty.
 % to solve it and let
 %$ h_t \defi f(x_t) - f(x^\ast) $
@@ -405,9 +425,10 @@ We address the problem $\min_{x \in \mP} f(x)$ of minimizing a convex, smooth an
 
 Further, let $[k] \defi \{1, 2, \dots, k\}$. We denote the %$k \times k$ identity matrix by $I_k$ and the $k$-dimensional vector of ones by $\ones_k$.
 $m \times m$ identity matrix by $I_m$ and the $m$-dimensional vector of ones by $\ones_m$.
-We make use of the Cartesian product of $k$ $n$-dimensional polytopes $\Pi_{i \in [k]} \mP_i \defi \mP_1 \times \mP_2 \times \cdots \times \mP_k \subset \R^{n \times k}$ denoting its components by upper indices $x = (x^1, x^2, \dots, x^k)$, where each $x^i \in \mP_i$ is said to be a \emph{block variable}.
+We make use of the Cartesian product of $k$ $n$-dimensional polytopes $\Pi_{i \in [k]} \mP_i \defi \mP_1 \times \cdots \times \mP_k \subset \R^{n \times k}$ denoting its components by upper indices $x = (x^1, \dots, x^k)$, where each $x^i \in \mP_i$ is said to be a \emph{block variable}.
 In the following, we will consider blocks $I_t = \{i\}$, for some $i \in [k]$, and the partial gradients $\nabla^i f(x) \defi (\nabla f(x))^i$ of a differentiable function $f$ over block $i \in [k]$.
-Recall that a face is a product of faces in this setting. 
+%Recall that
+A face is a product of faces in this setting. 
 
 We will work with the following function regularity conditions, where the differentiability assumption over non-open sets $\mX$ is to be understood as differentiability in an open set containing $\mX$.
 
@@ -439,8 +460,8 @@ A well-known fact is that, under convexity, $\mu$-\PL{} is equivalent to the so-
 \section{Conditioning of Product Polytopes and Convergence}\label{s:conditioning_convergence}
 In this section, we develop our theory providing bounds for how our polytope condition numbers of interest behave when considering product polytopes. At the end of this section we quantify the linear rates of convergence that ensue from our results.
 
-We start by studying the pyramidal width, and we show that, if each subpolytope $\mP_i$ is well-conditioned in terms of pyramidal width lower bounds, then the product polytope $\mP$ is also well-conditioned.
-We note that several equivalent definitions of the pyramidal width can be found in the literature. We make use of the one given by \citep{PR18}, 
+We start by studying the pyramidal width and show that, if each subpolytope $\mP_i$ is well-conditioned in terms of pyramidal width lower bounds, then the product polytope $\mP$ is also well-conditioned.
+Note that several equivalent definitions of the pyramidal width can be found in the literature. We make use of the one given by \citep{PR18}, 
 %\citep[Theorem 2]{PR18}
 where it is termed \emph{facial distance}, while the original notions can be found in \citep{lacoste2013affine}. See also \citep{BS15, LJ15}. 
 \eli{ if we rely on their characterization, i think we should call the objects we work with facial distances and not pyramidal width. we literally define things via the face. i strongly feel that we should make a final pass and change things to facial distance, it is the more descriptive term.
@@ -469,7 +490,9 @@ Let $\mP$ be a polytope, with at least two vertices and let $f$ be a face of $\m
 \end{equation}
 \end{definition}
 
-In order to achieve linear rates with FW algorithms, it is enough to obtain lower bounds for the pyramidal width $\delta_{\mP}$ of the domain $\mP$. For a product polytope, $\mP = \prod_{i\in[k]}\mP_i$, we trivially have that $\delta_{\mP} \leq \min_{i\in[k]}\{\delta_{\mP_i}\}$ from the definition. In the sequel, we will show
+In order to achieve linear rates with FW algorithms, it is enough to obtain lower bounds for the pyramidal width $\delta_{\mP}$ of the domain $\mP$.
+For a product polytope, $\mP = \prod_{i\in[k]}\mP_i$, we trivially have that $\delta_{\mP} \leq \min_{i\in[k]}\{\delta_{\mP_i}\}$ from the definition. 
+In the sequel, we will show
 %that
 a lower bound that is only a minor polynomial factor away from this upper bound, depending on $k$.
 %It is also evident from the definition that the following lower bound holds.
@@ -479,7 +502,8 @@ a lower bound that is only a minor polynomial factor away from this upper bound,
 % Then, it holds that $\pw{\mP \times \mQ} \le \min\{\pw{\mP}, \pw{\mQ}\}$.
 % \end{lemma}
 %We will also rely on the following variant of the pyramidal width, which is equivalent to the definition above.
-To that end, we introduce the following variant of the pyramidal width, which we show it is equivalent to the definition above.
+To that end, we introduce the following variant of the pyramidal width, %which we
+and show it is equivalent to the definition above.
 \begin{definition}[\textbf{Affine pyramidal width}]
   Let $\mP$ be a polytope, and let $f$ be a face of $\mP$. The \emph{affine pyramidal width} of $\mP$ in $f$ is the distance between $\aff{f}$ and $\mP^f$. We denote it by $\whatface{f}{\mP}$.
 %
@@ -520,7 +544,9 @@ However, The affine pyramidal width is also better suited for our compositional 
   \]
 \end{corollary}
 \begin{proof}
-    For every face $f$ of $\mP$, we straightforwardly have $\whatface{f}{\mP}\leq \wface{f}{\mP}$ from the definition. Hence, $\what_{\mP}\leq \w{\mP}$. Now let $f$ be a face of $\mP$ with minimum affine pyramidal width. Then, by \cref{lemma:affine_pyramidal_width}, $\wface{f}{\mP}=\whatface{f}{\mP}$. Hence, $\w{\mP}=\what_{\mP}$.
+    For every face $f$ of $\mP$, we %straightforwardly
+    directly have $\whatface{f}{\mP}\leq \wface{f}{\mP}$ from the definition,%. Hence,
+    so $\what_{\mP}\leq \w{\mP}$. Now, let $f$ be a face of $\mP$ with minimum affine pyramidal width. Then, by \cref{lemma:affine_pyramidal_width}, $\wface{f}{\mP}=\whatface{f}{\mP}$. Hence, $\w{\mP}=\what_{\mP}$.
 
 \end{proof}
 
@@ -588,14 +614,16 @@ where $\verts{\mP}$ is the set of vertices of $\mP$.
 \end{definition}
 
 %In the following, we use the shorthand $\vf{i:j}$ for $\vf{\mP_i \times \mP_{i+1} \times \cdots \times \mP_j}$.
-The fact that this polytope condition number restricts to distances between facets and vertices makes it behave better for product polytopes. In particular, we do not get a polynomial factor decrease with respect to the minimum condition number, as it was the case for the pyramidal width.
+Since this polytope condition number only depends on distances between facets and vertices, it behaves better on product polytopes.
+Notably, unlike the pyramidal width, it does not suffer a polynomial-factor decrease relative to the minimum component condition number.
 
 
 \begin{proposition}[\textbf{Vertex-facet distance of the product}]\linktoproof{prop:vfd_PxQ_bounds}\label{prop:vfd_PxQ_bounds}
 Let $\mP \defi \mP_1 \times \cdots \times \mP_k$ be a product polytope. We have $\vf{\mP} = \min_{i \in[k]}\left\{\vf{\mP_i}\right\}$.
 \end{proposition}
 
-An interesting fact, proven in \citep[Theorem 2.22]{RS22},  is that for a polytope $\mP$ with at least two vertices, the following inequality holds: $\vf{\mP} \ge \pw{\mP}$.
+An interesting fact, proven in \citep[Theorem 2.22]{RS22},  is that for a polytope $\mP$ with at least two vertices, the following %inequality
+holds: $\vf{\mP} \ge \pw{\mP}$.
 
 
 %\Eli{I gave it a shot, but this will need some streamlining. where exactly do we deal with the other two premises? Gab: they are analyzed in section 6 for the specific application we address here of the polytope-intersection problem}
@@ -708,17 +736,62 @@ On the other hand, if the intersection is empty, we can run the algorithm until 
 %In this section, we evaluate several algorithms for solving the problem in \cref{prob:intersection_k} on \gabaistats{several product polytopes,} showcasing their practical performances.% and the differences among the explored options.
 In this section, we evaluate \gabaistats{the practical performances of} several algorithms for solving the problem in \cref{prob:intersection_k} \gabaistats{with different product polytopes.}
 
+\begin{figure*}[!t]
+\centering
+%\hspace*{-0.075\textwidth} % Shift the image 5% of the text width to the left
+%\begin{adjustbox}{center}
+\includegraphics[width=0.98\textwidth]{./figures/plot_ni_k2_n20000_i1000_s240389_cvxho_anc_t20250511_212230_fromlogs}
+%  \end{adjustbox}
+\caption{%C-BC-FW, F-FW, and F-AFW
+\FW{} variants, run for up to $1\,000$ iterations on two non-intersecting point-cloud polytopes in $\R^{20\,000}$.}
+\label{fig:k2n20000_pc_ni}
+\end{figure*}
+
+\begin{figure*}[!t]
+\centering
+%\hspace*{-0.075\textwidth} % Shift the image 5% of the text width to the left
+%\begin{adjustbox}{center}
+\includegraphics[width=0.98\textwidth]{./figures/plot_ni_k10_n10000_npub20000_unif_i10000_s240389_cvxho-mat_a-p1_p2_segment-0.5_ref-vertex_t20260328_082154}
+%\end{adjustbox}
+\caption{%C-BC-FW, F-FW, and F-AFW
+\FW{} variants, run for up to $10\,000$ iterations on ten non-intersecting point-cloud polytopes in $\R^{10\,000}$.}
+\label{fig:k10n10000_pc_ni}
+\end{figure*}
+
+\begin{figure*}[!t]
+\centering
+%\hspace*{-0.075\textwidth} % Shift the image 5% of the text width to the left
+%\begin{adjustbox}{center}
+\includegraphics[width=0.98\textwidth]{./figures/plot_i_vf_k2_n10000_i80000_s42_a0p1_b0p3_d0p45_tp-mid_sep-0p5_t20260324_022349}
+%\end{adjustbox}
+\caption{%C-BC-FW, F-FW, and F-AFW
+\FW{} variants, run for up to $80\,000$ iterations on two intersecting vertex-facet polytopes in $\R^{10\,000}$.}
+\label{fig:k2n10000_vf_i}
+\end{figure*}
+
+\begin{figure*}[!t]
+\centering
+%\hspace*{-0.075\textwidth} % Shift the image 5% of the text width to the left
+%\begin{adjustbox}{center}
+\includegraphics[width=0.98\textwidth]{./figures/plot_i_k2_n20000_i1000_s240389_cvxho_anc_t20250511_212230_fromlogs}
+%\end{adjustbox}
+\caption{%C-BC-FW, F-FW, and F-AFW
+\FW{} variants, run for up to $1\,000$ iterations on the two polytopes from \cref{fig:k2n20000_pc_ni}, translated to intersect.}
+\label{fig:k2n20000_pc_i}
+\end{figure*}
+
+
 Each instance is constructed by generating $k$ polytopes.
-Here we report results for settings with $k = 2, 10$ polytopes in $\R^n$, with up to $n = 20000$. We present more plots, corresponding to additional setups in \cref{a:extra_experiments}. 
+Here we report results for settings with $k = 2, 10$ polytopes in $\R^n$, with up to $n = 20\,000$. We present more plots, corresponding to additional setups in \cref{a:extra_experiments}. 
 %vertices per polytope. 
-We generate two kinds of problems: one where the polytopes do not intersect (cf. \cref{fig:k2n20000_pc_ni,fig:k10n10000_pc_ni}) and another where they do (cf. \cref{fig:k2n10000_pc_i,fig:k2n10000_vf_i}). 
+We generate two kinds of problems: one where the polytopes do not intersect (cf. \cref{fig:k2n20000_pc_ni,fig:k10n10000_pc_ni}) and another where they do (cf. \cref{fig:k2n20000_pc_i,fig:k2n10000_vf_i}). 
 \gabaistats{Moreover, we test two polytope setups, that we call ``point-cloud'' and ``vertex-facet'' throughout.}
-In the point-cloud setup \gabaistats{(cf. \cref{fig:k2n20000_pc_ni,fig:k10n10000_pc_ni,fig:k2n10000_pc_i})}, each polytope is generated as the convex hull of a list of points that are sampled uniformly at random from mutually disjoint intervals for every coordinate $i \in [n]$.
+In the point-cloud setup \gabaistats{(cf. \cref{fig:k2n20000_pc_ni,fig:k10n10000_pc_ni,fig:k2n20000_pc_i})}, each polytope is generated as the convex hull of a list of points that are sampled uniformly at random from mutually disjoint intervals for every coordinate $i \in [n]$.
 %\Dav{maybe point to the slides of sebastian's paper that did the same to generate polytopes. But maybe not, it'd be a weird thing to reference }
 %\dav{``Further, we note that, for all instances, we compute \LMO{}s that perform a single linear pass over the point list, evaluating one dot product per point.'' DM: if you want to add this detail, do it in the appendix}
 For each polytope, we draw the number of points uniformly at random in $[n, 2n]$. This choice keeps each polytope ``reasonably challenging'' to optimize over.
 %, while ensuring that the cost of the oracle remains manageable for all runs. 
-In \cref{a:extra_experiments}, we also report an example with two disjoint polytopes in $\R^{10,000}$ built from $100,000$ vertices, an order of magnitude larger: the convergence behavior of the tested algorithms in that instance is essentially unchanged, and only the absolute time to convergence increases, reflecting a higher cost for the \LMO{}.
+In \cref{a:extra_experiments}, we also report an example with two disjoint polytopes in $\R^{10\,000}$ built from $100\,000$ vertices, an order of magnitude larger: the convergence behavior of the tested algorithms in that instance is essentially unchanged, and only the absolute time to convergence increases, reflecting a higher cost for the \LMO{}.
 %We then computed the convex hull of these points to form each polytope.\dav{but how many vertices do you have then in the end for the polytope? people are going to wonder}
 \gabaistats{In the vertex-facet setup (cf. \cref{fig:k2n10000_vf_i}), we only consider the case $k =2$, and the polytopes are generalizations of an $\ell_\infty$-ball and of an $\ell_1$-ball, respectively.}
 %In the latter case, 
@@ -750,39 +823,15 @@ Therefore, the \FW{} gap results in a stopping criterion that can be used to gua
 We thus used it as a stopping criterion in our experiments, if they already converged, cf. \citep{Jag13}.
 Both metrics in the figures below are plotted against
 %recorded as functions of the iteration count and as a function of
-the elapsed wall-clock time, in seconds, \gabaistats{measured within the corresponding \FW{} routine.}
+the elapsed wall-clock time, in seconds, \gabaistats{measured within the corresponding \FW{} routine, using logarithmic scales on both axes.}
 
 \gabaistats{Note that the \FW{} gap is not guaranteed to decrease monotonically but its minimum across iterations decreases linearly, see the plots.
 Furthermore, we remark that small non-monotonic fluctuations of the primal gap in the tail of \cref{fig:k10n10000_pc_ni} are numerical artifacts caused by finite-precision effects and the approximate computation of the reference optimum.}
 
 The implementation was carried out fully in Julia (Version 1.9.4) and, in particular, we relied on the \href{https://github.com/ZIB-IOL/FrankWolfe.jl}{\texttt{FrankWolfe.jl}} package (Version 0.5.0, MIT License) for the algorithmic part.
-All runs were executed on Slurm compute nodes equipped with Intel Xeon Gold 6342 processors, each providing 96 logical cores, and approximately 512GiB RAM, interconnected via Infiniband.
+All runs were executed on Slurm compute nodes equipped with Intel Xeon Gold 6\,342 processors, each providing 96 logical cores, and approximately 512GiB RAM, interconnected via Infiniband.
 We requested $k$ cores per task in Slurm via \texttt{\#SBATCH\ --cpus-per-task=k}, and then set \texttt{export JULIA\_NUM\_THREADS=\$SLURM\_CPUS\_PER\_TASK} so that Julia's \FW{} routines used exactly $k$ threads.
-
-\gabaistats{ TODO: UPDATE WITH URL TO CODE}
-The code for reproducing the results in this section will be made publicly available upon publication and can be found in the supplementary material.
-
-\begin{figure*}[!t]
-\centering
-%\hspace*{-0.075\textwidth} % Shift the image 5% of the text width to the left
-%\begin{adjustbox}{center}
-\includegraphics[width=0.98\textwidth]{./figures/plot_ni_k2_n20000_i1000_s240389_cvxho_anc_t20250511_212230_fromlogs}
-%  \end{adjustbox}
-\caption{%C-BC-FW, F-FW, and F-AFW
-FW variants run for up to $1000$ iterations on two non-intersecting point-cloud polytopes in $\R^{10000}$.}
-\label{fig:k2n20000_pc_ni}
-\end{figure*}
-
-\begin{figure*}[!t]
-\centering
-%\hspace*{-0.075\textwidth} % Shift the image 5% of the text width to the left
-%\begin{adjustbox}{center}
-\includegraphics[width=0.98\textwidth]{./figures/plot_ni_k10_n10000_npub20000_unif_i5000_s240389_cvxho-mat_a-p1_p2_segment-0.5_ref-vertex_t20260327_180524}
-%\end{adjustbox}
-\caption{%C-BC-FW, F-FW, and F-AFW
-FW variants run for up to $5000$ iterations on ten non-intersecting point-cloud polytopes in $\R^{10000}$.}
-\label{fig:k10n10000_pc_ni}
-\end{figure*}
+The code for reproducing the results in this section \gabaistats{is available at TODO: URL}.% will be made publicly available upon publication and can be found in the supplementary material.
 
 % \cref{fig:k2n20000,fig:k2n20000_pc_ni} showcase the superiority of the block-coordinate implementations over the traditional full-product approaches, as well as the benefits of employing \AFW{} variants, in speeding up convergence.
 % Notably, our computational results provide empirical confirmation of the our theoretical linear rates for \AFW{} in several scenarios, converged consistently faster than F-\FW{}, F-BC-\FW{} and C-BC-\FW{}, in all settings, on disjoint polytopes.
@@ -811,38 +860,16 @@ Surprisingly, on our instances, the cyclic block‑coordinate \FW{} strategy off
 \gabaistats{
 For the intersecting point-cloud instances, the empirical separation among the algorithms appears less pronounced than in the non-intersecting case.
 In particular, comparing \cref{fig:k2n20000_pc_i}, reporting algorithmic performances on the same polytopes used in \cref{fig:k2n20000_pc_ni} but translated so as to create a non-empty intersection, we observe that the curves in the intersecting case are closer to each other, suggesting a smaller performance gap.
-Since these instances are obtained by translation, this effect should not be attributed to a change in global domain-geometric quantities such as the pyramidal width of the product polytope.
-Rather, the relevant difference is local: for the convex-feasibility objective, every common point $z \in \cap_{i=1}^k P_i$ induces an optimal product point $(z,\ldots,z)$, so a higher-dimensional intersection yields a higher-dimensional optimal set containing many points.
-This can make optimal-face identification less effective in practice, and is consistent with less favorable local conditioning near the attained optimum, which plausibly reduces the empirical advantage of \AFW{} over \FW{}.
+%Since these instances are obtained by translation, this effect should not be attributed to a change in global domain-geometric quantities such as the pyramidal width of the product polytope.
+In these instances, a high-dimensional intersection yields a high-dimensional optimal set containing many points.
+This can make optimal-face identification less effective in practice. It is also is consistent with less favorable local conditioning near the attained optimum, say on the optimal face, which plausibly reduces the empirical advantage of \AFW{} over \FW{}.
 
 By contrast, in the vertex-facet construction the intersection is a single point by design, so the optimal set is isolated and the associated optimal face is geometrically much ``sharper''.
-In this setting, a face-dependent pyramidal-width-type constant is a more natural explanatory quantity, consistent with the clearer linear regime observed for \AFW{}.
+In this setting, a larger face-dependent pyramidal-width-type constant is consistent with the clearer linear regime observed for \AFW{}.
 
 Additional examples showing similar behavior are reported in \cref{a:extra_experiments}.
 We also note that the convergence happens to be faster across all algorithms for the non-intersecting, point-cloud setting.
 }
-
-\begin{figure*}[!t]
-\centering
-%\hspace*{-0.075\textwidth} % Shift the image 5% of the text width to the left
-%\begin{adjustbox}{center}
-\includegraphics[width=0.98\textwidth]{./figures/plot_i_vf_k2_n10000_i80000_s42_a0p1_b0p3_d0p45_tp-mid_sep-0p5_t20260324_022349}
-%\end{adjustbox}
-\caption{%C-BC-FW, F-FW, and F-AFW
-FW variants run for up to $80000$ iterations on two intersecting vertex-facet polytopes in $\R^{10000}$.}
-\label{fig:k2n10000_vf_i}
-\end{figure*}
-
-\begin{figure*}[!t]
-\centering
-%\hspace*{-0.075\textwidth} % Shift the image 5% of the text width to the left
-%\begin{adjustbox}{center}
-\includegraphics[width=0.98\textwidth]{./figures/plot_i_k2_n20000_i1000_s240389_cvxho_anc_t20250511_212230_fromlogs}
-%\end{adjustbox}
-\caption{%C-BC-FW, F-FW, and F-AFW
-FW variants run for up to $1000$ iterations on two intersecting polytopes in $\R^{20000}$.}
-\label{fig:k2n20000_pc_i}
-\end{figure*}
 
 % We remark that, although exact line search ensures a nonincreasing primal gap (see \cref{a:algos}), our plots exhibit slight oscillations near convergence. These slight perturbations are due to minor numerical errors in the \texttt{Goldenratio} line search implementation in the \texttt{FrankWolfe.jl} package, that we chose for our runs, where finite‐precision (\texttt{Float64}) rounding can introduce small errors. In practice, these minor oscillations do not change the overall convergence pattern, which still aligns with theoretical guarantees.
 %
@@ -852,9 +879,9 @@ We note that we also experimented with a stochastic block-coordinate \FW{} varia
 The plots showcase the superiority of
 %the block-coordinate implementations over the traditional full-product approaches, as well as the benefits of
 employing \AFW{} variants in speeding up convergence.
-Most importantly, \emph{our computational results provide empirical confirmation of our theoretical linear rates for \AFW{}} in several scenarios, as this algorithm converged consistently faster than F-\FW{}
+Most importantly, \emph{our computational results provide empirical confirmation of our theoretical linear rates for \AFW{}} in several scenarios, as this algorithm converged \gabaistats{at least as fast, and often} consistently faster, than F-\FW{}
 %, F-BC-\FW{}
-and C-BC-\FW{} in all settings on disjoint polytopes.
+and C-BC-\FW{} in all settings.% on disjoint polytopes.
 
 \section{Conclusion}
 
@@ -872,7 +899,7 @@ Francisco Criado was supported by grant PID2022-137283NB-C21.
 
 
 \clearpage
-\vspace{2cm}
+%\vspace{2cm}
 \printbibliography[heading=bibintoc] %
 
 
@@ -973,7 +1000,7 @@ We quantify run-to-run variability by including additional plots, pertaining to 
 \item A description of the computing infrastructure used. (e.g., type of GPUs, internal cluster, or cloud provider).
 
 [Yes]
-Experiments were run on SLURM-managed nodes with Intel Xeon Gold 6342 CPUs (96 logical cores) and \mbox{$\sim$512\,GiB} RAM over InfiniBand; we specify threading and SLURM settings (\texttt{cpus-per-task} and \texttt{JULIA\_NUM\_THREADS}) in \cref{s:experiments}.
+Experiments were run on SLURM-managed nodes with Intel Xeon Gold 6\,342 CPUs (96 logical cores) and \mbox{$\sim$512\,GiB} RAM over InfiniBand; we specify threading and SLURM settings (\texttt{cpus-per-task} and \texttt{JULIA\_NUM\_THREADS}) in \cref{s:experiments}.
 \end{enumerate}
 
 \item If you are using existing assets (e.g., code, data, models) or curating/releasing new assets, check if you include:
@@ -2035,75 +2062,102 @@ As in \cref{s:experiments}, the plots below display the primal and \FW{} gap of 
 The software and hardware settings are the same as the ones used to obtain the figures in \cref{s:experiments}.}
 
 \gabrev{The plots presented below show the outcome of running the experiments of \cref{s:experiments} several times but with different configurations and seeds.
-Doing this, we obtain the same relative performance among the algorithms:  when solving both instances where polytopes do not intersect (\cref{fig:k2n2500_ni}, \cref{fig:k2n5000_ni}, \cref{fig:k5n5000_ni}, \cref{fig:k5n10000_ni}) and when they have a non-empty intersection (\cref{fig:k2n10000_i}, \cref{fig:k5n10000_i}), the curves again exhibit the predicted linear rate for \AFW{} on product polytopes, and confirm that its empirical advantage persists across different randomizations.
+Doing this, we obtain the same relative performance among the algorithms:  when solving both instances where polytopes do not intersect (\cref{fig:k2n2500_pc_ni}, \cref{fig:k2n5000_pc_ni}, \cref{fig:k5n5000_pc_ni}, \cref{fig:k5n10000_pc_ni}) and when they have a non-empty intersection (\cref{fig:k2n10000_pc_i}, \cref{fig:k5n10000_pc_i}), the curves again exhibit the predicted linear rate for \AFW{} on product polytopes, and confirm that its empirical advantage persists across different randomizations.
 % We first provide plots showing aggregated results over several instances of problem \eqref{prob:intersection_k} for $k = 2$ and $k=5$, obtained by generating polytopes each time with different random seeds, with empty (\cref{fig:k2n20000_ni_avg13instances}, \cref{fig:k5n10000_ni_avg13instances}) and non-empty (\cref{fig:k2n20000_i_avg13instances}, \cref{fig:k5n10000_i_avg13instances}) intersection.
 Furthermore, these figures confirm that the runs presented in \cref{s:experiments} are representative of algorithmic behavior and not statistical outliers.}
 %
-\begin{figure}[htbp!]
+\begin{figure}[!t]
 \centering
 \includegraphics[width=\textwidth]{./figures/plot_ni_k2_n2500_i1000_s240389_cvxho_anc_t20250514_114746_fromlogs}
-\caption{Different variants of the AFW algorithm, run for up to $1\,000$ iterations on two non‑intersecting polytopes in $\R^{2\,500}$. }
-\label{fig:k2n2500_ni}
+\caption{FW variants, run for up to $1\,000$ iterations on two non-intersecting point-cloud polytopes in $\R^{2\,500}$. }
+\label{fig:k2n2500_pc_ni}
 \end{figure}
 %
-%
-\begin{figure}[htbp!]
+
+\begin{figure}[!t]
 \centering
 \includegraphics[width=\textwidth]{./figures/plot_ni_k2_n5000_i1000_s240389_cvxho_anc_t20250514_113038_fromlogs}
-\caption{Different variants of the AFW algorithm, run for up to $1\,000$ iterations on two non‑intersecting polytopes in $\R^{5000}$. }
-\label{fig:k2n5000_ni}
+\caption{\FW{} variants, run for up to $1\,000$ iterations on two non-intersecting point-cloud polytopes in $\R^{5\,000}$. }
+\label{fig:k2n5000_pc_ni}
 \end{figure}
 %
-%
-\begin{figure}[htbp!]
+
+\begin{figure}[!t]
 \centering
-\includegraphics[width=\textwidth]{./figures/plot_ni_k5_n5000_i1000_s240389_cvxho_anc_t20250512_174837_fromlogs}
-\caption{Different variants of the AFW algorithm, run for up to $1\,000$ iterations on five non‑intersecting polytopes in $\R^{5\,000}$. }
-\label{fig:k5n5000_ni}
+\includegraphics[width=\textwidth]{./figures/plot_ni_k5_n5000_npub25000_unif_i10000_s240389_cvxho-mat_a-p1_p2_segment-0.5_ref-vertex_t20260327_024217}
+\caption{FW variants, run for up to $10\,000$ iterations on five non-intersecting point-cloud polytopes in $\R^{5\,000}$. For each polytope, we draw the number of points uniformly at random in $[n, 5n]$.}
+\label{fig:k5n5000_pc_ni}
 \end{figure}
+
 %
-%
-\begin{figure}[htbp!]
+\begin{figure}[!t]
 \centering
-\includegraphics[width=\textwidth]{./figures/plot_ni_k5_n10000_i1000_s344_cvxho_anc_t20250522_131814_fromlogs}
-\caption{Different variants of the AFW algorithm, run for up to $1\,000$ iterations on five non‑intersecting polytopes in $\R^{10\,000}$. }
-\label{fig:k5n10000_ni}
+\includegraphics[width=\textwidth]{./figures/plot_ni_k5_n10000_npub50000_unif_i10000_s344_cvxho-mat_a-p1_p2_segment-0.5_ref-vertex_t20260327_064429}
+\caption{FW variants, run for up to $10\,000$ iterations on five non-intersecting point-cloud polytopes in $\R^{10\,000}$. For each polytope, we draw the number of points uniformly at random in $[n, 5n]$.}
+\label{fig:k5n10000_pc_ni}
 \end{figure}
+
 %
-%
-\begin{figure}[htbp!]
+\begin{figure}[!t]
 \centering
 \includegraphics[width=\textwidth]{./figures/plot_i_k2_n10000_i1000_s240389_cvxho_anc_t20250511_123700_fromlogs}
-\caption{Different variants of the AFW algorithm, run for up to $1\,000$ iterations on two intersecting polytopes in $\R^{10\,000}$. }
-\label{fig:k2n10000_i}
+\caption{FW variants, run for up to $1\,000$ iterations on two intersecting point-cloud polytopes in $\R^{10\,000}$. }
+\label{fig:k2n10000_pc_i}
 \end{figure}
+
 %
-%
-\begin{figure}[htbp!]
+\begin{figure}[!t]
 \centering
-\includegraphics[width=\textwidth]{./figures/plot_i_k5_n10000_i1000_s344_cvxho_anc_t20250522_131814_fromlogs}
-\caption{Different variants of the AFW algorithm, run for up to $1\,000$ iterations on five intersecting polytopes in $\R^{10\,000}$. }
-\label{fig:k5n10000_i}
+\includegraphics[width=\textwidth]{./figures/plot_i_k5_n10000_npub50000_unif_i10000_s344_cvxho-mat_a-p1_p2_segment-0.5_ref-vertex_t20260327_064429}
+\caption{FW variants, run for up to $10\,000$ iterations on the five intersecting point-cloud polytopes from \cref{fig:k5n10000_pc_ni}, here translated to intersect. For each polytope, we draw the number of points uniformly at random in $[n, 5n]$.}
+\label{fig:k5n10000_pc_i}
 \end{figure}
 
 
 \gabrev{We also increase the scale by solving the intersection problem on two disjoint polytopes, generated as the convex hull of $100\,000$ vertices each, namely, around an order of magnitude larger than the example in \cref{fig:k2n20000_pc_ni}. 
-We provide the results of this test in \cref{fig:k2n10000_100000vertices_ni}. As shown in the plot, \AFW{} continues to outperform the other methods, underscoring its robustness even when individual \LMO{} calls become substantially more expensive. In fact, we note that, for each polytope, we always compute \LMO{}s that perform a single linear pass over the vertex list that was used to generate it, evaluating one dot product per vertex. The same implementation was used in \cref{s:experiments}. Because of this, the time to convergence in \cref{fig:k2n10000_100000vertices_ni} is longer, in absolute terms, than on instances created following the procedure explained in \cref{s:experiments}, i.e., with polytopes generated from a list of between $n$ and $2n$ vertices, see \cref{fig:k2n10000_15000vertices_ni} for a comparison with one such instance. Clearly, however, the relative performance of all the tested algorithms is virtually unchanged.}
+We provide the results of this test in \cref{fig:k2n10000_100000vertices_pc_ni}.
+As shown in the plot, \AFW{} continues to outperform the other methods, underscoring its robustness even when individual \LMO{} calls become substantially more expensive.
+In fact, we note that, for each polytope, we always compute \LMO{}s that perform a single linear pass over the vertex list that was used to generate it, evaluating one dot product per vertex.
+The same implementation was used in \cref{s:experiments}.
+Because of this, the time to convergence in \cref{fig:k2n10000_100000vertices_pc_ni} is longer, in absolute terms, than on instances created following the procedure explained in \cref{s:experiments}, i.e., with polytopes generated from a list of between $n$ and $2n$ vertices, see \cref{fig:k2n10000_15000vertices_pc_ni} for a comparison with one such instance.
+Clearly, however, the relative performance of all the tested algorithms is virtually unchanged.}
 
-\begin{figure}[htbp]
+\begin{figure}[!t]
 \centering
 \includegraphics[width=\textwidth]{./figures/plot_ni_k2_n10000_i1000_s240389_cvxho_vert_t20250513_175132_fromlogs_100000vertices}
-\caption{Different variants of the AFW algorithm run for up to $1\,000$ iterations on two non‑intersecting polytopes in $\R^{10\,000}$, generated as the convex hull of $100\,000$ vertices.}
-\label{fig:k2n10000_100000vertices_ni}
+\caption{FW variants, run for up to $1\,000$ iterations on two non‑intersecting point-cloud polytopes in $\R^{10\,000}$, generated as the convex hull of $100\,000$ vertices.}
+\label{fig:k2n10000_100000vertices_pc_ni}
 \end{figure}
 
-\begin{figure}[htbp]
+\begin{figure}[!t]
 \centering
 \includegraphics[width=\textwidth]{./figures/plot_ni_k2_n10000_i1000_s6_cvxho_anc_t20250515_121134_fromlogs}
-\caption{Different variants of the AFW algorithm run for up to $1\,000$ iterations on two non‑intersecting polytopes in $\R^{10\,000}$, generated as the convex hull of $15\,000$ vertices.}
-\label{fig:k2n10000_15000vertices_ni}
+\caption{FW variants, run for up to $1\,000$ iterations on two non‑intersecting point-cloud polytopes in $\R^{10\,000}$, generated as the convex hull of $15\,000$ vertices.}
+\label{fig:k2n10000_15000vertices_pc_ni}
 \end{figure}
 
+
+\begin{figure}[!t]
+\centering
+\includegraphics[width=\textwidth]{./figures/plot_ni_vf_k2_n10000_i80000_s42_a0p1_b0p3_d0p45_tp-mid_sep-0p5_t20260324_022349}
+\caption{FW variants, run for up to $80\,000$ iterations on the two vertex-facet polytopes from \cref{fig:k2n10000_vf_i}, not intersecting here.}
+\label{fig:k2n10000_vf_ni}
+\end{figure}
+
+
+\begin{figure}[!t]
+\centering
+\includegraphics[width=\textwidth]{./figures/plot_ni_vf_k2_n20000_i80000_s42_a0p1_b0p3_d0p45_tp-mid_sep-0p5_t20260328_030828}
+\caption{FW variants, run for up to $80\,000$ iterations on two non-intersecting vertex-facet polytopes in $\R^{20\,000}$.}
+\label{fig:k2n20000_vf_ni}
+\end{figure}
+
+\begin{figure}[!t]
+\centering
+\includegraphics[width=\textwidth]{./figures/plot_i_vf_k2_n20000_i80000_s42_a0p1_b0p3_d0p45_tp-mid_sep-0p5_t20260328_030828}
+\caption{FW variants, run for up to $80\,000$ iterations on the two vertex-facet polytopes from \cref{fig:k2n20000_vf_ni}, here translated to intersect.}
+\label{fig:k2n20000_vf_i}
+\end{figure}
 
 % --------------------
 
