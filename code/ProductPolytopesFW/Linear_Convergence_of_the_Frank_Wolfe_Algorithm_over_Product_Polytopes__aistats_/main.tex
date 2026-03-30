@@ -382,7 +382,7 @@ For the convex feasibility problem, classical methods make use of projections as
 Several works applied \FW{}‐type methods to the convex feasibility problem. Early distance‐minimization schemes by \citep{Wil68,Wol76} use FW methods without providing convergence rates. More recent block‐coordinate FW algorithms \citep{BPS15,BRZ23} exploit product‐structure by cycling or randomly selecting blocks, but without global linear rates unless combined with costly subroutines.
 An augmented‐Lagrangian FW approach under a PL condition was proposed in \citep{GPL18} for two blocks, though it requires stringent feasibility assumptions and does not easily extend to larger $k$.
 \gabaistats{
-However, while this line of work is closely related to ours, its guarantees should be interpreted with caution as their proofs contain a flaw, as discussed in {\citep[Appendix~A]{GLS23}}.
+However, while this line of work is closely related to ours, its guarantees should be interpreted with caution as their proofs contain a flaw, as discussed in \citep[Appendix~A]{GLS23}.
 To the best of our knowledge, the first corrected analysis (though for a more limited variant) of the setting considered in \citep{GPL18} appears in {\citep[Section~6.2]{SMF20}}.}
 
 \paragraph{FW convergence and fast convergence rates.}  
@@ -2058,7 +2058,7 @@ Next, we provide the pseudocode for the alternating linear minimization (ALM) al
 \section{More experiments}\label{a:extra_experiments}
 
 \gabaistats{
-In this section, we present additional plots to further validate the practical behavior of \FW{}, \C-BC-FW{}, and \AFW{} when solving both point-cloud and vertex-facet instances.
+In this section, we present additional plots to further validate the practical behavior of \FW{}, C-BC-FW, and \AFW{} when solving both point-cloud and vertex-facet instances.
 As in \cref{s:experiments}, the plots below display the primal and \FW{} gap of the examined algorithms, plotted against the elapsed computational time, in seconds, using logarithmic scales on both axes.
 The software and hardware settings are the same as the ones used to obtain the figures in \cref{s:experiments}.}
 
@@ -2093,7 +2093,7 @@ Overall, these plots confirm that the runs presented in \cref{s:experiments} are
 \begin{figure}[!t]
 \centering
 \includegraphics[width=\textwidth]{./figures/plot_ni_k2_n5000_i1000_s240389_cvxho_anc_t20250514_113038_fromlogs}
-\caption{\FW{} variants, run for up to $1\,000$ iterations on two non-intersecting point-cloud polytopes in $\R^{5\,000}$. }
+\caption{FW variants, run for up to $1\,000$ iterations on two non-intersecting point-cloud polytopes in $\R^{5\,000}$. }
 \label{fig:k2n5000_pc_ni}
 \end{figure}
 %
