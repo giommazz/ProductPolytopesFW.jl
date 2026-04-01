@@ -17,7 +17,7 @@ config = Config("examples/config.yml")
 # ---------------------------------------------------------------------------------
 # SCRIPT PARAMETERS
 # ---------------------------------------------------------------------------------
-basename_log = "ni_k2_n5000_i25000_s15556_cvxho_anc_t20251129_155336"
+basename_log = "ni_pc_k2_n5000_i25000_s15556_cvxho_anc_t20251129_155336"
 logname = basename_log*".csv"
 
 k, n = get_k_n_from_logstring(basename_log)

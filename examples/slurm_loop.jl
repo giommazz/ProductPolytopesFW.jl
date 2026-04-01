@@ -1,31 +1,100 @@
 #!/usr/bin/env julia
 # Generate per-run config/script variants and submit a `(k, n)` grid to Slurm
-# through `examples/slurm_experiments.sh`, using hardcoded settings below.
+# through `examples/slurm_experiments.sh`.
 using ProductPolytopesFW
 using Dates
 
 const CONFIG_LINE_TEMPLATE = "config = Config(\"examples/config.yml\")"
+const USAGE = """
+Usage:
+  julia --project=. examples/slurm_loop.jl <script.jl> <results_dir> <base_config.yml> <k_csv> <n_csv> <seed_start> [--dry-run]
+
+Example:
+  julia --project=. examples/slurm_loop.jl examples/compute_intersection_point_clouds_full_warmup.jl examples/results_linesearch_point_clouds examples/config.yml 2,3 103,207 555 --dry-run
+"""
 
 # -----------------------------------------------------------------------------
-# Hardcoded run settings
+# Default run settings used when the script is invoked without CLI arguments
 # -----------------------------------------------------------------------------
-const SCRIPT_TEMPLATE = "examples/compute_intersection_vertex_facet_full_warmup.jl"
-const RESULTS_DIR = "examples/results_linesearch_vertex_facet"
-const BASE_CONFIG = "examples/config.yml"
-const K_VALUES = [2]
-const N_VALUES = [10000]
-const SEED_START = 42
-const DRY_RUN = false
+const DEFAULT_SCRIPT_TEMPLATE = "examples/compute_intersection_vertex_facet_full_warmup.jl"
+const DEFAULT_RESULTS_DIR = "examples/results_linesearch_vertex_facet"
+const DEFAULT_BASE_CONFIG = "examples/config.yml"
+const DEFAULT_K_VALUES = [2]
+const DEFAULT_N_VALUES = [10000]
+const DEFAULT_SEED_START = 42
+const DEFAULT_DRY_RUN = false
 
 """
-    validate_hardcoded_settings()
+    parse_csv_ints(arg_name, arg_value)
 
-Validate the hardcoded run settings and return normalized absolute paths/values.
+Parse a comma-separated list of integers passed on the command line.
 """
-function validate_hardcoded_settings()
-    script_template = abspath(SCRIPT_TEMPLATE)
-    results_dir = abspath(RESULTS_DIR)
-    base_config = abspath(BASE_CONFIG)
+function parse_csv_ints(arg_name::AbstractString, arg_value::AbstractString)
+    values = Int[]
+    for token in split(arg_value, ',')
+        stripped = strip(token)
+        isempty(stripped) && continue
+        push!(values, parse(Int, stripped))
+    end
+    isempty(values) && error("$arg_name must contain at least one integer. Got: '$arg_value'.")
+    return values
+end
+
+"""
+    parse_run_settings(args)
+
+Parse CLI arguments or fall back to the defaults defined at the top of this file.
+"""
+function parse_run_settings(args::Vector{String})
+    isempty(args) && return (
+        DEFAULT_SCRIPT_TEMPLATE,
+        DEFAULT_RESULTS_DIR,
+        DEFAULT_BASE_CONFIG,
+        copy(DEFAULT_K_VALUES),
+        copy(DEFAULT_N_VALUES),
+        DEFAULT_SEED_START,
+        DEFAULT_DRY_RUN,
+    )
+
+    dry_run = false
+    parsed_args = args
+    if last(parsed_args) == "--dry-run"
+        dry_run = true
+        parsed_args = parsed_args[1:end-1]
+    end
+
+    length(parsed_args) == 6 || error(USAGE)
+    script_template, results_dir, base_config, k_values_arg, n_values_arg, seed_start_arg = parsed_args
+    seed_start = parse(Int, seed_start_arg)
+
+    return (
+        script_template,
+        results_dir,
+        base_config,
+        parse_csv_ints("k_csv", k_values_arg),
+        parse_csv_ints("n_csv", n_values_arg),
+        seed_start,
+        dry_run,
+    )
+end
+
+"""
+    validate_settings(script_template, results_dir, base_config, k_values, n_values, seed_start, dry_run)
+
+Validate run settings and return normalized absolute paths/values.
+"""
+function validate_settings(
+    script_template::AbstractString,
+    results_dir::AbstractString,
+    base_config::AbstractString,
+    k_values::Vector{Int},
+    n_values::Vector{Int},
+    seed_start::Int,
+    dry_run::Bool,
+)
+    script_template = abspath(script_template)
+    results_dir = abspath(results_dir)
+    base_config = abspath(base_config)
 
     isfile(script_template) || error("Script template not found: $script_template")
     isfile(base_config) || error("Base config not found: $base_config")
@@ -42,13 +111,13 @@ function validate_hardcoded_settings()
     occursin(script_kind, lowercase(results_dir)) ||
         error("RESULTS_DIR must contain '$script_kind' to match SCRIPT_TEMPLATE. Found: $results_dir")
 
-    isempty(K_VALUES) && error("K_VALUES must contain at least one integer.")
-    isempty(N_VALUES) && error("N_VALUES must contain at least one integer.")
-    all(k -> k > 0, K_VALUES) || error("All K_VALUES must be positive integers.")
-    all(n -> n > 0, N_VALUES) || error("All N_VALUES must be positive integers.")
-    SEED_START >= 0 || error("SEED_START must be non-negative.")
+    isempty(k_values) && error("k_values must contain at least one integer.")
+    isempty(n_values) && error("n_values must contain at least one integer.")
+    all(k -> k > 0, k_values) || error("All k_values must be positive integers.")
+    all(n -> n > 0, n_values) || error("All n_values must be positive integers.")
+    seed_start >= 0 || error("seed_start must be non-negative.")
 
-    return script_template, results_dir, base_config, Int.(K_VALUES), Int.(N_VALUES), Int(SEED_START), Bool(DRY_RUN)
+    return script_template, results_dir, base_config, Int.(k_values), Int.(n_values), Int(seed_start), Bool(dry_run)
 end
 
 """
@@ -129,11 +198,23 @@ end
 """
     main()
 
-Generate per-run config/script files for each hardcoded `(k, n)` pair and submit
+Generate per-run config/script files for each requested `(k, n)` pair and submit
 the corresponding Slurm jobs.
 """
 function main()
-    script_template, results_dir, base_config_filename, k_values, n_values, seed_start, dry_run = validate_hardcoded_settings()
+    isempty(ARGS) && println("No CLI arguments provided; using defaults defined at the top of examples/slurm_loop.jl.")
+
+    script_template_input, results_dir_input, base_config_input, k_values_input, n_values_input, seed_start_input, dry_run_input =
+        parse_run_settings(ARGS)
+    script_template, results_dir, base_config_filename, k_values, n_values, seed_start, dry_run = validate_settings(
+        script_template_input,
+        results_dir_input,
+        base_config_input,
+        k_values_input,
+        n_values_input,
+        seed_start_input,
+        dry_run_input,
+    )
     base_config = Config(base_config_filename)
 
     generated_root = joinpath(results_dir, "slurm_generated")

@@ -1,6 +1,6 @@
 # ProductPolytopesFW
 
-Julia package and experiment scripts for Frank-Wolfe variants on product polytope feasibility instances.
+Julia package and experiment scripts accompanying the AISTATS 2026 paper on Frank-Wolfe variants for product polytope feasibility instances.
 
 ## Associated paper
 
@@ -30,16 +30,32 @@ If you use this repository in your research, please cite:
 
 ## Setup
 
+Install as an unregistered Julia package:
+
+```julia
+using Pkg
+Pkg.add(url="https://github.com/giommazz/ProductPolytopesFW.jl")
+```
+
+Then load it with:
+
+```julia
+using ProductPolytopesFW
+```
+
+For running experiments from the repository source:
+
 ```bash
-cd code/ProductPolytopesFW
+cd /path/to/ProductPolytopesFW.jl
 julia --project=. -e 'using Pkg; Pkg.instantiate(); Pkg.precompile()'
 ```
 
-The repository currently targets Julia `1.12` (`Project.toml` compat).
+The repository currently targets Julia `1.12` (`Project.toml` compat) and was verified locally with Julia `1.12.5`.
 
 ## Configuration
 
 All experiment parameters live in `examples/config.yml`.
+The example compute/plot scripts read this file directly; `examples/slurm_loop.jl` generates per-run config copies automatically.
 
 ## Current experiment scripts
 
@@ -93,10 +109,12 @@ done
 ```
 
 ## SLURM
-Run experiments on slurm via
+Run experiments on Slurm via
 
 - `examples/slurm_experiments.sh`: submit one run with explicit script + results folder + config.
-- `examples/slurm_loop.jl`: generate per-run configs/scripts and submit a `(k, n)` grid.
+- `examples/slurm_loop.jl`: generate per-run configs/scripts and submit a `(k, n)` grid from CLI arguments.
+
+`examples/slurm_experiments.sh` derives the repository root from its own location, and the cluster-specific `#SBATCH` lines for partition, node pinning, and email notifications are commented out by default. Enable only the directives that your cluster actually supports.
 
 Single submission for point-cloud-type instances:
 
@@ -119,8 +137,9 @@ julia --project=. examples/slurm_loop.jl examples/compute_intersection_point_clo
 
 Notes:
 - `slurm_loop.jl` overrides `--cpus-per-task` per job as `k`.
+- `slurm_loop.jl` writes generated scripts/configs under `<results_dir>/slurm_generated/`.
 - Set `JULIA_BIN=/path/to/julia` if the cluster does not expose `julia` in `PATH`.
-- Adjust `SBATCH` directives in `examples/slurm_experiments.sh` to match your cluster.
+- Optional `#SBATCH` directives in `examples/slurm_experiments.sh` are commented out by default; edit only what your cluster requires.
 
 ## Testing
 

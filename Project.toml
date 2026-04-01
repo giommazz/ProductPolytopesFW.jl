@@ -1,6 +1,6 @@
 name = "ProductPolytopesFW"
 uuid = "f2b8fa5e-0abd-47db-9d6f-354aeaa919ee"
-authors = ["giommazz <gab.iom89@gmail.com>"]
+authors = ["Gabriele Iommazzo"]
 version = "0.1.0"
 
 [deps]
@@ -22,11 +22,25 @@ Polyhedra = "67491407-f73d-577b-9b50-8179a7c68029"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 SCIP = "82193955-e24f-5292-bf16-6f2c5261a85f"
 Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
-TestEnv = "1e6cf692-eddd-4d53-88a5-2d735e33781b"
 YAML = "ddb6d928-2868-570f-bddf-ab3f9cf99eb6"
 
 [compat]
+CDDLib = "0.10"
+CSV = "0.10"
+Combinatorics = "1"
+DataFrames = "1.8"
+FileIO = "1.18"
+FiniteDifferences = "0.12"
+FrankWolfe = "0.6"
+GLPK = "1.2"
+HiGHS = "1.21"
+JLD2 = "0.6"
+JuMP = "1.30"
 julia = "1.12"
+Plots = "1.41"
+Polyhedra = "0.8"
+SCIP = "0.12"
+YAML = "0.4"
 
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"

@@ -1,0 +1,8 @@
+# Generated experiment outputs
+examples/results*/
+examples/logs/
+slurm-*.out
+
+# Local Codex files
+.codex/
+.codex

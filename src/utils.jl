@@ -64,7 +64,7 @@ function generate_point_cloud_filename(config::Config)
     anchor = config.intersection_anchor
     anchor_t = config.intersection_anchor_t
     ref = config.intersection_reference_point
-    return "k$(config.k)_n$(config.n)_npub$(npub)_$(sampling)_i$(config.max_iterations)_s$(seed)_$(oracle)_a-$(anchor)-$(anchor_t)_ref-$(ref)_t$timestamp"
+    return "pc_k$(config.k)_n$(config.n)_npub$(npub)_$(sampling)_i$(config.max_iterations)_s$(seed)_$(oracle)_a-$(anchor)-$(anchor_t)_ref-$(ref)_t$timestamp"
 end
 
 function filename_float_token(value::Real)
