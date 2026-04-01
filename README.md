@@ -1,6 +1,6 @@
 # ProductPolytopesFW
 
-Julia package and experiment scripts accompanying the AISTATS 2026 paper on Frank-Wolfe variants for product polytope feasibility instances.
+Julia package and experiment scripts accompanying the AISTATS 2026 paper on the linear convergence of Frank-Wolfe algorithms on product polytope.
 
 ## Associated paper
 
