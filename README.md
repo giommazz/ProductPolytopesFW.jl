@@ -6,10 +6,10 @@ Julia package and experiment scripts accompanying the AISTATS 2026 paper on the 
 
 This repository contains the code accompanying the paper
 
-**Linear Convergence of the Frank-Wolfe Algorithm over Product Polytopes**  
-Gabriele Iommazzo, David Martinez-Rubio, Francisco Criado, Elias Wirth, Sebastian Pokutta.  
-Accepted at **AISTATS 2026**.  
-Preprint: [arXiv:2505.11259](https://arxiv.org/abs/2505.11259)
+> Iommazzo, G., Martinez-Rubio, D., Criado, F., Wirth, E., and Pokutta, S.  
+> **Linear Convergence of the Frank-Wolfe Algorithm over Product Polytopes.**  
+> Accepted at *AISTATS 2026*.  
+> Available as preprint at [arXiv:2505.11259](https://arxiv.org/abs/2505.11259).
 
 The repository includes the implementation used for the computational results in the paper, together with additional experiment and benchmarking scripts.
 
